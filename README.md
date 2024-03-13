@@ -12,7 +12,7 @@ This work is based on [Papageno](https://github.com/PAPAGENO-devels/papageno), a
 
 ### Installation
 ```
-go get github.com/simoneguidi94/gopapageno
+go get github.com/giornetta/gopapageno
 ```
 
 ### Parser generator example
@@ -21,7 +21,7 @@ go get github.com/simoneguidi94/gopapageno
 package main
 
 import (
-	"github.com/simoneguidi94/gopapageno/generator"
+	"github.com/giornetta/gopapageno/generator"
 )
 
 func main() {
@@ -37,7 +37,7 @@ package main
 import (
     "fmt"
 
-    "github.com/simoneguidi94/gopapageno/languages/arithmetic"
+    "github.com/giornetta/gopapageno/languages/arithmetic"
 )
 
 func main() {

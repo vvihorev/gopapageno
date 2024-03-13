@@ -1,3 +1,5 @@
+package common
+
 type lexerDfaState struct {
 	Transitions     [256]int
 	IsFinal         bool

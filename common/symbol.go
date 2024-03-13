@@ -1,3 +1,5 @@
+package common
+
 /*
 symbol contains a token and its value, a precedence and pointers to build the syntactic tree.
 */

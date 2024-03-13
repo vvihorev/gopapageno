@@ -150,7 +150,7 @@ func (nfa1 *Nfa) Concatenate(nfa2 Nfa) {
 	nfa1.NumStates = nfa1.NumStates + nfa2.NumStates - 1
 }
 
-//Operator |
+// Operator |
 func (nfa1 *Nfa) Unite(nfa2 Nfa) {
 	newInitial := NfaState{}
 	newFinal := NfaState{}
@@ -167,7 +167,7 @@ func (nfa1 *Nfa) Unite(nfa2 Nfa) {
 	nfa1.NumStates += nfa2.NumStates + 2
 }
 
-//Operator *
+// Operator *
 func (nfa *Nfa) KleeneStar() {
 	newInitial := NfaState{}
 	newFinal := NfaState{}
@@ -184,7 +184,7 @@ func (nfa *Nfa) KleeneStar() {
 	nfa.NumStates += 2
 }
 
-//Operator +
+// Operator +
 func (nfa *Nfa) KleenePlus() {
 	newInitial := NfaState{}
 	newFinal := NfaState{}
@@ -200,7 +200,7 @@ func (nfa *Nfa) KleenePlus() {
 	nfa.NumStates += 2
 }
 
-//Operator ?
+// Operator ?
 func (nfa *Nfa) ZeroOrOne() {
 	newInitial := NfaState{}
 	newFinal := NfaState{}

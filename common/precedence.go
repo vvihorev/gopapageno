@@ -1,3 +1,5 @@
+package common
+
 const (
 	_YIELDS_PREC = iota
 	_EQ_PREC     = iota

@@ -1,4 +1,6 @@
-//This is approx. 1MB per stack (on 64 bit architecture)
+package common
+
+// This is approx. 1MB per stack (on 64 bit architecture)
 const _STACK_PTR_SIZE int = 131000
 
 /*

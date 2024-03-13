@@ -1,3 +1,5 @@
+package common
+
 import (
 	"time"
 	"unsafe"

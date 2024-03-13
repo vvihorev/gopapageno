@@ -8,7 +8,7 @@ import (
 	"runtime"
 	"runtime/pprof"
 
-	"github.com/simoneguidi94/gopapageno/languages/xml"
+	"github.com/giornetta/gopapageno/languages/xml"
 )
 
 var cpuprofile = flag.String("cpuprofile", "", "") //write cpu profile to file")

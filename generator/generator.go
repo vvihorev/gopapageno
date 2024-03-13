@@ -3,7 +3,7 @@ package generator
 import (
 	"fmt"
 
-	"github.com/simoneguidi94/gopapageno/generator/regex"
+	"github.com/giornetta/gopapageno/generator/regex"
 )
 
 func Generate(lexerFilename string, parserFilename string, outdir string) {

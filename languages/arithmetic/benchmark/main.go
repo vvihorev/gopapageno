@@ -9,7 +9,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/simoneguidi94/gopapageno/languages/arithmetic"
+	"github.com/giornetta/gopapageno/languages/arithmetic"
 )
 
 var fname = flag.String("fname", "", "the name of the file to parse")
