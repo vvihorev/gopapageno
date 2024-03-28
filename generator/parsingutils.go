@@ -1,36 +1,48 @@
 package generator
 
-import "fmt"
-
-func skipSpaces(bytes []byte, curPos int) int {
-	for curPos < len(bytes) && (bytes[curPos] == ' ' || bytes[curPos] == '\t' || bytes[curPos] == '\r' || bytes[curPos] == '\n') {
-		curPos++
+func skipSpaces(input string, index *int) {
+	for *index < len(input) &&
+		(input[*index] == ' ' ||
+			input[*index] == '\t' ||
+			input[*index] == '\r' ||
+			input[*index] == '\n') {
+		*index++
 	}
-	return curPos
 }
 
-func getIdentifier(bytes []byte, curPos int) (string, int) {
-	startingPos := curPos
-	if curPos < len(bytes) && ((bytes[curPos] >= 'a' && bytes[curPos] <= 'z') || (bytes[curPos] >= 'A' && bytes[curPos] <= 'Z') || (bytes[curPos] == '_')) {
-		curPos++
-		for curPos < len(bytes) && ((bytes[curPos] >= 'a' && bytes[curPos] <= 'z') || (bytes[curPos] >= 'A' && bytes[curPos] <= 'Z') || (bytes[curPos] == '_') || (bytes[curPos] >= '9' && bytes[curPos] <= '0')) {
-			curPos++
+func getIdentifier(input string, index *int) string {
+	startIndex := *index
+
+	if *index < len(input) &&
+		// TODO: Consider regex?
+		((input[*index] >= 'a' && input[*index] <= 'z') ||
+			(input[*index] >= 'A' && input[*index] <= 'Z') ||
+			(input[*index] == '_')) {
+		*index++
+
+		for *index < len(input) &&
+			((input[*index] >= 'a' && input[*index] <= 'z') ||
+				(input[*index] >= 'A' && input[*index] <= 'Z') ||
+				(input[*index] == '_') ||
+				(input[*index] >= '9' && input[*index] <= '0')) {
+			*index++
 		}
 	}
-	return string(bytes[startingPos:curPos]), curPos
+	return input[startIndex:*index]
 }
 
-func getSemanticFunction(bytes []byte, curPos int) (string, int) {
-	startingPos := curPos
+func getSemanticFunction(input string, index *int) string {
+	startIndex := *index
+
 	numBraces := 0
-	for curPos < len(bytes) {
-		if bytes[curPos] == '\'' {
-			curPos++
+	for *index < len(input) {
+		if input[*index] == '\'' {
+			*index++
 			escape := false
-			for curPos < len(bytes) {
-				if bytes[curPos] == '\\' {
+			for *index < len(input) {
+				if input[*index] == '\\' {
 					escape = !escape
-				} else if bytes[curPos] == '\'' {
+				} else if input[*index] == '\'' {
 					if !escape {
 						break
 					}
@@ -38,15 +50,15 @@ func getSemanticFunction(bytes []byte, curPos int) (string, int) {
 				} else {
 					escape = false
 				}
-				curPos++
+				*index++
 			}
-		} else if bytes[curPos] == '"' {
-			curPos++
+		} else if input[*index] == '"' {
+			*index++
 			escape := false
-			for curPos < len(bytes) {
-				if bytes[curPos] == '\\' {
+			for *index < len(input) {
+				if input[*index] == '\\' {
 					escape = !escape
-				} else if bytes[curPos] == '"' {
+				} else if input[*index] == '"' {
 					if !escape {
 						break
 					}
@@ -54,25 +66,25 @@ func getSemanticFunction(bytes []byte, curPos int) (string, int) {
 				} else {
 					escape = false
 				}
-				curPos++
+				*index++
 			}
-		} else if bytes[curPos] == '`' {
-			curPos++
-			for curPos < len(bytes) {
-				if bytes[curPos] == '`' {
+		} else if input[*index] == '`' {
+			*index++
+			for *index < len(input) {
+				if input[*index] == '`' {
 					break
 				}
-				curPos++
+				*index++
 			}
-		} else if bytes[curPos] == '/' && curPos < len(bytes)-1 {
-			curPos++
-			if bytes[curPos] == '*' {
-				curPos++
+		} else if input[*index] == '/' && *index < len(input)-1 {
+			*index++
+			if input[*index] == '*' {
+				*index++
 				foundStar := false
-				for curPos < len(bytes) {
-					if bytes[curPos] == '*' {
+				for *index < len(input) {
+					if input[*index] == '*' {
 						foundStar = true
-					} else if bytes[curPos] == '/' {
+					} else if input[*index] == '/' {
 						if foundStar {
 							break
 						}
@@ -80,34 +92,28 @@ func getSemanticFunction(bytes []byte, curPos int) (string, int) {
 					} else {
 						foundStar = false
 					}
-					curPos++
+					*index++
 				}
-			} else if bytes[curPos] == '/' {
-				curPos++
-				for curPos < len(bytes) {
-					if bytes[curPos] == '\n' {
+			} else if input[*index] == '/' {
+				*index++
+				for *index < len(input) {
+					if input[*index] == '\n' {
 						break
 					}
-					curPos++
+					*index++
 				}
 			}
-		} else if bytes[curPos] == '{' {
+		} else if input[*index] == '{' {
 			numBraces++
-		} else if bytes[curPos] == '}' {
+		} else if input[*index] == '}' {
 			numBraces--
 			if numBraces == 0 {
-				curPos++
+				*index++
 				break
 			}
 		}
-		curPos++
+		*index++
 	}
 
-	return string(bytes[startingPos:curPos]), curPos
-}
-
-func checkRegexpCompileError(err error) {
-	if err != nil {
-		fmt.Println(err)
-	}
+	return input[startIndex:*index]
 }

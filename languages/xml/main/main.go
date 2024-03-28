@@ -88,18 +88,18 @@ func main() {
 		fmt.Printf("Time to parse (total): %s\n\n", xml.Stats.ParseTimeTotal)
 
 		for i, v := range xml.Stats.RemainingStacks {
-			fmt.Printf("Remaining stacks (thread %d): %d\n", i, v)
+			fmt.Printf("Left stacks (thread %d): %d\n", i, v)
 		}
 		for i, v := range xml.Stats.RemainingStacksNewNonterminals {
-			fmt.Printf("Remaining stacks new nonterminals (thread %d): %d\n", i, v)
+			fmt.Printf("Left stacks new nonterminals (thread %d): %d\n", i, v)
 		}
 		for i, v := range xml.Stats.RemainingStackPtrs {
-			fmt.Printf("Remaining stackPtrs (thread %d): %d\n", i, v)
+			fmt.Printf("Left stackPtrs (thread %d): %d\n", i, v)
 		}
 
-		fmt.Printf("Remaining stacks final pass: %d\n", xml.Stats.RemainingStacksFinalPass)
-		fmt.Printf("Remaining stacks new nonterminals final pass: %d\n", xml.Stats.RemainingStacksNewNonterminalsFinalPass)
-		fmt.Printf("Remaining stackPtrs final pass: %d\n", xml.Stats.RemainingStackPtrsFinalPass)
+		fmt.Printf("Left stacks final pass: %d\n", xml.Stats.RemainingStacksFinalPass)
+		fmt.Printf("Left stacks new nonterminals final pass: %d\n", xml.Stats.RemainingStacksNewNonterminalsFinalPass)
+		fmt.Printf("Left stackPtrs final pass: %d\n", xml.Stats.RemainingStackPtrsFinalPass)
 
 	} else {
 		fmt.Println("Parse failed!")

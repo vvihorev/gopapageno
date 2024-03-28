@@ -1,6 +1,7 @@
 package arithmetic
 
 import (
+	"github.com/giornetta/gopapageno"
 	"math"
 )
 
@@ -11,9 +12,9 @@ parserPreallocMem initializes all the memory pools required by the semantic func
 */
 func parserPreallocMem(inputSize int, numThreads int) {
 	parserInt64Pools = make([]*int64Pool, numThreads)
-	
+
 	avgCharsPerNumber := float64(4)
-	
+
 	poolSizePerThread := int(math.Ceil((float64(inputSize) / avgCharsPerNumber) / float64(numThreads)))
 
 	for i := 0; i < numThreads; i++ {
@@ -24,7 +25,7 @@ func parserPreallocMem(inputSize int, numThreads int) {
 /*
 function is the semantic function of the parser.
 */
-func function(thread int, ruleNum uint16, lhs *symbol, rhs []*symbol) {
+func function(thread int, ruleNum uint16, lhs *gopapageno.Symbol, rhs []*gopapageno.Symbol) {
 	switch ruleNum {
 	case 0:
 		NEW_AXIOM0 := lhs
