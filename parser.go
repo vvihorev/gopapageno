@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"runtime"
 	"time"
 )
 
@@ -59,18 +60,23 @@ type Parser struct {
 	PrecedenceMatrix          [][]Precedence
 	BitPackedPrecedenceMatrix []uint64
 
-	Func func(rule uint16, lhs *Token, rhs []*Token)
+	Func func(rule uint16, lhs *Token, rhs []*Token, thread int)
 }
 
-type ParserOpt func(parser *Parser)
+type ParserOpt func(p *Parser)
+
+func WithConcurrency(n int) ParserOpt {
+	return func(p *Parser) {
+		p.concurrency = n
+	}
+}
 
 func (p *Parser) Parse(ctx context.Context, src []byte) (*Token, error) {
-	scanner := p.Lexer.Scanner(src, ScannerWithConcurrency(p.concurrency))
-
-	tokens, err := scanner.Lex(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("could not lex: %w", err)
+	if p.concurrency <= 0 {
+		p.concurrency = 1
 	}
+
+	scanner := p.Lexer.Scanner(src, ScannerWithConcurrency(p.concurrency))
 
 	srcLen := len(src)
 	avgCharsPerToken := 12.5
@@ -78,6 +84,27 @@ func (p *Parser) Parse(ctx context.Context, src []byte) (*Token, error) {
 	stackPoolBaseSize := math.Ceil(float64(srcLen) / avgCharsPerToken / float64(stackSize) / float64(p.concurrency))
 	stackPtrPoolBaseSize := math.Ceil(float64(srcLen) / avgCharsPerToken / float64(stackPtrSize) / float64(p.concurrency))
 
+	pools := make([]*Pool[stack[Token]], p.concurrency)
+	ptrPools := make([]*Pool[stackPtr], p.concurrency)
+
+	for thread := 0; thread < p.concurrency; thread++ {
+		pools[thread] = NewPool[stack[Token]](int(stackPoolBaseSize * 0.8))
+		ptrPools[thread] = NewPool[stackPtr](int(stackPtrPoolBaseSize))
+	}
+
+	stackPoolFinalPass := NewPool[stack[Token]](int(math.Ceil(stackPoolBaseSize * 0.1 * float64(p.concurrency))))
+	stackPoolNewNonterminalsFinalPass := NewPool[stack[Token]](int(math.Ceil(stackPoolBaseSize * 0.05 * float64(p.concurrency))))
+	stackPtrPoolFinalPass := NewPool[stackPtr](int(math.Ceil(stackPtrPoolBaseSize * 0.1)))
+
+	runtime.GC()
+
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	tokens, err := scanner.Lex(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("could not lex: %w", err)
+	}
 	// If there are not enough stacks in the input, reduce the number of threads.
 	// The input is split by splitting stacks, not stack contents.
 	if tokens.NumStacks() < p.concurrency {
@@ -94,13 +121,6 @@ func (p *Parser) Parse(ctx context.Context, src []byte) (*Token, error) {
 	resultCh := make(chan parseResult)
 	errCh := make(chan error, 1)
 
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
-	stackPoolFinalPass := NewPool[stack[Token]](int(math.Ceil(stackPoolBaseSize * 0.1 * float64(p.concurrency))))
-	stackPoolNewNonterminalsFinalPass := NewPool[stack[Token]](int(math.Ceil(stackPoolBaseSize * 0.05 * float64(p.concurrency))))
-	stackPtrPoolFinalPass := NewPool[stackPtr](int(math.Ceil(stackPtrPoolBaseSize * 0.1)))
-
 	workers := make([]*parserWorker, p.concurrency)
 	for thread := 0; thread < p.concurrency; thread++ {
 		var nextToken *Token
@@ -114,8 +134,8 @@ func (p *Parser) Parse(ctx context.Context, src []byte) (*Token, error) {
 			parser: p,
 			id:     thread,
 
-			stackPool:    NewPool[stack[Token]](int(stackPoolBaseSize * 0.8)),
-			ptrStackPool: NewPool[stackPtr](int(stackPtrPoolBaseSize)),
+			stackPool:    pools[thread],
+			ptrStackPool: ptrPools[thread],
 		}
 
 		go workers[thread].parse(ctx,
@@ -160,6 +180,8 @@ func (p *Parser) Parse(ctx context.Context, src []byte) (*Token, error) {
 
 		workers[0].stackPool = stackPoolNewNonterminalsFinalPass
 		workers[0].ptrStackPool = stackPtrPoolFinalPass
+
+		p.concurrency = 1
 
 		go workers[0].parse(ctx,
 			finalPassInput,
@@ -208,12 +230,12 @@ func (w *parserWorker) parse(ctx context.Context, tokens *LOS[Token], nextToken 
 	stack := newLosPtr(w.ptrStackPool)
 
 	// If the thread is the first, push a # onto the stack
-	// Otherwise, push the first token onto the stack
+	// Otherwise, push the first inputToken onto the stack
 	if w.id == 0 {
 		stack.Push(&Token{
-			Type:       TokenTerm,
-			Value:      nil,
-			Lexeme:     "",
+			Type:  TokenTerm,
+			Value: nil,
+			// Lexeme:     "",
 			Precedence: PrecEmpty,
 			Next:       nil,
 			Child:      nil,
@@ -226,12 +248,12 @@ func (w *parserWorker) parse(ctx context.Context, tokens *LOS[Token], nextToken 
 	}
 
 	// If the thread is the last, push a # onto the tokens m
-	// Otherwise, push onto the tokens m the first token of the next tokens m
+	// Otherwise, push onto the tokens m the first inputToken of the next tokens m
 	if w.id == w.parser.concurrency-1 {
 		tokens.Push(Token{
-			Type:       TokenTerm,
-			Value:      nil,
-			Lexeme:     "",
+			Type:  TokenTerm,
+			Value: nil,
+			// Lexeme:     "",
 			Precedence: PrecEmpty,
 			Next:       nil,
 			Child:      nil,
@@ -249,75 +271,83 @@ func (w *parserWorker) parse(ctx context.Context, tokens *LOS[Token], nextToken 
 	var rhsTokens []*Token
 
 	rhsBuf := make([]TokenType, w.parser.MaxRHSLength)
-	rhsSymbolsBuf := make([]*Token, w.parser.MaxRHSLength)
+	rhsTokensBuf := make([]*Token, w.parser.MaxRHSLength)
 
 	newNonTerm := &Token{
-		Type:       TokenEmpty,
-		Value:      nil,
-		Lexeme:     "",
+		Type:  TokenEmpty,
+		Value: nil,
+		// Lexeme:     "",
 		Precedence: PrecEmpty,
 		Next:       nil,
 		Child:      nil,
 	}
 
+	i := 0
 	// Iterate over the tokens m
-	for token := tokensIt.Next(); token != nil; token = tokensIt.Next() {
-		//If the current token is a nonterminal, push it onto the stack with no precedence relation
-		if !token.Type.IsTerminal() {
-			token.Precedence = PrecEmpty
-			stack.Push(token)
+	for inputToken := tokensIt.Next(); inputToken != nil; i++ {
+		//If the current inputToken is a non-terminal, push it onto the stack with no precedence relation
+		if !inputToken.Type.IsTerminal() {
+			inputToken.Precedence = PrecEmpty
+			stack.Push(inputToken)
 
+			inputToken = tokensIt.Next()
 			continue
 		}
 
-		//Find the first terminal on the stack and get the precedence between it and the current tokens token
+		//Find the first terminal on the stack and get the precedence between it and the current tokens inputToken
 		firstTerminal := stack.FirstTerminal()
-		prec := w.parser.precedence(firstTerminal.Type, token.Type)
+		prec := w.parser.precedence(firstTerminal.Type, inputToken.Type)
 		switch prec {
-		// If it yields precedence, push the tokens token onto the stack with that precedence relation.
+		// If it yields precedence, push the tokens inputToken onto the stack with that precedence relation.
 		// Also increment the counter of the number of tokens yielding precedence.
 		case PrecYields:
-			token.Precedence = PrecYields
-			stack.Push(token)
+			inputToken.Precedence = PrecYields
+			stack.Push(inputToken)
 			numYieldsPrec++
-		// If it's equal in precedence, push the tokens token onto the stack with that precedence relation
+
+			inputToken = tokensIt.Next()
+		// If it's equal in precedence, push the tokens inputToken onto the stack with that precedence relation
 		case PrecEquals:
-			token.Precedence = PrecEquals
-			stack.Push(token)
+			inputToken.Precedence = PrecEquals
+			stack.Push(inputToken)
+
+			inputToken = tokensIt.Next()
 		// If it takes precedence, the next action depends on whether there are tokens that yield precedence onto the stack.
 		case PrecTakes:
-			//If there are no tokens yielding precedence on the stack, push the tokens token onto the stack with take precedence as precedence relation
+			//If there are no tokens yielding precedence on the stack, push the tokens inputToken onto the stack with take precedence as precedence relation
 			//Otherwise, perform a reduction
 			if numYieldsPrec == 0 {
-				token.Precedence = PrecTakes
-				stack.Push(token)
+				inputToken.Precedence = PrecTakes
+				stack.Push(inputToken)
+
+				inputToken = tokensIt.Next()
 			} else {
 				pos = w.parser.MaxRHSLength - 1
 
-				// Pop tokens from the stack until one that yields precedence is reached, saving them in rhsBuf
 				var token *Token
+				// Pop tokens from the stack until one that yields precedence is reached, saving them in rhsBuf
 				for token = stack.Pop(); token.Precedence != PrecYields; token = stack.Pop() {
-					rhsSymbolsBuf[pos] = token
+					rhsTokensBuf[pos] = token
 					rhsBuf[pos] = token.Type
 					pos--
 				}
-				rhsSymbolsBuf[pos] = token
+				rhsTokensBuf[pos] = token
 				rhsBuf[pos] = token.Type
 
-				//Pop one last token, if it's a nonterminal add it to rhsBuf, otherwise ignore it (push it again onto the stack)
+				//Pop one last token, if it's a non-terminal add it to rhsBuf, otherwise ignore it (push it again onto the stack)
 				token = stack.Pop()
 				if token.Type.IsTerminal() {
 					stack.Push(token)
 				} else {
 					pos--
-					rhsSymbolsBuf[pos] = token
+					rhsTokensBuf[pos] = token
 					rhsBuf[pos] = token.Type
 
 					stack.UpdateFirstTerminal()
 				}
 
 				//Obtain the actual rhs from the buffers
-				rhsTokens = rhsSymbolsBuf[pos:]
+				rhsTokens = rhsTokensBuf[pos:]
 				rhs = rhsBuf[pos:]
 
 				//Find corresponding lhs and ruleNum
@@ -332,7 +362,7 @@ func (w *parserWorker) parse(ctx context.Context, tokens *LOS[Token], nextToken 
 				lhsToken = newNonTerminalsList.Push(*newNonTerm)
 
 				//Execute the semantic action
-				w.parser.Func(ruleNum, lhsToken, rhsTokens)
+				w.parser.Func(ruleNum, lhsToken, rhsTokens, w.id)
 
 				//Push the new nonterminal onto the stack
 				stack.Push(lhsToken)

@@ -78,6 +78,7 @@ func parseGrammarDescription(r io.Reader) (*parserDescriptor, error) {
 	for scanner.Scan() {
 		l := scanner.Bytes()
 		sb.Write(l)
+		sb.WriteString("\n")
 	}
 
 	rules, err := parseRules(sb.String())
@@ -187,13 +188,14 @@ func (p *parserDescriptor) compile() error {
 	}
 
 	p.deleteRepeatedRHS()
-	p.sortRulesByRHS()
 
 	precMatrix, err := p.newPrecedenceMatrix()
 	if err != nil {
 		return fmt.Errorf("could not create precedence matrix: %w", err)
 	}
 	p.precMatrix = precMatrix
+
+	p.sortRulesByRHS()
 
 	return nil
 }
@@ -234,7 +236,15 @@ func (p *parserDescriptor) isAxiomUsed() bool {
 }
 
 func (p *parserDescriptor) emit(f io.Writer) {
-	fmt.Fprintf(f, "func NewParser() *gopapageno.Parser {\n")
+	/************
+	 * Preamble *
+	 ************/
+	fmt.Fprintf(f, p.preamble)
+	fmt.Fprintf(f, "\n\n")
+
+	p.emitTokens(f)
+
+	fmt.Fprintf(f, "\nfunc NewParser(opts ...gopapageno.ParserOpt) *gopapageno.Parser {\n")
 
 	/*****************
 	 * Token Numbers *
@@ -256,11 +266,16 @@ func (p *parserDescriptor) emit(f io.Writer) {
 	fmt.Fprintf(f, "\tmaxRHSLen := %d\n", maxRHSLen)
 	fmt.Fprint(f, "\trules := []gopapageno.Rule{\n")
 	for _, rule := range p.rules {
-		fmt.Fprintf(f, "\t\t{%s, []uint16{%s}},\n", rule.LHS, strings.Join(rule.RHS, ", "))
+		fmt.Fprintf(f, "\t\t{%s, []gopapageno.TokenType{%s}},\n", rule.LHS, strings.Join(rule.RHS, ", "))
 	}
 	fmt.Fprintf(f, "\t}\n")
 
-	trie := newTrie(p.rules, p.nonterminals, p.terminals)
+	trie, err := newTrie(p.rules, p.nonterminals, p.terminals)
+	if err != nil {
+		// TODO: Change this handling.
+		panic(err)
+	}
+
 	compressedTrie := trie.Compress(p.nonterminals, p.terminals)
 
 	fmt.Fprintf(f, "\tcompressedRules := []uint16{")
@@ -275,55 +290,45 @@ func (p *parserDescriptor) emit(f io.Writer) {
 	/*********************
 	 * Precedence Matrix *
 	 *********************/
-	pureMatrix := make([][]gopapageno.Precedence, p.terminals.Len())
-	for i, terminal1 := range p.terminals.Iter {
-		pureMatrix[i] = make([]gopapageno.Precedence, p.terminals.Len())
-
-		for j, terminal2 := range p.terminals.Iter {
-			pureMatrix[i][j] = p.precMatrix[terminal1][terminal2]
-		}
-	}
-
 	fmt.Fprintf(f, "\tprecMatrix := [][]gopapageno.Precedence{\n")
-	for i, _ := range p.terminals.Iter {
+	for i, _ := range p.precMatrix {
 		fmt.Fprintf(f, "\t\t{")
 
-		for j, _ := range p.terminals.Iter {
-			if j < p.terminals.Len()-1 {
-				fmt.Fprintf(f, "%s, ", pureMatrix[i][j].String())
+		for j, _ := range p.precMatrix {
+			if j < len(p.precMatrix)-1 {
+				fmt.Fprintf(f, "gopapageno.Prec%s, ", p.precMatrix[i][j].String())
 			} else {
-				fmt.Fprintf(f, "%s", pureMatrix[i][j].String())
+				fmt.Fprintf(f, "gopapageno.Prec%s", p.precMatrix[i][j].String())
 			}
 		}
 		fmt.Fprintf(f, "},\n")
 	}
-	fmt.Fprintf(f, "}\n")
+	fmt.Fprintf(f, "\t}\n")
 
-	bitPackedMatrix := bitPack(pureMatrix)
-	fmt.Fprintf(f, "\tbitPackedMatrix := []uint64{\n\t")
+	bitPackedMatrix := bitPack(p.precMatrix)
+	fmt.Fprintf(f, "\tbitPackedMatrix := []uint64{\n\t\t")
 	for _, v := range bitPackedMatrix {
 		fmt.Fprintf(f, "%d, ", v)
 	}
-	fmt.Fprintf(f, "\n}\n\n")
+	fmt.Fprintf(f, "\n\t}\n\n")
 
 	/*******************
 	 * Parser Function *
 	 *******************/
-
-	fmt.Fprintf(f, "\tfn := func(rule uint16, lhs *Token, rhs []*Token){\n")
+	fmt.Fprintf(f, "\tfn := func(rule uint16, lhs *gopapageno.Token, rhs []*gopapageno.Token, thread int){\n")
 	fmt.Fprintf(f, "\t\tswitch rule {\n")
 	for i, rule := range p.rules {
 		fmt.Fprintf(f, "\t\tcase %d:\n", i)
-		fmt.Fprintf(f, "\t\t%s0 := lhs\n", rule.LHS)
+		fmt.Fprintf(f, "\t\t\t%s0 := lhs\n", rule.LHS)
 		for j, _ := range rule.RHS {
-			fmt.Fprintf(f, "\t\t%s%d := rhs[%d]\n", rule.RHS[j], j+1, j)
+			fmt.Fprintf(f, "\t\t\t%s%d := rhs[%d]\n", rule.RHS[j], j+1, j)
 		}
 		fmt.Fprintf(f, "\n")
 
 		if len(rule.RHS) > 0 {
-			fmt.Fprintf(f, "\t\t%s0.Child = %s1\n", rule.LHS, rule.RHS[0])
+			fmt.Fprintf(f, "\t\t\t%s0.Child = %s1\n", rule.LHS, rule.RHS[0])
 			for j := 0; j < len(rule.RHS)-1; j++ {
-				fmt.Fprintf(f, "\t\t%s%d.Next = %s%d\n", rule.RHS[j], j+1, rule.RHS[j+1], j+2)
+				fmt.Fprintf(f, "\t\t\t%s%d.Next = %s%d\n", rule.RHS[j], j+1, rule.RHS[j+1], j+2)
 			}
 		}
 		fmt.Fprintf(f, "\n")
@@ -335,39 +340,41 @@ func (p *parserDescriptor) emit(f io.Writer) {
 		}
 		lines := strings.Split(action, "\n")
 		for _, line := range lines {
-			fmt.Fprintf(f, "\t\t")
+			fmt.Fprintf(f, "\t\t\t")
 			fmt.Fprintf(f, line)
 			fmt.Fprintf(f, "\n")
 		}
 	}
-	fmt.Fprintf(f, "\t}\n")
-	fmt.Fprintf(f, "}\n")
+	fmt.Fprintf(f, "\t\t}\n")
+	fmt.Fprintf(f, "\t}\n\n")
 
-	/*****************
-	 * Return Parser *
-	 *****************/
-	fmt.Fprintf(f, "\treturn &gopapageno.Parser{\n")
-	fmt.Fprintf(f, "\t\tNumTerminals: numTerminals,\n\t\tNumNonTerminals: numNonTerminals,\n")
+	/********************
+	 * Construct Parser *
+	 ********************/
+	fmt.Fprintf(f, "\tparser := &gopapageno.Parser{\n")
+	fmt.Fprintf(f, "\t\tLexer: NewLexer(),\n")
+	fmt.Fprintf(f, "\t\tNumTerminals: numTerminals,\n\t\tNumNonterminals: numNonTerminals,\n")
 	fmt.Fprintf(f, "\t\tMaxRHSLength: maxRHSLen,\n")
 	fmt.Fprintf(f, "\t\tRules: rules,\n")
 	fmt.Fprintf(f, "\t\tCompressedRules: compressedRules,\n")
 	fmt.Fprintf(f, "\t\tPrecedenceMatrix: precMatrix,\n")
 	fmt.Fprintf(f, "\t\tBitPackedPrecedenceMatrix: bitPackedMatrix,\n")
 	fmt.Fprintf(f, "\t\tFunc: fn,\n")
-	fmt.Fprintf(f, "\t}\n}\n\n")
+	fmt.Fprintf(f, "\t}\n\n")
 
-	// TODO: Consider removing this next section.
-	/************
-	 * Preamble *
-	 ************/
-	fmt.Fprintf(f, p.preamble)
-	fmt.Fprintf(f, "\n\n")
+	fmt.Fprintf(f, "\tfor _, opt := range opts {\n\t\topt(parser)\n\t}\n\n")
+
+	fmt.Fprintf(f, "\treturn parser\n}\n\n")
 }
 
 func (p *parserDescriptor) emitTokens(f io.Writer) {
-	fmt.Fprintf(f, "// Non-terminals")
+	fmt.Fprintf(f, "// Non-terminals\n")
 	fmt.Fprintf(f, "const (\n")
-	for i, token := range p.nonterminals.Iter {
+	for i, token := range p.nonterminals.Slice() {
+		if token == "_EMPTY" {
+			continue
+		}
+
 		if i == 0 {
 			fmt.Fprintf(f, "\t%s = gopapageno.TokenEmpty + 1 + iota\n", token)
 		} else {
@@ -376,11 +383,15 @@ func (p *parserDescriptor) emitTokens(f io.Writer) {
 	}
 	fmt.Fprintf(f, ")\n\n")
 
-	fmt.Fprintf(f, "// Terminals")
+	fmt.Fprintf(f, "// Terminals\n")
 	fmt.Fprintf(f, "const (\n")
-	for i, token := range p.terminals.Iter {
+	for i, token := range p.terminals.Slice() {
+		if token == "_TERM" {
+			continue
+		}
+
 		if i == 0 {
-			fmt.Fprintf(f, "\t%s = gopapageno.TokenEmpty + 1 + iota\n", token)
+			fmt.Fprintf(f, "\t%s = gopapageno.TokenTerm + 1 + iota\n", token)
 		} else {
 			fmt.Fprintf(f, "\t%s\n", token)
 		}

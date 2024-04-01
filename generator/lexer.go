@@ -207,7 +207,9 @@ func (l *lexerDescriptor) compile() error {
 }
 
 func (l *lexerDescriptor) emit(f io.Writer) {
-	fmt.Fprintf(f, "func NewLexer() *gopapageno.Lexer {\n")
+	fmt.Fprintf(f, l.code)
+
+	fmt.Fprintf(f, "\n\nfunc NewLexer() *gopapageno.Lexer {\n")
 
 	/************
 	 * Automata *
@@ -221,9 +223,9 @@ func (l *lexerDescriptor) emit(f io.Writer) {
 	/******************
 	 * Lexer Function *
 	 ******************/
-	fmt.Fprintf(f, "\tfn := func(rule int, text string, token *gopapageno.Token) error {\n")
+	fmt.Fprintf(f, "\tfn := func(rule int, text string, token *gopapageno.Token, thread int) gopapageno.LexResult {\n")
 	fmt.Fprintf(f, "\t\ttoken.Type = gopapageno.TokenTerm\n")
-	fmt.Fprintf(f, "\t\ttoken.Lexeme = text\n\n")
+	//fmt.Fprintf(f, "\t\ttoken.Lexeme = text\n\n")
 	fmt.Fprintf(f, "\t\tswitch rule {\n")
 	for i, rule := range l.rules {
 		fmt.Fprintf(f, "\t\tcase %d:\n", i)
@@ -231,8 +233,8 @@ func (l *lexerDescriptor) emit(f io.Writer) {
 			fmt.Fprintf(f, "\t\t\t%s\n", line)
 		}
 	}
-	fmt.Fprintf(f, "\t\tdefault:\n\t\t\treturn gopapageno.ErrInvalid\n\t\t}\n\n")
-	fmt.Fprintf(f, "\t\treturn nil\n}\n")
+	fmt.Fprintf(f, "\t\tdefault:\n\t\t\treturn gopapageno.LexErr\n\t\t}\n\n")
+	fmt.Fprintf(f, "\t\treturn gopapageno.LexOK\n\t}\n\n")
 
 	/****************
 	 * Return Lexer *
@@ -240,7 +242,7 @@ func (l *lexerDescriptor) emit(f io.Writer) {
 	fmt.Fprintf(f, "\treturn &gopapageno.Lexer{\n")
 	fmt.Fprintf(f, "\t\tAutomaton: automaton,\n")
 	fmt.Fprintf(f, "\t\tCutPointsAutomaton: cutPointsAutomaton,\n")
-	fmt.Fprintf(f, "\t\tFunc:fn,\n")
+	fmt.Fprintf(f, "\t\tFunc: fn,\n")
 	fmt.Fprintf(f, "\t}\n}\n")
 }
 

@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"github.com/giornetta/gopapageno"
 	"math"
-	"strings"
 )
 
-type precedenceMatrix map[string]map[string]gopapageno.Precedence
+type precedenceMatrix [][]gopapageno.Precedence
 
 func (p *parserDescriptor) newPrecedenceMatrix() (precedenceMatrix, error) {
-	m := make(precedenceMatrix)
+	m := make(map[string]map[string]gopapageno.Precedence)
 
 	// Initialize an empty matrix.
 	for _, term := range p.terminals.Iter {
@@ -33,24 +32,24 @@ func (p *parserDescriptor) newPrecedenceMatrix() (precedenceMatrix, error) {
 
 			if p.terminals.Contains(token1) && p.terminals.Contains(token2) {
 				//Check if the matrix already contains an entry for this couple
-				if m[token1][token2] != gopapageno.PrecUnknown && m[token1][token2] != gopapageno.PrecEquals {
-					return nil, fmt.Errorf("the precedence relation is not unique between %s and %s", token1, token2)
+				if m[token1][token2] != gopapageno.PrecEmpty && m[token1][token2] != gopapageno.PrecEquals {
+					return nil, fmt.Errorf("the precedence relation Eq is not unique between %s and %s", token1, token2)
 				}
 
 				m[token1][token2] = gopapageno.PrecEquals
 			} else if p.nonterminals.Contains(token1) && p.terminals.Contains(token2) {
 				for _, token := range rts[token1].Iter {
 					//Check if the matrix already contains an entry for this couple
-					if m[token][token2] != gopapageno.PrecUnknown && m[token][token2] != gopapageno.PrecTakes {
-						return nil, fmt.Errorf("the precedence relation is not unique between %s and %s", token, token2)
+					if m[token][token2] != gopapageno.PrecEmpty && m[token][token2] != gopapageno.PrecTakes {
+						return nil, fmt.Errorf("the precedence relation Ta is not unique between %s and %s", token, token2)
 					}
 					m[token][token2] = gopapageno.PrecTakes
 				}
 			} else if p.terminals.Contains(token1) && p.nonterminals.Contains(token2) {
 				for _, token := range lts[token2].Iter {
 					//Check if the matrix already contains an entry for this couple
-					if m[token1][token] != gopapageno.PrecUnknown && m[token1][token] != gopapageno.PrecYields {
-						return nil, fmt.Errorf("the precedence relation is not unique between %s and %s", token1, token)
+					if m[token1][token] != gopapageno.PrecEmpty && m[token1][token] != gopapageno.PrecYields {
+						return nil, fmt.Errorf("the precedence relation Yi is not unique between %s and %s", token1, token)
 					}
 					m[token1][token] = gopapageno.PrecYields
 				}
@@ -67,7 +66,7 @@ func (p *parserDescriptor) newPrecedenceMatrix() (precedenceMatrix, error) {
 
 			if p.terminals.Contains(token1) && p.nonterminals.Contains(token2) && p.terminals.Contains(token3) {
 				//Check if the matrix already contains an entry for this couple
-				if m[token1][token3] != gopapageno.PrecUnknown && m[token1][token3] != gopapageno.PrecEquals {
+				if m[token1][token3] != gopapageno.PrecEmpty && m[token1][token3] != gopapageno.PrecEquals {
 					return nil, fmt.Errorf("the precedence relation is not unique between %s and %s", token1, token3)
 				}
 
@@ -85,7 +84,21 @@ func (p *parserDescriptor) newPrecedenceMatrix() (precedenceMatrix, error) {
 	}
 	m["_TERM"]["_TERM"] = gopapageno.PrecEquals
 
-	return m, nil
+	terminals := p.terminals.Slice()
+	if err := moveToFront(terminals, "_TERM"); err != nil {
+		return nil, fmt.Errorf("could not move _TERM to front: %w", err)
+	}
+
+	precMatrix := make([][]gopapageno.Precedence, len(terminals))
+	for i, t1 := range terminals {
+		precMatrix[i] = make([]gopapageno.Precedence, len(terminals))
+
+		for j, t2 := range terminals {
+			precMatrix[i][j] = m[t1][t2]
+		}
+	}
+
+	return precMatrix, nil
 }
 
 // getTerminalSets returns two maps mapping nonterminal tokens to possible terminal productions.
@@ -158,21 +171,6 @@ func (p *parserDescriptor) getTerminalSets() (lts map[string]*gopapageno.Set[str
 	return lts, rts
 }
 
-func (m precedenceMatrix) String() string {
-	s := ""
-	var sb strings.Builder
-	for key, row := range m {
-		s += key + ": [ "
-		sb.WriteString(fmt.Sprintf("%s: [ ", key))
-		for key2, prec := range row {
-			sb.WriteString(fmt.Sprintf("%s:%s ", key2, prec))
-		}
-		sb.WriteString("]\n")
-	}
-
-	return sb.String()
-}
-
 // bitPack packs the matrix into a slice of uint64 where a precedence value is represented by just 2 bits.
 func bitPack(matrix [][]gopapageno.Precedence) []uint64 {
 	newSize := int(math.Ceil(float64(len(matrix)*len(matrix)) / float64(32)))
@@ -194,4 +192,25 @@ func bitPack(matrix [][]gopapageno.Precedence) []uint64 {
 	}
 
 	return newMatrix
+}
+
+func moveToFront[T comparable](slice []T, e T) error {
+	index := -1
+
+	for i, v := range slice {
+		if v == e {
+			index = i
+		}
+	}
+
+	if index == -1 {
+		return fmt.Errorf("could not find element %v in given slice", e)
+	}
+
+	newSlice := append(slice[:index], slice[index+1:]...)
+	newSlice = append([]T{e}, newSlice...)
+
+	copy(slice, newSlice)
+
+	return nil
 }

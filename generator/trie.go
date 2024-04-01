@@ -61,23 +61,33 @@ func (n *trieNode) Find(rhs []gopapageno.TokenType) (*trieNode, bool) {
 newTrie creates a trie from a set of rules and returns it.
 The rhs of the rules must be sorted.
 */
-func newTrie(rules []rule, nonterminals *gopapageno.Set[string], terminals *gopapageno.Set[string]) *trieNode {
+func newTrie(rules []rule, nonterminals *gopapageno.Set[string], terminals *gopapageno.Set[string]) (*trieNode, error) {
 	root := &trieNode{false, 0, 0, make([]triePtrNode, 0)}
 
 	nonterminalSlice := nonterminals.Slice()
+	if err := moveToFront(nonterminalSlice, "_EMPTY"); err != nil {
+		return nil, err
+	}
+
 	terminalSlice := terminals.Slice()
+	if err := moveToFront(terminalSlice, "_TERM"); err != nil {
+		return nil, err
+	}
 
 	for i, rule := range rules {
 		curNode := root
 		for j, strToken := range rule.RHS {
+			// Find the current token in the nodes' children.
 			token := tokenValue(strToken, nonterminalSlice, terminalSlice)
 			nextNode, ok := curNode.Get(token)
+			// If not found, create a new empty node and append it as a child to the current one.
 			if !ok {
 				nextNode = &trieNode{false, 0, 0, make([]triePtrNode, 0)}
 				curNode.Branches = append(curNode.Branches, triePtrNode{token, nextNode})
 			}
 			curNode = nextNode
 
+			// If we're at the last token of the rule, assign the current LHS to the last node created.
 			if j == len(rule.RHS)-1 {
 				curNode.HasValue = true
 				curNode.Value = tokenValue(rule.LHS, nonterminalSlice, terminalSlice)
@@ -86,7 +96,7 @@ func newTrie(rules []rule, nonterminals *gopapageno.Set[string], terminals *gopa
 		}
 	}
 
-	return root
+	return root, nil
 }
 
 func (n *trieNode) compressR(newTrie *[]gopapageno.TokenType, curpos *uint16, nonterminals *gopapageno.Set[string], terminals *gopapageno.Set[string]) {
@@ -129,17 +139,20 @@ func (n *trieNode) Compress(nonterminals *gopapageno.Set[string], terminals *gop
 	return compressedTrie
 }
 
-// TODO: VERY IMPORTANT! Must be changed.
 func tokenValue(token string, nonterminals []string, terminals []string) gopapageno.TokenType {
 	for i, t := range nonterminals {
 		if token == t {
-			return gopapageno.TokenType(i)
+			// If it's _EMPTY, return TokenEmpty (it should be at i == 0)
+			// Otherwise start counting.
+			return gopapageno.TokenEmpty + gopapageno.TokenType(i)
 		}
 	}
 
 	for i, t := range terminals {
 		if token == t {
-			return gopapageno.TokenType(0x8000 + i)
+			// If it's _TERM, return TokenTerm (it should be at i == 0)
+			// Otherwise start counting.
+			return gopapageno.TokenTerm + gopapageno.TokenType(i)
 		}
 	}
 

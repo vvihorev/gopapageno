@@ -11,9 +11,9 @@ type Symbol struct {
 */
 
 type Token struct {
-	Type   TokenType
-	Value  any
-	Lexeme string
+	Type  TokenType
+	Value any
+	// Lexeme string
 
 	Precedence Precedence
 
@@ -25,11 +25,11 @@ type TokenType uint16
 
 const (
 	TokenEmpty TokenType = 0
-	TokenTerm  TokenType = 0x8001
+	TokenTerm  TokenType = 0x8000
 )
 
 func (t TokenType) IsTerminal() bool {
-	return t >= 0x8001
+	return t >= 0x8000
 }
 
 func (t TokenType) Value() uint16 {

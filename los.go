@@ -14,7 +14,7 @@ const stackSize int = 26200
 // and pointers to the previous and next stacks.
 type stack[T any] struct {
 	Data [stackSize]T
-	Pos  int
+	Tos  int
 
 	Prev *stack[T]
 	Next *stack[T]
@@ -53,7 +53,7 @@ func NewLOS[T any](pool *Pool[stack[T]]) *LOS[T] {
 func (l *LOS[T]) Push(t T) *T {
 	// If the current stack is full, we must obtain a new one
 	// and set it as the current one.
-	if l.cur.Pos >= stackSize {
+	if l.cur.Tos >= stackSize {
 		if l.cur.Next != nil {
 			l.cur = l.cur.Next
 		} else {
@@ -66,32 +66,34 @@ func (l *LOS[T]) Push(t T) *T {
 		}
 	}
 
-	l.cur.Data[l.cur.Pos] = t
-	l.cur.Pos++
+	l.cur.Data[l.cur.Tos] = t
+	ptr := &l.cur.Data[l.cur.Tos]
+
+	l.cur.Tos++
 	l.len++
 
-	return &l.cur.Data[l.cur.Pos-1]
+	return ptr
 }
 
 func (l *LOS[T]) Pop() *T {
-	l.cur.Pos--
+	l.cur.Tos--
 
-	if l.cur.Pos >= 0 {
+	if l.cur.Tos >= 0 {
 		l.len--
-		return &l.cur.Data[l.cur.Pos]
+		return &l.cur.Data[l.cur.Tos]
 	}
 
-	l.cur.Pos = 0
+	l.cur.Tos = 0
 
 	if l.cur.Prev == nil {
 		return nil
 	}
 
 	l.cur = l.cur.Prev
-	l.cur.Pos--
+	l.cur.Tos--
 	l.len--
 
-	return &l.cur.Data[l.cur.Pos]
+	return &l.cur.Data[l.cur.Tos]
 }
 
 // Merge links the stacks of the current and of another LOS.
@@ -130,8 +132,14 @@ func (l *LOS[T]) Split(n int) ([]*LOS[T], error) {
 		lists[curList] = &LOS[T]{
 			head: curStack,
 			cur:  curStack,
-			len:  curStack.Pos,
+			len:  curStack.Tos,
 			pool: l.pool,
+		}
+
+		for i := 1; i < stacksToAssign; i++ {
+			curStack = curStack.Next
+			lists[curList].cur = curStack
+			lists[curList].len += curStack.Tos
 		}
 
 		next := curStack.Next
@@ -172,7 +180,7 @@ func (l *LOS[T]) HeadIterator() *LOSIterator[T] {
 
 // TailIterator returns an iterator initialized to point after the last element of the m.
 func (l *LOS[T]) TailIterator() *LOSIterator[T] {
-	return &LOSIterator[T]{l, l.cur, l.cur.Pos}
+	return &LOSIterator[T]{l, l.cur, l.cur.Tos}
 }
 
 // Prev moves the iterator one position backward and returns a pointer to the new current element.
@@ -192,7 +200,7 @@ func (i *LOSIterator[T]) Prev() *T {
 	}
 	curStack = curStack.Prev
 	i.cur = curStack
-	i.pos = curStack.Pos - 1
+	i.pos = curStack.Tos - 1
 
 	return &curStack.Data[i.pos]
 }
@@ -202,7 +210,7 @@ func (i *LOSIterator[T]) Prev() *T {
 func (i *LOSIterator[T]) Cur() *T {
 	curStack := i.cur
 
-	if i.pos >= 0 && i.pos < curStack.Pos {
+	if i.pos >= 0 && i.pos < curStack.Tos {
 		return &curStack.Data[i.pos]
 	}
 
@@ -216,11 +224,11 @@ func (i *LOSIterator[T]) Next() *T {
 
 	i.pos++
 
-	if i.pos < curStack.Pos {
+	if i.pos < curStack.Tos {
 		return &curStack.Data[i.pos]
 	}
 
-	i.pos = curStack.Pos
+	i.pos = curStack.Tos
 	if curStack.Next == nil {
 		return nil
 	}

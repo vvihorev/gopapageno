@@ -1,12 +1,17 @@
 package gopapageno
 
+import (
+	"cmp"
+	"slices"
+)
+
 // Set is a collection that contains no duplicate elements.
-type Set[T comparable] struct {
+type Set[T cmp.Ordered] struct {
 	m map[T]struct{}
 }
 
 // NewSet returns a new empty set containing items of type T.
-func NewSet[T comparable]() *Set[T] {
+func NewSet[T cmp.Ordered]() *Set[T] {
 	return &Set[T]{
 		m: make(map[T]struct{}),
 	}
@@ -134,6 +139,8 @@ func (s *Set[T]) Slice() []T {
 		slice[i] = k
 		i++
 	}
+
+	slices.Sort(slice)
 
 	return slice
 }

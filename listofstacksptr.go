@@ -9,7 +9,7 @@ import (
 const stackPtrSize int = 131000
 
 type stackPtr struct {
-	Data [stackSize]*Token
+	Data [stackPtrSize]*Token
 	Tos  int
 
 	Prev *stackPtr

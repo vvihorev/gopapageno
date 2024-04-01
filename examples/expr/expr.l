@@ -28,24 +28,44 @@ NEWLINE [\r\n]
 }
 {DIGIT}+
 {
-	num, err := strconv.ParseInt(text, 10, 64)
+    num := lexerInt64Pools[thread].Get()
+    var err error
+
+	*num, err = strconv.ParseInt(text, 10, 64)
 	if err != nil {
-		return err
+		return gopapageno.LexErr
 	}
 
-	*token.Type = NUMBER
-	*token.Value = num
+	token.Type = NUMBER
+	token.Value = num
 }
 {SPACE}
 {
-	return ErrSkip
+	return gopapageno.LexSkip
 }
 {NEWLINE}
 {
-	return ErrSkip
+	return gopapageno.LexSkip
 }
 
 %%
 import (
 	"strconv"
+	"math"
 )
+
+var lexerInt64Pools []*gopapageno.Pool[int64]
+
+/*
+lexerPreallocMem initializes all the memory pools required by the lexer.
+*/
+func LexerPreallocMem(inputSize int, numThreads int) {
+	lexerInt64Pools = make([]*gopapageno.Pool[int64], numThreads)
+
+	avgCharsPerNumber := float64(4)
+	poolSizePerThread := int(math.Ceil((float64(inputSize) / avgCharsPerNumber) / float64(numThreads)))
+
+	for i := 0; i < numThreads; i++ {
+		lexerInt64Pools[i] = gopapageno.NewPool[int64](poolSizePerThread)
+	}
+}

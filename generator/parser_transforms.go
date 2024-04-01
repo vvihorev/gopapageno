@@ -1,7 +1,6 @@
 package generator
 
 import (
-	"fmt"
 	"github.com/giornetta/gopapageno"
 	"strings"
 )
@@ -184,9 +183,6 @@ func (p *parserDescriptor) deleteRepeatedRHS() {
 			})
 		}
 	}
-
-	fmt.Println("New rulesDictionary:")
-	fmt.Println(newRulesDict)
 
 	//Create the rules from rulesDictionary
 	for i, _ := range newRulesDict.KeysRHS {

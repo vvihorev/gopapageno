@@ -36,15 +36,15 @@ func Generate(lexerFilename string, parserFilename string, outdir string) error 
 		return fmt.Errorf("could not compile parser: %w", err)
 	}
 
-	f, err := emitFile(outdir)
+	lexerGenFile, parserGenFile, err := emitFiles(outdir)
 	if err != nil {
 		return fmt.Errorf("could not generate output file %s: %w", outdir, err)
 	}
-	defer f.Close()
+	defer lexerGenFile.Close()
+	defer parserGenFile.Close()
 
-	parserDesc.emitTokens(f)
-	lexerDesc.emit(f)
-	parserDesc.emit(f)
+	lexerDesc.emit(lexerGenFile)
+	parserDesc.emit(parserGenFile)
 
 	return nil
 }
