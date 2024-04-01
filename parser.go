@@ -3,6 +3,8 @@ package gopapageno
 import (
 	"context"
 	"fmt"
+	"io"
+	"log"
 	"math"
 	"runtime"
 	"time"
@@ -61,19 +63,36 @@ type Parser struct {
 	BitPackedPrecedenceMatrix []uint64
 
 	Func func(rule uint16, lhs *Token, rhs []*Token, thread int)
+
+	logger *log.Logger
+}
+
+func (p *Parser) Concurrency() int {
+	return p.concurrency
 }
 
 type ParserOpt func(p *Parser)
 
 func WithConcurrency(n int) ParserOpt {
 	return func(p *Parser) {
+		if n <= 0 {
+			n = 1
+		}
+
 		p.concurrency = n
 	}
 }
 
+func WithLogging(logger *log.Logger) ParserOpt {
+	return func(p *Parser) {
+		p.logger = logger
+	}
+}
+
 func (p *Parser) Parse(ctx context.Context, src []byte) (*Token, error) {
-	if p.concurrency <= 0 {
-		p.concurrency = 1
+	// Instantiate no-op logger if it's not set.
+	if p.logger == nil {
+		p.logger = log.New(io.Discard, "", 0)
 	}
 
 	scanner := p.Lexer.Scanner(src, ScannerWithConcurrency(p.concurrency))

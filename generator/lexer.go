@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/giornetta/gopapageno/generator/regex"
 	"io"
+	"log"
 	"regexp"
 	"sort"
 	"strings"
@@ -38,7 +39,9 @@ func (r lexRule) String() string {
 	return fmt.Sprintf("%s: %s", r.Regex, r.Action)
 }
 
-func parseLexerDescription(r io.Reader) (*lexerDescriptor, error) {
+func parseLexerDescription(r io.Reader, logger *log.Logger) (*lexerDescriptor, error) {
+	logger.Printf("Parsing lexer description file...\n")
+
 	scanner := bufio.NewScanner(r)
 
 	//Scan the definitions section
@@ -60,6 +63,13 @@ func parseLexerDescription(r io.Reader) (*lexerDescriptor, error) {
 		}
 	}
 
+	logger.Printf("Cut Points: %s\n", cutPoints)
+
+	logger.Printf("Definitions:\n")
+	for k, v := range definitions {
+		logger.Printf("%s: %s\n", k, v)
+	}
+
 	var sb strings.Builder
 
 	// Scan the rules section
@@ -76,6 +86,11 @@ func parseLexerDescription(r io.Reader) (*lexerDescriptor, error) {
 	lexRules, err := parseLexRules(sb.String(), definitions)
 	if err != nil {
 		return nil, fmt.Errorf("could not parse lexer rules: %w", err)
+	}
+
+	logger.Printf("Lex Rules:\n")
+	for _, rule := range lexRules {
+		logger.Printf("%s\n", rule)
 	}
 
 	// Scan the code section

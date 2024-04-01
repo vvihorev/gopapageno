@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/giornetta/gopapageno"
 	"io"
+	"log"
 	"regexp"
 	"strings"
 )
@@ -20,7 +21,7 @@ type rule struct {
 }
 
 func (r rule) String() string {
-	return fmt.Sprintf("%s -> %s", r.LHS, strings.Join(r.RHS, ", "))
+	return fmt.Sprintf("%s -> %s", r.LHS, strings.Join(r.RHS, " "))
 }
 
 type parserDescriptor struct {
@@ -37,7 +38,9 @@ type parserDescriptor struct {
 	precMatrix precedenceMatrix
 }
 
-func parseGrammarDescription(r io.Reader) (*parserDescriptor, error) {
+func parseParserDescription(r io.Reader, logger *log.Logger) (*parserDescriptor, error) {
+	logger.Printf("Parsing parser description file...\n")
+
 	scanner := bufio.NewScanner(r)
 
 	var preambleBuilder strings.Builder
@@ -74,6 +77,8 @@ func parseGrammarDescription(r io.Reader) (*parserDescriptor, error) {
 		return nil, fmt.Errorf("no axiom is defined")
 	}
 
+	logger.Printf("Axiom: %s\n", axiom)
+
 	var sb strings.Builder
 	for scanner.Scan() {
 		l := scanner.Bytes()
@@ -84,6 +89,11 @@ func parseGrammarDescription(r io.Reader) (*parserDescriptor, error) {
 	rules, err := parseRules(sb.String())
 	if err != nil {
 		return nil, fmt.Errorf("could not parse rules: %w", err)
+	}
+
+	logger.Printf("Parser Rules:\n")
+	for _, rule := range rules {
+		logger.Printf("%s\n", rule)
 	}
 
 	return &parserDescriptor{
@@ -180,7 +190,7 @@ func parseRules(input string) ([]rule, error) {
 
 // compile completes the parser description by doing all necessary checks and
 // transformations in order to produce a correct OPG.
-func (p *parserDescriptor) compile() error {
+func (p *parserDescriptor) compile(logger *log.Logger) error {
 	p.inferTokens()
 
 	if !p.isAxiomUsed() {

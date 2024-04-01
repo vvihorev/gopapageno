@@ -1,9 +1,13 @@
 package main
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestMainProgram(t *testing.T) {
 	for i := 0; i < 1; i++ {
-		run()
+		if err := run(); err != nil {
+			t.Fail()
+		}
 	}
 }

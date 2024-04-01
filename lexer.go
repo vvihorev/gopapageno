@@ -198,7 +198,7 @@ func (w *scannerWorker) lex(ctx context.Context, resultCh chan<- lexResult, errC
 				return
 			}
 
-			errCh <- ErrNotAccepted
+			errCh <- ErrInvalid
 			return
 		}
 
