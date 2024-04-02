@@ -172,9 +172,9 @@ func (p *Parser) Parse(ctx context.Context, src []byte) (*Token, error) {
 	// If there are not enough stacks in the input, reduce the number of threads.
 	// The input is split by splitting stacks, not stack contents.
 	if tokens.NumStacks() < p.concurrency {
-		// TODO: Move this somewhere else?
-		// TODO: Log?
 		p.concurrency = tokens.NumStacks()
+
+		p.logger.Printf("Not enough stacks in lexer output, lowering parser concurrency to %d", p.concurrency)
 	}
 
 	tokensLists, err := tokens.Split(p.concurrency)
@@ -235,10 +235,8 @@ func (p *Parser) Parse(ctx context.Context, src []byte) (*Token, error) {
 			//Ignore the first token
 			iterator.Next()
 
-			sym := iterator.Next()
-			for sym != nil {
-				finalPassInput.Push(*sym)
-				sym = iterator.Next()
+			for token := iterator.Next(); token != nil; token = iterator.Next() {
+				finalPassInput.Push(*token)
 			}
 		}
 
@@ -264,13 +262,12 @@ func (p *Parser) Parse(ctx context.Context, src []byte) (*Token, error) {
 	}
 
 	//Pop tokens from the stack until a nonterminal is found
-	sym := parseResults[0].stack.Pop()
-
-	for sym.Type.IsTerminal() {
-		sym = parseResults[0].stack.Pop()
+	token := parseResults[0].stack.Pop()
+	for token.Type.IsTerminal() {
+		token = parseResults[0].stack.Pop()
 	}
 
-	return sym, nil
+	return token, nil
 }
 
 type parserWorker struct {
