@@ -28,6 +28,9 @@ func run() error {
 	concurrencyFlag := flag.Int("c", 1, "number of concurrent goroutines to spawn")
 	logFlag := flag.Bool("log", false, "enable logging")
 
+	cpuProfileFlag := flag.String("cpuprof", "", "output file for CPU profiling")
+	memProfileFlag := flag.String("memprof", "", "output file for Memory profiling")
+
 	flag.Parse()
 
 	bytes, err := os.ReadFile(*sourceFlag)
@@ -35,16 +38,32 @@ func run() error {
 		return fmt.Errorf("could not read source file %s: %w", *sourceFlag, err)
 	}
 
-	var logOut io.Writer
+	logOut := io.Discard
 	if *logFlag {
 		logOut = os.Stderr
-	} else {
-		logOut = io.Discard
+	}
+
+	cpuProfileWriter := io.Discard
+	if *cpuProfileFlag != "" {
+		cpuProfileWriter, err = os.Create(*cpuProfileFlag)
+		if err != nil {
+			cpuProfileWriter = io.Discard
+		}
+	}
+
+	memProfileWriter := io.Discard
+	if *memProfileFlag != "" {
+		memProfileWriter, err = os.Create(*memProfileFlag)
+		if err != nil {
+			memProfileWriter = io.Discard
+		}
 	}
 
 	p := NewParser(
 		gopapageno.WithConcurrency(*concurrencyFlag),
-		gopapageno.WithLogging(log.New(logOut, "", 0)))
+		gopapageno.WithLogging(log.New(logOut, "", 0)),
+		gopapageno.WithCPUProfiling(cpuProfileWriter),
+		gopapageno.WithMemoryProfiling(memProfileWriter))
 
 	LexerPreallocMem(len(bytes), p.Concurrency())
 	ParserPreallocMem(len(bytes), p.Concurrency())
@@ -56,7 +75,7 @@ func run() error {
 		return fmt.Errorf("could not parse source: %w", err)
 	}
 
-	// Added manually.
+	// Added manually
 	fmt.Println(*root.Value.(*int64))
 
 	return nil

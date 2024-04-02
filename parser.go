@@ -6,7 +6,8 @@ import (
 	"io"
 	"log"
 	"math"
-	"runtime"
+	"runtime/debug"
+	"runtime/pprof"
 	"time"
 )
 
@@ -49,8 +50,7 @@ type Rule struct {
 }
 
 type Parser struct {
-	Lexer       *Lexer
-	concurrency int
+	Lexer *Lexer
 
 	NumTerminals    uint16
 	NumNonterminals uint16
@@ -64,7 +64,12 @@ type Parser struct {
 
 	Func func(rule uint16, lhs *Token, rhs []*Token, thread int)
 
+	concurrency int
+
 	logger *log.Logger
+
+	cpuProfileWriter io.Writer
+	memProfileWriter io.Writer
 }
 
 func (p *Parser) Concurrency() int {
@@ -89,14 +94,44 @@ func WithLogging(logger *log.Logger) ParserOpt {
 	}
 }
 
+func WithCPUProfiling(w io.Writer) ParserOpt {
+	return func(p *Parser) {
+		p.cpuProfileWriter = w
+	}
+}
+
+func WithMemoryProfiling(w io.Writer) ParserOpt {
+	return func(p *Parser) {
+		p.memProfileWriter = w
+	}
+}
+
 func (p *Parser) Parse(ctx context.Context, src []byte) (*Token, error) {
 	// Instantiate no-op logger if it's not set.
 	if p.logger == nil {
 		p.logger = log.New(io.Discard, "", 0)
 	}
 
+	// Set minimum concurrency level to 1
 	if p.concurrency <= 0 {
 		p.concurrency = 1
+	}
+
+	// Profiling
+	if p.cpuProfileWriter != nil && p.cpuProfileWriter != io.Discard {
+		if err := pprof.StartCPUProfile(p.cpuProfileWriter); err != nil {
+			log.Printf("could not start CPU profiling: %v", err)
+		}
+
+		defer func() {
+			if p.memProfileWriter != nil && p.memProfileWriter != io.Discard {
+				if err := pprof.WriteHeapProfile(p.memProfileWriter); err != nil {
+					log.Printf("Could not write memory profile: %v", err)
+				}
+			}
+
+			pprof.StopCPUProfile()
+		}()
 	}
 
 	scanner := p.Lexer.Scanner(src, ScannerWithConcurrency(p.concurrency))
@@ -119,7 +154,16 @@ func (p *Parser) Parse(ctx context.Context, src []byte) (*Token, error) {
 	stackPoolNewNonterminalsFinalPass := NewPool[stack[Token]](int(math.Ceil(stackPoolBaseSize * 0.05 * float64(p.concurrency))))
 	stackPtrPoolFinalPass := NewPool[stackPtr](int(math.Ceil(stackPtrPoolBaseSize * 0.1)))
 
-	runtime.GC()
+	// TODO: Investigate this section better.
+	// Old code forced a GC Run to occur, so that it would - hopefully - stop GCs from happening again during computation.
+	// However a GC run can still be very slow.
+	// runtime.GC()
+
+	// This new version stops the GC from running entirely.
+	debug.SetGCPercent(-1)
+
+	// Deferring this will cause the GC to still run at the end of computation...
+	// defer debug.SetGCPercent(1)
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
