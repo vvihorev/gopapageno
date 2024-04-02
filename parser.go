@@ -95,6 +95,10 @@ func (p *Parser) Parse(ctx context.Context, src []byte) (*Token, error) {
 		p.logger = log.New(io.Discard, "", 0)
 	}
 
+	if p.concurrency <= 0 {
+		p.concurrency = 1
+	}
+
 	scanner := p.Lexer.Scanner(src, ScannerWithConcurrency(p.concurrency))
 
 	srcLen := len(src)
