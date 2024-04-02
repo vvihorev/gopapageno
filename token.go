@@ -1,15 +1,5 @@
 package gopapageno
 
-/*
-type Symbol struct {
-	Token      uint16
-	precedence precedence
-	Value      interface{}
-	Next       *Symbol
-	Child      *Symbol
-}
-*/
-
 type Token struct {
 	Type  TokenType
 	Value any
