@@ -360,20 +360,16 @@ func (p *parserDescriptor) emit(f io.Writer) {
 	/********************
 	 * Construct Parser *
 	 ********************/
-	fmt.Fprintf(f, "\tparser := &gopapageno.Parser{\n")
-	fmt.Fprintf(f, "\t\tLexer: NewLexer(),\n")
-	fmt.Fprintf(f, "\t\tNumTerminals: numTerminals,\n\t\tNumNonterminals: numNonTerminals,\n")
-	fmt.Fprintf(f, "\t\tMaxRHSLength: maxRHSLen,\n")
-	fmt.Fprintf(f, "\t\tRules: rules,\n")
-	fmt.Fprintf(f, "\t\tCompressedRules: compressedRules,\n")
-	fmt.Fprintf(f, "\t\tPrecedenceMatrix: precMatrix,\n")
-	fmt.Fprintf(f, "\t\tBitPackedPrecedenceMatrix: bitPackedMatrix,\n")
-	fmt.Fprintf(f, "\t\tFunc: fn,\n")
-	fmt.Fprintf(f, "\t}\n\n")
-
-	fmt.Fprintf(f, "\tfor _, opt := range opts {\n\t\topt(parser)\n\t}\n\n")
-
-	fmt.Fprintf(f, "\treturn parser\n}\n\n")
+	fmt.Fprintf(f, "\treturn gopapageno.NewParser(\n")
+	fmt.Fprintf(f, "\t\tNewLexer(),\n")
+	fmt.Fprintf(f, "\t\tnumTerminals,\n\t\tnumNonTerminals,\n")
+	fmt.Fprintf(f, "\t\tmaxRHSLen,\n")
+	fmt.Fprintf(f, "\t\trules,\n")
+	fmt.Fprintf(f, "\t\tcompressedRules,\n")
+	fmt.Fprintf(f, "\t\tprecMatrix,\n")
+	fmt.Fprintf(f, "\t\tbitPackedMatrix,\n")
+	fmt.Fprintf(f, "\t\tfn,\n")
+	fmt.Fprintf(f, "\t\topts...)\n}\n\n")
 }
 
 func (p *parserDescriptor) emitTokens(f io.Writer) {

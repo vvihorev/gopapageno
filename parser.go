@@ -8,46 +8,18 @@ import (
 	"math"
 	"runtime/debug"
 	"runtime/pprof"
-	"time"
 )
 
-/*
-parsingStats contains some statistics about the parse.
-*/
-type parsingStats struct {
-	NumLexThreads                           int
-	NumParseThreads                         int
-	StackPoolSizes                          []int
-	StackPoolNewNonterminalsSizes           []int
-	StackPtrPoolSizes                       []int
-	StackPoolSizeFinalPass                  int
-	StackPoolNewNonterminalsSizeFinalPass   int
-	StackPtrPoolSizeFinalPass               int
-	AllocMemTime                            time.Duration
-	CutPoints                               []int
-	LexTimes                                []time.Duration
-	LexTimeTotal                            time.Duration
-	NumTokens                               []int
-	NumTokensTotal                          int
-	ParseTimes                              []time.Duration
-	RecombiningStacksTime                   time.Duration
-	ParseTimeFinalPass                      time.Duration
-	ParseTimeTotal                          time.Duration
-	RemainingStacks                         []int
-	RemainingStacksNewNonterminals          []int
-	RemainingStackPtrs                      []int
-	RemainingStacksFinalPass                int
-	RemainingStacksNewNonterminalsFinalPass int
-	RemainingStackPtrsFinalPass             int
-}
-
-// Stats contains some statistics that may be checked after a call to ParseString or ParseFile
-// var Stats parsingStats
+var (
+	discardLogger = log.New(io.Discard, "", 0)
+)
 
 type Rule struct {
 	Lhs TokenType
 	Rhs []TokenType
 }
+
+type ParserFunc func(rule uint16, lhs *Token, rhs []*Token, thread int)
 
 type Parser struct {
 	Lexer *Lexer
@@ -62,7 +34,7 @@ type Parser struct {
 	PrecedenceMatrix          [][]Precedence
 	BitPackedPrecedenceMatrix []uint64
 
-	Func func(rule uint16, lhs *Token, rhs []*Token, thread int)
+	Func ParserFunc
 
 	concurrency int
 
@@ -90,6 +62,10 @@ func WithConcurrency(n int) ParserOpt {
 
 func WithLogging(logger *log.Logger) ParserOpt {
 	return func(p *Parser) {
+		if logger == nil {
+			logger = discardLogger
+		}
+
 		p.logger = logger
 	}
 }
@@ -106,17 +82,38 @@ func WithMemoryProfiling(w io.Writer) ParserOpt {
 	}
 }
 
+func NewParser(
+	lexer *Lexer,
+	numTerminals uint16, numNonterminals uint16, maxRHSLength int,
+	rules []Rule, compressedRules []uint16,
+	precedenceMatrix [][]Precedence, bitPackedPrecedenceMatrix []uint64,
+	fn ParserFunc,
+	opts ...ParserOpt,
+) *Parser {
+	parser := &Parser{
+		Lexer:                     lexer,
+		NumTerminals:              numTerminals,
+		NumNonterminals:           numNonterminals,
+		MaxRHSLength:              maxRHSLength,
+		Rules:                     rules,
+		CompressedRules:           compressedRules,
+		PrecedenceMatrix:          precedenceMatrix,
+		BitPackedPrecedenceMatrix: bitPackedPrecedenceMatrix,
+		Func:                      fn,
+		concurrency:               1,
+		logger:                    discardLogger,
+		cpuProfileWriter:          nil,
+		memProfileWriter:          nil,
+	}
+
+	for _, opt := range opts {
+		opt(parser)
+	}
+
+	return parser
+}
+
 func (p *Parser) Parse(ctx context.Context, src []byte) (*Token, error) {
-	// Instantiate no-op logger if it's not set.
-	if p.logger == nil {
-		p.logger = log.New(io.Discard, "", 0)
-	}
-
-	// Set minimum concurrency level to 1
-	if p.concurrency <= 0 {
-		p.concurrency = 1
-	}
-
 	// Profiling
 	if p.cpuProfileWriter != nil && p.cpuProfileWriter != io.Discard {
 		if err := pprof.StartCPUProfile(p.cpuProfileWriter); err != nil {

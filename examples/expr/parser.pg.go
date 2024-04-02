@@ -274,21 +274,15 @@ func NewParser(opts ...gopapageno.ParserOpt) *gopapageno.Parser {
 		}
 	}
 
-	parser := &gopapageno.Parser{
-		Lexer:                     NewLexer(),
-		NumTerminals:              numTerminals,
-		NumNonterminals:           numNonTerminals,
-		MaxRHSLength:              maxRHSLen,
-		Rules:                     rules,
-		CompressedRules:           compressedRules,
-		PrecedenceMatrix:          precMatrix,
-		BitPackedPrecedenceMatrix: bitPackedMatrix,
-		Func:                      fn,
-	}
-
-	for _, opt := range opts {
-		opt(parser)
-	}
-
-	return parser
+	return gopapageno.NewParser(
+		NewLexer(),
+		numTerminals,
+		numNonTerminals,
+		maxRHSLen,
+		rules,
+		compressedRules,
+		precMatrix,
+		bitPackedMatrix,
+		fn,
+		opts...)
 }
