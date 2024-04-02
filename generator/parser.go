@@ -3,7 +3,6 @@ package generator
 import (
 	"bufio"
 	"fmt"
-	"github.com/giornetta/gopapageno"
 	"io"
 	"log"
 	"regexp"
@@ -30,10 +29,10 @@ type parserDescriptor struct {
 	rules    []rule
 
 	// nonterminals is nil until inferTokens() is executed successfully.
-	nonterminals *gopapageno.Set[string]
+	nonterminals *set[string]
 
 	// terminals is nil until inferTokens() is executed successfully.
-	terminals *gopapageno.Set[string]
+	terminals *set[string]
 
 	precMatrix precedenceMatrix
 }
@@ -213,8 +212,8 @@ func (p *parserDescriptor) compile(logger *log.Logger) error {
 // inferTokens populates the two sets nonterminals and terminals
 // with tokens found in the grammar rules.
 func (p *parserDescriptor) inferTokens() {
-	p.nonterminals = gopapageno.NewSet[string]()
-	tokens := gopapageno.NewSet[string]()
+	p.nonterminals = newSet[string]()
+	tokens := newSet[string]()
 
 	for _, rule := range p.rules {
 		if !p.nonterminals.Contains(rule.LHS) {

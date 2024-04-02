@@ -75,7 +75,7 @@ func (p *parserDescriptor) newPrecedenceMatrix() (precedenceMatrix, error) {
 		}
 	}
 
-	//Set precedence for #
+	//set precedence for #
 	for _, terminal := range p.terminals.Iter {
 		if terminal != "_TERM" {
 			m["_TERM"][terminal] = gopapageno.PrecYields
@@ -102,14 +102,14 @@ func (p *parserDescriptor) newPrecedenceMatrix() (precedenceMatrix, error) {
 }
 
 // getTerminalSets returns two maps mapping nonterminal tokens to possible terminal productions.
-func (p *parserDescriptor) getTerminalSets() (lts map[string]*gopapageno.Set[string], rts map[string]*gopapageno.Set[string]) {
-	lts = make(map[string]*gopapageno.Set[string], p.nonterminals.Len())
-	rts = make(map[string]*gopapageno.Set[string], p.nonterminals.Len())
+func (p *parserDescriptor) getTerminalSets() (lts map[string]*set[string], rts map[string]*set[string]) {
+	lts = make(map[string]*set[string], p.nonterminals.Len())
+	rts = make(map[string]*set[string], p.nonterminals.Len())
 
 	// Initialize empty sets for every nonterminal token.
 	for _, nonterminal := range p.nonterminals.Iter {
-		lts[nonterminal] = gopapageno.NewSet[string]()
-		rts[nonterminal] = gopapageno.NewSet[string]()
+		lts[nonterminal] = newSet[string]()
+		rts[nonterminal] = newSet[string]()
 	}
 
 	// Direct terminals.

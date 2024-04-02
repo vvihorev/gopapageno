@@ -1,17 +1,16 @@
 package generator
 
 import (
-	"github.com/giornetta/gopapageno"
 	"strings"
 )
 
 func (p *parserDescriptor) deleteCopyRules(rulesDict *rulesDictionary) {
-	copySets := make(map[string]*gopapageno.Set[string], p.nonterminals.Len())
+	copySets := make(map[string]*set[string], p.nonterminals.Len())
 
 	rhsDict := make(map[string][][]string)
 
 	for _, nonterminal := range p.nonterminals.Iter {
-		copySets[nonterminal] = gopapageno.NewSet[string]()
+		copySets[nonterminal] = newSet[string]()
 	}
 
 	for _, rule := range p.rules {
@@ -129,7 +128,7 @@ func (p *parserDescriptor) deleteRepeatedRHS() {
 		}
 
 		valueLHSSets := dictRulesForIteration.LHSSets()
-		addedNonterminals := make([]*gopapageno.Set[string], 0)
+		addedNonterminals := make([]*set[string], 0)
 
 		for _, curNontermSet := range valueLHSSets {
 			contained := false
@@ -167,7 +166,7 @@ func (p *parserDescriptor) deleteRepeatedRHS() {
 	// TODO: remove unused nonterminals (see cpapageno)
 
 	newAxiom := "NEW_AXIOM"
-	newAxiomSet := gopapageno.NewSet[string]()
+	newAxiomSet := newSet[string]()
 	newAxiomSet.Add(newAxiom)
 
 	newAxiomSemAction := "{\n\t$$.Value = $1.Value\n}"
@@ -198,8 +197,8 @@ func (p *parserDescriptor) deleteRepeatedRHS() {
 }
 
 func addNewRules(dict *rulesDictionary,
-	keyRHS []string, valueLHS *gopapageno.Set[string], semAction *string,
-	nonterminals *gopapageno.Set[string], newNonterminals []*gopapageno.Set[string], newRuleRHS []string) {
+	keyRHS []string, valueLHS *set[string], semAction *string,
+	nonterminals *set[string], newNonterminals []*set[string], newRuleRHS []string) {
 	// If the provided key is empty, add new rules with the new RHS.
 	if len(keyRHS) == 0 {
 		for _, curLHS := range valueLHS.Iter {

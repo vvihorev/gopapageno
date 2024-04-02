@@ -61,7 +61,7 @@ func (n *trieNode) Find(rhs []gopapageno.TokenType) (*trieNode, bool) {
 newTrie creates a trie from a set of rules and returns it.
 The rhs of the rules must be sorted.
 */
-func newTrie(rules []rule, nonterminals *gopapageno.Set[string], terminals *gopapageno.Set[string]) (*trieNode, error) {
+func newTrie(rules []rule, nonterminals *set[string], terminals *set[string]) (*trieNode, error) {
 	root := &trieNode{false, 0, 0, make([]triePtrNode, 0)}
 
 	nonterminalSlice := nonterminals.Slice()
@@ -99,7 +99,7 @@ func newTrie(rules []rule, nonterminals *gopapageno.Set[string], terminals *gopa
 	return root, nil
 }
 
-func (n *trieNode) compressR(newTrie *[]gopapageno.TokenType, curpos *uint16, nonterminals *gopapageno.Set[string], terminals *gopapageno.Set[string]) {
+func (n *trieNode) compressR(newTrie *[]gopapageno.TokenType, curpos *uint16, nonterminals *set[string], terminals *set[string]) {
 	//Append the value of this node if it has one, and the rule number
 	if n.HasValue {
 		*newTrie = append(*newTrie, n.Value)
@@ -130,7 +130,7 @@ func (n *trieNode) compressR(newTrie *[]gopapageno.TokenType, curpos *uint16, no
 	}
 }
 
-func (n *trieNode) Compress(nonterminals *gopapageno.Set[string], terminals *gopapageno.Set[string]) []gopapageno.TokenType {
+func (n *trieNode) Compress(nonterminals *set[string], terminals *set[string]) []gopapageno.TokenType {
 	compressedTrie := make([]gopapageno.TokenType, 0)
 	curPos := uint16(0)
 

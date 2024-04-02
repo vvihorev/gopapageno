@@ -1,11 +1,11 @@
 package gopapageno
 
 type Token struct {
-	Type  TokenType
+	Type       TokenType
+	Precedence Precedence
+
 	Value any
 	// Lexeme string
-
-	Precedence Precedence
 
 	Next  *Token
 	Child *Token

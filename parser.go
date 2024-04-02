@@ -140,19 +140,19 @@ func (p *Parser) Parse(ctx context.Context, src []byte) (*Token, error) {
 	avgCharsPerToken := 12.5
 
 	stackPoolBaseSize := math.Ceil(float64(srcLen) / avgCharsPerToken / float64(stackSize) / float64(p.concurrency))
-	stackPtrPoolBaseSize := math.Ceil(float64(srcLen) / avgCharsPerToken / float64(stackPtrSize) / float64(p.concurrency))
+	stackPtrPoolBaseSize := math.Ceil(float64(srcLen) / avgCharsPerToken / float64(pointerStackSize) / float64(p.concurrency))
 
 	pools := make([]*Pool[stack[Token]], p.concurrency)
-	ptrPools := make([]*Pool[stackPtr], p.concurrency)
+	ptrPools := make([]*Pool[tokenPointerStack], p.concurrency)
 
 	for thread := 0; thread < p.concurrency; thread++ {
 		pools[thread] = NewPool[stack[Token]](int(stackPoolBaseSize * 0.8))
-		ptrPools[thread] = NewPool[stackPtr](int(stackPtrPoolBaseSize))
+		ptrPools[thread] = NewPool[tokenPointerStack](int(stackPtrPoolBaseSize))
 	}
 
 	stackPoolFinalPass := NewPool[stack[Token]](int(math.Ceil(stackPoolBaseSize * 0.1 * float64(p.concurrency))))
 	stackPoolNewNonterminalsFinalPass := NewPool[stack[Token]](int(math.Ceil(stackPoolBaseSize * 0.05 * float64(p.concurrency))))
-	stackPtrPoolFinalPass := NewPool[stackPtr](int(math.Ceil(stackPtrPoolBaseSize * 0.1)))
+	stackPtrPoolFinalPass := NewPool[tokenPointerStack](int(math.Ceil(stackPtrPoolBaseSize * 0.1)))
 
 	// TODO: Investigate this section better.
 	// Old code forced a GC Run to occur, so that it would - hopefully - stop GCs from happening again during computation.
@@ -230,7 +230,7 @@ func (p *Parser) Parse(ctx context.Context, src []byte) (*Token, error) {
 	//If the number of threads is greater than one, a final pass is required
 	if p.concurrency > 1 {
 		//Create the final input by joining together the stacks from the previous step
-		finalPassInput := NewLOS[Token](stackPoolFinalPass)
+		finalPassInput := newListOfStacks[Token](stackPoolFinalPass)
 
 		for i := 0; i < p.concurrency; i++ {
 			iterator := parseResults[i].stack.HeadIterator()
@@ -282,19 +282,19 @@ type parserWorker struct {
 	id int
 
 	stackPool    *Pool[stack[Token]]
-	ptrStackPool *Pool[stackPtr]
+	ptrStackPool *Pool[tokenPointerStack]
 }
 
 type parseResult struct {
 	threadNum int
-	stack     *listOfStackPtrs
+	stack     *listOfTokenPointerStacks
 }
 
-func (w *parserWorker) parse(ctx context.Context, tokens *LOS[Token], nextToken *Token, finalPass bool, resultCh chan<- parseResult, errCh chan<- error) {
+func (w *parserWorker) parse(ctx context.Context, tokens *listOfStacks[Token], nextToken *Token, finalPass bool, resultCh chan<- parseResult, errCh chan<- error) {
 	tokensIt := tokens.HeadIterator()
 
-	newNonTerminalsList := NewLOS[Token](w.stackPool)
-	stack := newLosPtr(w.ptrStackPool)
+	newNonTerminalsList := newListOfStacks[Token](w.stackPool)
+	stack := newListOfTokenPointerStacks(w.ptrStackPool)
 
 	// If the thread is the first, push a # onto the stack
 	// Otherwise, push the first inputToken onto the stack
@@ -444,7 +444,7 @@ func (w *parserWorker) parse(ctx context.Context, tokens *LOS[Token], nextToken 
 		}
 	}
 
-	resultCh <- parseResult{w.id, &stack}
+	resultCh <- parseResult{w.id, stack}
 }
 
 func (p *Parser) precedence(t1 TokenType, t2 TokenType) Precedence {

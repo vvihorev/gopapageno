@@ -1,20 +1,18 @@
 package generator
 
-import "github.com/giornetta/gopapageno"
-
 // rulesDictionary is a data structure used to store unique RHS -> LHS mappings.
 // It is useful to remove repeated RHS productions.
 type rulesDictionary struct {
 	KeysRHS [][]string
 
-	ValuesLHS  []*gopapageno.Set[string]
+	ValuesLHS  []*set[string]
 	SemActions []*string
 }
 
 func newRulesDictionary(capacity int) *rulesDictionary {
 	return &rulesDictionary{
 		KeysRHS:    make([][]string, 0, capacity),
-		ValuesLHS:  make([]*gopapageno.Set[string], 0, capacity),
+		ValuesLHS:  make([]*set[string], 0, capacity),
 		SemActions: make([]*string, 0, capacity)}
 }
 
@@ -33,7 +31,7 @@ func (d *rulesDictionary) Add(r *rule) {
 	if !found {
 		d.KeysRHS = append(d.KeysRHS, r.RHS)
 
-		d.ValuesLHS = append(d.ValuesLHS, gopapageno.NewSet[string]())
+		d.ValuesLHS = append(d.ValuesLHS, newSet[string]())
 		d.ValuesLHS[len(d.ValuesLHS)-1].Add(r.LHS)
 
 		d.SemActions = append(d.SemActions, &r.Action)
@@ -69,8 +67,8 @@ func (d *rulesDictionary) Copy() *rulesDictionary {
 	return newDict
 }
 
-func (d *rulesDictionary) LHSSets() []*gopapageno.Set[string] {
-	valueLHSSets := make([]*gopapageno.Set[string], 0)
+func (d *rulesDictionary) LHSSets() []*set[string] {
+	valueLHSSets := make([]*set[string], 0)
 
 	for _, curLHSSet := range d.ValuesLHS {
 		alreadyContained := false
