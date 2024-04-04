@@ -238,7 +238,7 @@ func (l *lexerDescriptor) emit(f io.Writer) {
 	/******************
 	 * Lexer Function *
 	 ******************/
-	fmt.Fprintf(f, "\tfn := func(rule int, text string, token *gopapageno.Token, thread int) gopapageno.LexResult {\n")
+	fmt.Fprintf(f, "\tfn := func(rule int, text string, start int, end int, thread int, token *gopapageno.Token) gopapageno.LexResult {\n")
 	fmt.Fprintf(f, "\t\ttoken.Type = gopapageno.TokenTerm\n")
 	//fmt.Fprintf(f, "\t\ttoken.Lexeme = text\n\n")
 	fmt.Fprintf(f, "\t\tswitch rule {\n")

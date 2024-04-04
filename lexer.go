@@ -14,7 +14,7 @@ var (
 	ErrInvalid     = errors.New("invalid character")
 )
 
-type LexerFunc func(rule int, text string, token *Token, thread int) LexResult
+type LexerFunc func(rule int, text string, start int, end int, thread int, token *Token) LexResult
 
 type Lexer struct {
 	Automaton          LexerDFA
@@ -123,7 +123,7 @@ func (s *Scanner) findCutPoints(maxConcurrency int) ([]int, int) {
 	return cutPoints, maxConcurrency
 }
 
-func (s *Scanner) Lex(ctx context.Context) (*listOfStacks[Token], error) {
+func (s *Scanner) Lex(ctx context.Context) (*ListOfStacks[Token], error) {
 	resultCh := make(chan lexResult, s.concurrency)
 	errCh := make(chan error, 1)
 
@@ -132,17 +132,18 @@ func (s *Scanner) Lex(ctx context.Context) (*listOfStacks[Token], error) {
 
 	for thread := 0; thread < s.concurrency; thread++ {
 		w := &scannerWorker{
-			lexer:     s.Lexer,
-			id:        thread,
-			stackPool: s.pools[thread],
-			data:      s.source[s.cutPoints[thread]:s.cutPoints[thread+1]],
-			pos:       0,
+			lexer:       s.Lexer,
+			id:          thread,
+			stackPool:   s.pools[thread],
+			data:        s.source[s.cutPoints[thread]:s.cutPoints[thread+1]],
+			pos:         0,
+			startingPos: s.cutPoints[thread],
 		}
 
 		go w.lex(ctx, resultCh, errCh)
 	}
 
-	lexResults := make([]*listOfStacks[Token], s.concurrency)
+	lexResults := make([]*ListOfStacks[Token], s.concurrency)
 	completed := 0
 
 	for completed < s.concurrency {
@@ -174,16 +175,18 @@ type scannerWorker struct {
 
 	data []byte
 	pos  int
+
+	startingPos int
 }
 
 type lexResult struct {
 	threadID int
-	tokens   *listOfStacks[Token]
+	tokens   *ListOfStacks[Token]
 }
 
 // lex is the lexing function executed in parallel by each thread.
 func (w *scannerWorker) lex(ctx context.Context, resultCh chan<- lexResult, errCh chan<- error) {
-	los := newListOfStacks[Token](w.stackPool)
+	los := NewListOfStacks[Token](w.stackPool)
 
 	var token Token
 
@@ -275,10 +278,14 @@ func (w *scannerWorker) advance(token *Token, lastFinalStatePos int, lastFinalSt
 	w.pos = lastFinalStatePos + 1
 	ruleNum := lastFinalStateReached.AssociatedRules[0]
 
-	//TODO should be changed to safe code when Go supports no-op []byte to string conversion
+	// TODO: should be changed to safe code when Run supports no-op []byte to string conversion
 	//text := unsafe.String(unsafe.SliceData(w.data[startPos:w.pos]), w.pos - startPos)
 	textBytes := w.data[startPos:w.pos]
 	text := *(*string)(unsafe.Pointer(&textBytes))
 
-	return w.lexer.Func(ruleNum, text, token, w.id)
+	// Compute absolute start & end position of the current token in the source file.
+	tokenStart := w.startingPos + startPos
+	tokenEnd := tokenStart + w.pos - startPos - 1
+
+	return w.lexer.Func(ruleNum, text, tokenStart, tokenEnd, w.id, token)
 }

@@ -1,11 +1,11 @@
-// Copyright 2023 The Go Authors. All rights reserved.
+// Copyright 2023 The Run Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
 // TODO: This is here until I realize how to make Goland work with GOEXPERIMENTAL features.
 
 // Package iter provides basic definitions and operations
-// related to iteration in Go.
+// related to iteration in Run.
 //
 // This package is experimental and can only be imported
 // when building with GOEXPERIMENT=rangefunc.

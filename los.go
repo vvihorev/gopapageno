@@ -19,8 +19,8 @@ type stack[T any] struct {
 	Next *stack[T]
 }
 
-// listOfStacks is a list of stacks.
-type listOfStacks[T any] struct {
+// ListOfStacks is a list of stacks.
+type ListOfStacks[T any] struct {
 	head *stack[T]
 	cur  *stack[T]
 
@@ -28,19 +28,19 @@ type listOfStacks[T any] struct {
 	pool *Pool[stack[T]]
 }
 
-// losIterator allows to iterate over a listOfStacks, either forward or backwards.
-type losIterator[T any] struct {
-	los *listOfStacks[T]
+// LosIterator allows to iterate over a ListOfStacks, either forward or backwards.
+type LosIterator[T any] struct {
+	los *ListOfStacks[T]
 
 	cur *stack[T]
 	pos int
 }
 
-// newListOfStacks creates a new listOfStacks initialized with an empty stack.
-func newListOfStacks[T any](pool *Pool[stack[T]]) *listOfStacks[T] {
+// NewListOfStacks creates a new ListOfStacks initialized with an empty stack.
+func NewListOfStacks[T any](pool *Pool[stack[T]]) *ListOfStacks[T] {
 	s := pool.Get()
 
-	return &listOfStacks[T]{
+	return &ListOfStacks[T]{
 		head: s,
 		cur:  s,
 		len:  0,
@@ -51,7 +51,7 @@ func newListOfStacks[T any](pool *Pool[stack[T]]) *listOfStacks[T] {
 // Push adds an element to the listOfStacks.
 // By default, the element is added to the current stack;
 // if that is full, a new one is obtained from the pool.
-func (l *listOfStacks[T]) Push(t T) *T {
+func (l *ListOfStacks[T]) Push(t T) *T {
 	// If the current stack is full, we must obtain a new one and set it as the current one.
 	if l.cur.Tos >= stackSize {
 		if l.cur.Next != nil {
@@ -76,7 +76,7 @@ func (l *listOfStacks[T]) Push(t T) *T {
 }
 
 // Pop removes the topmost element from the listOfStacks and returns it.
-func (l *listOfStacks[T]) Pop() *T {
+func (l *ListOfStacks[T]) Pop() *T {
 	l.cur.Tos--
 
 	if l.cur.Tos >= 0 {
@@ -98,7 +98,7 @@ func (l *listOfStacks[T]) Pop() *T {
 }
 
 // Merge links the stacks of the current and of another listOfStacks.
-func (l *listOfStacks[T]) Merge(other *listOfStacks[T]) {
+func (l *ListOfStacks[T]) Merge(other *ListOfStacks[T]) {
 	l.cur.Next = other.head
 	other.head.Prev = l.cur
 
@@ -108,14 +108,14 @@ func (l *listOfStacks[T]) Merge(other *listOfStacks[T]) {
 
 // Split splits a listOfStacks into a slice of listOfStacks of length n.
 // The original listOfStacks should not be used after this operation.
-func (l *listOfStacks[T]) Split(n int) ([]*listOfStacks[T], error) {
+func (l *ListOfStacks[T]) Split(n int) ([]*ListOfStacks[T], error) {
 	numStacks := l.NumStacks()
 
 	if n > numStacks {
 		return nil, fmt.Errorf("not enough stacks in listOfStacks")
 	}
 
-	lists := make([]*listOfStacks[T], n)
+	lists := make([]*ListOfStacks[T], n)
 	curList := 0
 
 	deltaStacks := float64(numStacks) / float64(n)
@@ -130,7 +130,7 @@ func (l *listOfStacks[T]) Split(n int) ([]*listOfStacks[T], error) {
 		stacksToAssign := int(math.Floor(remainder + 0.5))
 
 		curStack.Prev = nil
-		lists[curList] = &listOfStacks[T]{
+		lists[curList] = &ListOfStacks[T]{
 			head: curStack,
 			cur:  curStack,
 			len:  curStack.Tos,
@@ -159,7 +159,7 @@ func (l *listOfStacks[T]) Split(n int) ([]*listOfStacks[T], error) {
 
 // NumStacks returns the number of stacks contained in the listOfStacks.
 // It takes linear time (in the number of stacks) to execute.
-func (l *listOfStacks[T]) NumStacks() int {
+func (l *ListOfStacks[T]) NumStacks() int {
 	n := 0
 
 	for cur := l.head; cur != nil; cur = cur.Next {
@@ -170,23 +170,23 @@ func (l *listOfStacks[T]) NumStacks() int {
 
 // Length returns the number of items contained in the listOfStacks.
 // It takes constant time to execute.
-func (l *listOfStacks[T]) Length() int {
+func (l *ListOfStacks[T]) Length() int {
 	return l.len
 }
 
 // HeadIterator returns an iterator initialized to point before the first element of the list.
-func (l *listOfStacks[T]) HeadIterator() *losIterator[T] {
-	return &losIterator[T]{l, l.head, -1}
+func (l *ListOfStacks[T]) HeadIterator() *LosIterator[T] {
+	return &LosIterator[T]{l, l.head, -1}
 }
 
 // TailIterator returns an iterator initialized to point after the last element of the list.
-func (l *listOfStacks[T]) TailIterator() *losIterator[T] {
-	return &losIterator[T]{l, l.cur, l.cur.Tos}
+func (l *ListOfStacks[T]) TailIterator() *LosIterator[T] {
+	return &LosIterator[T]{l, l.cur, l.cur.Tos}
 }
 
 // Prev moves the iterator one position backward and returns a pointer to the new current element.
 // It returns nil if it points before the first element of the list.
-func (i *losIterator[T]) Prev() *T {
+func (i *LosIterator[T]) Prev() *T {
 	curStack := i.cur
 
 	i.pos--
@@ -208,7 +208,7 @@ func (i *losIterator[T]) Prev() *T {
 
 // Cur returns a pointer to the current element.
 // It returns nil if it points before the first element or after the last element of the list.
-func (i *losIterator[T]) Cur() *T {
+func (i *LosIterator[T]) Cur() *T {
 	curStack := i.cur
 
 	if i.pos >= 0 && i.pos < curStack.Tos {
@@ -220,7 +220,7 @@ func (i *losIterator[T]) Cur() *T {
 
 // Next moves the iterator one position forward and returns a pointer to the new current element.
 // It returns nil if it points after the last element of the list.
-func (i *losIterator[T]) Next() *T {
+func (i *LosIterator[T]) Next() *T {
 	curStack := i.cur
 
 	i.pos++
@@ -254,7 +254,7 @@ type tokenPointerStack struct {
 	Next *tokenPointerStack
 }
 
-// listOfStacks is a list of pointer stacks.
+// ListOfStacks is a list of pointer stacks.
 type listOfTokenPointerStacks struct {
 	head          *tokenPointerStack
 	cur           *tokenPointerStack

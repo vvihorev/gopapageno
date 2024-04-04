@@ -8,6 +8,7 @@ import (
 )
 
 var parserInt64Pools []*gopapageno.Pool[int64]
+var parserInt64Pools []*gopapageno.Pool[int64]
 
 // parserPreallocMem initializes all the memory pools required by the semantic function of the parser.
 func ParserPreallocMem(inputSize int, numThreads int) {

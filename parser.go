@@ -227,7 +227,7 @@ func (p *Parser) Parse(ctx context.Context, src []byte) (*Token, error) {
 	//If the number of threads is greater than one, a final pass is required
 	if p.concurrency > 1 {
 		//Create the final input by joining together the stacks from the previous step
-		finalPassInput := newListOfStacks[Token](stackPoolFinalPass)
+		finalPassInput := NewListOfStacks[Token](stackPoolFinalPass)
 
 		for i := 0; i < p.concurrency; i++ {
 			iterator := parseResults[i].stack.HeadIterator()
@@ -284,10 +284,10 @@ type parseResult struct {
 	stack     *listOfTokenPointerStacks
 }
 
-func (w *parserWorker) parse(ctx context.Context, tokens *listOfStacks[Token], nextToken *Token, finalPass bool, resultCh chan<- parseResult, errCh chan<- error) {
+func (w *parserWorker) parse(ctx context.Context, tokens *ListOfStacks[Token], nextToken *Token, finalPass bool, resultCh chan<- parseResult, errCh chan<- error) {
 	tokensIt := tokens.HeadIterator()
 
-	newNonTerminalsList := newListOfStacks[Token](w.stackPool)
+	newNonTerminalsList := NewListOfStacks[Token](w.stackPool)
 	stack := newListOfTokenPointerStacks(w.ptrStackPool)
 
 	// If the thread is the first, push a # onto the stack
