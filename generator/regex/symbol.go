@@ -33,6 +33,6 @@ func (s *symbol) printTreeR(level int) {
 /*
 PrintTreeln prints the syntactic tree using the symbol as the root.
 */
-func (root *symbol) PrintTreeln() {
-	root.printTreeR(0)
+func (s *symbol) PrintTreeln() {
+	s.printTreeR(0)
 }

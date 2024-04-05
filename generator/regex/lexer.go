@@ -78,7 +78,7 @@ func (l *lexer) yyLex(genSym *symbol) int {
 			anyCharClass['\n'] = false
 			anyCharClass['\r'] = false
 			newNfa := newNfaFromCharClass(anyCharClass)
-			*genSym = symbol{any, 0, &newNfa, nil, nil}
+			*genSym = symbol{anyc, 0, &newNfa, nil, nil}
 			return _LEX_CORRECT
 		case curChar == '\t' || curChar == '\r' || curChar == '\n':
 			//Do nothing
@@ -147,7 +147,7 @@ func lex(input []byte, stackPool *stackPool) (listOfStacks, error) {
 	//Keep lexing until the end of the file is reached or an error occurs
 	for res != _END_OF_FILE {
 		if res == _ERROR {
-			return los, errors.New("Lexing error")
+			return los, errors.New("lexing error")
 		}
 		los.Push(&sym)
 
