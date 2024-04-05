@@ -244,7 +244,7 @@ func (p *parserDescriptor) isAxiomUsed() bool {
 	return false
 }
 
-func (p *parserDescriptor) emit(f io.Writer) {
+func (p *parserDescriptor) emit(f io.Writer, opts *Options) {
 	/************
 	 * Preamble *
 	 ************/

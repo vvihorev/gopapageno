@@ -221,7 +221,7 @@ func (l *lexerDescriptor) compile() error {
 	return nil
 }
 
-func (l *lexerDescriptor) emit(f io.Writer) {
+func (l *lexerDescriptor) emit(f io.Writer, opts *Options) {
 	fmt.Fprintf(f, l.code)
 
 	fmt.Fprintf(f, "\n\nfunc NewLexer() *gopapageno.Lexer {\n")
@@ -258,6 +258,11 @@ func (l *lexerDescriptor) emit(f io.Writer) {
 	fmt.Fprintf(f, "\t\tAutomaton: automaton,\n")
 	fmt.Fprintf(f, "\t\tCutPointsAutomaton: cutPointsAutomaton,\n")
 	fmt.Fprintf(f, "\t\tFunc: fn,\n")
+
+	if !opts.TypesOnly {
+		fmt.Fprintf(f, "\t\tPreallocFunc: LexerPreallocMem,\n")
+	}
+
 	fmt.Fprintf(f, "\t}\n}\n")
 }
 

@@ -36,6 +36,8 @@ type Parser struct {
 
 	Func ParserFunc
 
+	PreallocFunc PreallocFunc
+
 	concurrency int
 
 	logger *log.Logger
@@ -79,6 +81,12 @@ func WithCPUProfiling(w io.Writer) ParserOpt {
 func WithMemoryProfiling(w io.Writer) ParserOpt {
 	return func(p *Parser) {
 		p.memProfileWriter = w
+	}
+}
+
+func WithPreallocFunc(fn PreallocFunc) ParserOpt {
+	return func(p *Parser) {
+		p.PreallocFunc = fn
 	}
 }
 
@@ -129,6 +137,15 @@ func (p *Parser) Parse(ctx context.Context, src []byte) (*Token, error) {
 
 			pprof.StopCPUProfile()
 		}()
+	}
+
+	// Run Prealloc Functions
+	if p.Lexer.PreallocFunc != nil {
+		p.Lexer.PreallocFunc(len(src), p.concurrency)
+	}
+
+	if p.PreallocFunc != nil {
+		p.PreallocFunc(len(src), p.concurrency)
 	}
 
 	scanner := p.Lexer.Scanner(src, ScannerWithConcurrency(p.concurrency))

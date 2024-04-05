@@ -63,10 +63,8 @@ func run() error {
 		gopapageno.WithConcurrency(*concurrencyFlag),
 		gopapageno.WithLogging(log.New(logOut, "", 0)),
 		gopapageno.WithCPUProfiling(cpuProfileWriter),
-		gopapageno.WithMemoryProfiling(memProfileWriter))
-
-	LexerPreallocMem(len(bytes), p.Concurrency())
-	ParserPreallocMem(len(bytes), p.Concurrency())
+		gopapageno.WithMemoryProfiling(memProfileWriter),
+		gopapageno.WithPreallocFunc(ParserPreallocMem))
 
 	ctx := context.Background()
 

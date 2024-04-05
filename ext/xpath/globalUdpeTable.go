@@ -17,7 +17,7 @@ type globalUdpeTableImpl struct {
 func (globalUdpeTable *globalUdpeTableImpl) newExecutionTable() executionTable {
 	et := new(executionTableImpl)
 	globalUdpeTableSize := globalUdpeTable.size()
-	executionRecordsGroup := make([]executionRecord, globalUdpeTableSize, globalUdpeTableSize)
+	executionRecordsGroup := make([]executionRecord, globalUdpeTableSize)
 	for id := range executionRecordsGroup {
 		globalUdpeRecord := globalUdpeTable.recordByID(id)
 		executionRecordsGroup[id] = &executionRecordImpl{
