@@ -1,5 +1,7 @@
 %cut \n
 
+%%
+
 DIGIT [0-9]
 EQUAL =
 PLUS \+

@@ -58,6 +58,8 @@ func parseGrammarDescription(r io.Reader, opts *Options) (*grammarDescription, e
 			axiom = match[1]
 		} else if match := preambleRegex.FindStringSubmatch(l); match != nil {
 			preambleFunc = match[1]
+		} else if l != "" {
+			return nil, fmt.Errorf("unrecognized parser option: %s", l)
 		}
 	}
 

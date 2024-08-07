@@ -275,13 +275,11 @@ func (w *coppWorker) parse(ctx context.Context, stack *COPPStack, tokens *LOS[To
 
 	var prefixCount int
 
+	var prec Precedence
 	// Iterate over the tokens
 	// If this is the first worker, start reading from the input stack, otherwise begin with the last
 	// token of the previous stack.
 	for inputToken := tokensIt.Next(); inputToken != nil; {
-		//If the current inputToken is a non-terminal, push it onto the stack with no precedence relation
-		var prec Precedence
-
 		//Find the first terminal on the stack and get the precedence between it and the current tokens inputToken
 		firstTerminal := stack.FirstTerminal()
 

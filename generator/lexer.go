@@ -63,16 +63,28 @@ func parseLexerDescription(r io.Reader, logger *log.Logger) (*lexerDescriptor, e
 			break
 		}
 
-		if match := definitionRegex.FindStringSubmatch(l); match != nil {
-			definitions[match[1]] = strings.TrimSpace(match[2])
-		} else if match := cutPointsRegex.FindStringSubmatch(l); match != nil {
+		if match := cutPointsRegex.FindStringSubmatch(l); match != nil {
 			cutPoints = match[1]
 		} else if match := preambleRegex.FindStringSubmatch(l); match != nil {
 			preambleFunc = match[1]
+		} else if l != "" {
+			return nil, fmt.Errorf("unrecognized lexer option: %s", l)
 		}
 	}
 
 	logger.Printf("Cut Points: %s\n", cutPoints)
+	logger.Printf("Preamble Func: %s\n", cutPoints)
+
+	for scanner.Scan() {
+		l := scanner.Text()
+		if separatorRegexp.MatchString(l) {
+			break
+		}
+
+		if match := definitionRegex.FindStringSubmatch(l); match != nil {
+			definitions[match[1]] = strings.TrimSpace(match[2])
+		}
+	}
 
 	logger.Printf("Definitions:\n")
 	for k, v := range definitions {

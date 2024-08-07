@@ -1,5 +1,7 @@
 %cut \n
 
+%%
+
 LCURLY {
 RCURLY }
 LSQUARE \[

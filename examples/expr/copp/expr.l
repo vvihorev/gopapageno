@@ -1,6 +1,7 @@
 %cut [\+/]
-
 %preamble LexerPreallocMem
+
+%%
 
 LPAR    \(
 RPAR    \)
