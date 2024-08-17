@@ -141,7 +141,7 @@ func NewGrammar() *gopapageno.Grammar {
 	}
 
 	fn := func(rule uint16, lhs *gopapageno.Token, rhs []*gopapageno.Token, thread int) {
-		var ruleType gopapageno.RuleType
+		var ruleType gopapageno.RuleFlags
 		switch rule {
 		case 0:
 			ruleType = gopapageno.RuleSimple

@@ -3,9 +3,9 @@ package gopapageno
 import (
 	"context"
 	"fmt"
-	"slices"
 )
 
+// COPParser implements parsing using a simplified approach to C-OPGs.
 type COPParser struct {
 	g *Grammar
 
@@ -28,6 +28,7 @@ type COPParser struct {
 	results []*COPPStack
 }
 
+// NewCOPParser allocates all required resources for a COPParser to be usable.
 func NewCOPParser(
 	g *Grammar,
 	src []byte, concurrency int, avgTokenLength int, strategy ReductionStrategy) *COPParser {
@@ -75,16 +76,16 @@ func NewCOPParser(
 
 	for thread := 0; thread < concurrency; thread++ {
 		p.workers[thread] = &coppWorker{
-			parser:         p,
-			id:             thread,
-			ntPool:         p.pools.nonterminals[thread],
-			producedTokens: make(map[*Token]*Token),
+			parser: p,
+			id:     thread,
+			ntPool: p.pools.nonterminals[thread],
 		}
 	}
 
 	return p
 }
 
+// Parse performs C-OPG parsing of the provided tokensLists, returning the root of the resulting parse tree.
 func (p *COPParser) Parse(ctx context.Context, tokensLists []*LOS[Token]) (*Token, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -98,13 +99,12 @@ func (p *COPParser) Parse(ctx context.Context, tokensLists []*LOS[Token]) (*Toke
 	for thread := 0; thread < p.concurrency; thread++ {
 		var nextToken *Token
 
-		// If the thread is not the last, also take the first token of the next stack for lookahead.
+		// If the thread is not the last, take the first token of the next stack as lookahead.
 		if thread < p.concurrency-1 {
 			nextInputListIter := tokensLists[thread+1].HeadIterator()
 			nextToken = nextInputListIter.Next()
 		}
 
-		// TODO: Initialize right stack
 		s := NewCOPPStack(p.pools.stacks[thread], p.pools.stateStacks[thread])
 		go p.workers[thread].parse(ctx, s, tokensLists[thread], nextToken, false, resultCh, errCh)
 	}
@@ -118,14 +118,21 @@ func (p *COPParser) Parse(ctx context.Context, tokensLists []*LOS[Token]) (*Toke
 
 	// Reduction phase
 	for p.concurrency--; p.concurrency >= 1; p.concurrency-- {
+		// This branch performs a final sweep, it's taken either if ReductionSweep has been selected as a strategy
+		// and if ReductionMixed has already performed the maximum number of parallel passes.
 		if p.reductionStrategy == ReductionSweep || (p.reductionStrategy == ReductionMixed && reductionPasses >= 2) {
-
-			// Nullifies the previous p.concurrency--
+			// Nullifies the previous p.concurrency-- (concurrency is used by CombineSweepLOS)
 			p.concurrency++
 
 			// Create the final input by joining together the stacks from the previous step.
 			stack := p.results[0].Combine()
-			input := p.CombineSweepLOS(p.pools.sweepInput, p.results[1:])
+			input, producedTokens := p.CombineSweepLOS(p.pools.sweepInput, p.results[1:])
+
+			// Merge produced tokens maps
+			// TODO: Find a better place to handle this.
+			for k, v := range producedTokens {
+				stack.ProducedTokens[k] = v
+			}
 
 			// Sets correct concurrency level for final sweep.
 			p.concurrency = 1
@@ -137,6 +144,7 @@ func (p *COPParser) Parse(ctx context.Context, tokensLists []*LOS[Token]) (*Toke
 				return nil, err
 			}
 		} else {
+			// This branch performs parallel reductions.
 			for i := 0; i < p.concurrency; i++ {
 				stackLeft := p.results[i]
 				stackRight := p.results[i+1]
@@ -146,8 +154,13 @@ func (p *COPParser) Parse(ctx context.Context, tokensLists []*LOS[Token]) (*Toke
 				// TODO: I should find a way to make this work without creating a new LOS for the inputs.
 				// Unfortunately the new stack depends on the content of tokensLists[i] since its elements are stored there.
 				// We can't erase the old input easily to reuse its storage.
-				// TODO: Maybe allocate 2 * c LOS so that we can alternate?
-				input := stackRight.CombineLOS(tokensLists[i].pool)
+				input, producedTokens := stackRight.CombineLOS(tokensLists[i].pool)
+
+				// Merge produced tokens maps
+				// TODO: Find a better place to handle this.
+				for k, v := range producedTokens {
+					stack.ProducedTokens[k] = v
+				}
 
 				go p.workers[i].parse(ctx, stack, input, nil, true, resultCh, errCh)
 			}
@@ -169,75 +182,11 @@ func (p *COPParser) Parse(ctx context.Context, tokensLists []*LOS[Token]) (*Toke
 	return root, nil
 }
 
-func (p *COPParser) CombineSweepLOS(pool *Pool[stack[Token]], stacks []*COPPStack) *LOS[Token] {
-	input := NewLOS[Token](pool)
-
-	tokenSet := make(map[*Token]struct{}, stacks[0].Length())
-	for i := 0; i < p.concurrency-1; i++ {
-		it := stacks[i].Iterator()
-
-		//Ignore the first token.
-		t, st := it.Next()
-		tokenSet[t] = struct{}{}
-		for _, t := range stacks[i].StateTokenStack.Slice(st.CurrentIndex, st.CurrentLen) {
-			tokenSet[t] = struct{}{}
-		}
-
-		for t, st := it.Next(); t != nil; t, st = it.Next() {
-			if t.Precedence == PrecEquals {
-				if !it.IsLast() {
-					continue
-				}
-
-				for _, stateToken := range stacks[i].Previous() {
-					if _, ok := tokenSet[stateToken]; !ok {
-						stateToken.Precedence = PrecEmpty
-						input.Push(*stateToken)
-
-						tokenSet[stateToken] = struct{}{}
-					}
-				}
-
-				for _, stateToken := range stacks[i].Current() {
-					if _, ok := tokenSet[stateToken]; !ok {
-						stateToken.Precedence = PrecEmpty
-						input.Push(*stateToken)
-
-						tokenSet[stateToken] = struct{}{}
-					}
-				}
-
-				continue
-			}
-
-			for _, stateToken := range stacks[i].StateTokenStack.Slice(st.CurrentIndex, st.CurrentLen) {
-				if _, ok := tokenSet[stateToken]; !ok {
-					stateToken.Precedence = PrecEmpty
-					input.Push(*stateToken)
-
-					tokenSet[stateToken] = struct{}{}
-				}
-			}
-
-			if _, ok := tokenSet[t]; !ok {
-				t.Precedence = PrecEmpty
-				input.Push(*t)
-
-				tokenSet[t] = struct{}{}
-			}
-		}
-	}
-
-	return input
-}
-
 type coppWorker struct {
 	parser *COPParser
 	id     int
 
 	ntPool *Pool[Token]
-	// producedTokens maps the rightmost rhs-token of a prefix production with its parent.
-	producedTokens map[*Token]*Token
 }
 
 // parseCyclic implements COPP.
@@ -261,8 +210,8 @@ func (w *coppWorker) parse(ctx context.Context, stack *COPPStack, tokens *LOS[To
 			stack.Push(t)
 		}
 
-		// If the thread is the last, push a # onto the tokens m
-		// Otherwise, push onto the tokens m the first inputToken of the next tokens m
+		// If the thread is the last, push a # onto the tokensList.
+		// Otherwise, push the lookahead token.
 		if w.id == w.parser.concurrency-1 {
 			tokens.Push(Token{
 				Type:       TokenTerm,
@@ -273,19 +222,22 @@ func (w *coppWorker) parse(ctx context.Context, stack *COPPStack, tokens *LOS[To
 		}
 	}
 
+	var prec Precedence
+
+	// prefixCount is used to identify where to cut double occurrences of repeated prefixes.
 	var prefixCount int
 
-	var prec Precedence
-	// Iterate over the tokens
-	// If this is the first worker, start reading from the input stack, otherwise begin with the last
-	// token of the previous stack.
 	for inputToken := tokensIt.Next(); inputToken != nil; {
-		//Find the first terminal on the stack and get the precedence between it and the current tokens inputToken
+		// Find the first terminal on the stack and get the precedence between it and the current token
 		firstTerminal := stack.FirstTerminal()
 
 		if !inputToken.Type.IsTerminal() {
 			prec = PrecYields
+
+			rhs = rhs[:0]
+			rhsTokens = rhsTokens[:0]
 		} else {
+			// TODO: Consider removing this check, it is probably unnecessary.
 			if firstTerminal == nil {
 				prec = w.parser.g.precedence(TokenTerm, inputToken.Type)
 			} else {
@@ -295,40 +247,41 @@ func (w *coppWorker) parse(ctx context.Context, stack *COPPStack, tokens *LOS[To
 					prec = PrecYields
 				}
 
+				// This is required to put aside tokens that require the previous one to be matched within a rhs.
+				// Since the previous one has Empty precedence, it means that it's unusable.
 				if prec == PrecEquals && firstTerminal.Precedence == PrecEmpty {
 					prec = PrecTakes
 				}
 			}
 		}
 
-		// If it yields precedence, PUSH the inputToken onto the stack with its precedence relation.
+		// If it yields precedence, PUSH the inputToken onto the stack.
 		if prec == PrecYields {
-			t := inputToken
+			inputToken.Precedence = prec
+
 			if inputToken.Type.IsTerminal() {
-				inputToken.Precedence = prec
-				inputToken = stack.Push(inputToken)
+				stack.Push(inputToken)
 			}
 
-			// If the current construction is a single nonterminal.
+			// If the current construction is a single nonterminal, append the token to it.
+			// Otherwise, swap.
 			if stack.IsCurrentSingleNonterminal() {
-				// Append input character to the current construction.
-				stack.AppendStateToken(t)
+				stack.AppendStateToken(inputToken)
 			} else {
-				// Otherwise, swap.
 				stack.SwapState()
-				stack.AppendStateToken(t)
+				stack.AppendStateToken(inputToken)
 			}
 
 			inputToken = tokensIt.Next()
 		} else if prec == PrecEquals {
 			inputToken.Precedence = prec
-			// If it is equals, it is probably a shift transition?
+
 			if inputToken.Type == TokenTerm {
 				stack.Push(inputToken)
 				break
 			}
 
-			// If the current construction is a single nonterminal.
+			// If the current construction is a single nonterminal, prepend the previous construction to it.
 			if stack.IsCurrentSingleNonterminal() {
 				stack.State.CurrentIndex = stack.State.PreviousIndex
 				stack.State.CurrentLen += stack.State.PreviousLen
@@ -340,19 +293,12 @@ func (w *coppWorker) parse(ctx context.Context, stack *COPPStack, tokens *LOS[To
 					rhs = append(rhs, rhsTokens[i].Type)
 				}
 			}
-
 			rhsTokens = append(rhsTokens, inputToken)
 			rhs = append(rhs, inputToken.Type)
 
-			found := false
-			for _, prefix := range w.parser.g.Prefixes {
-				if slices.Equal(prefix, rhs) {
-					found = true
-					break
-				}
-			}
-
-			if !found {
+			// Try to identify if the current construction matches a prefix.
+			lhs, ruleNum := w.parser.g.findPrefixMatch(rhs)
+			if lhs == TokenEmpty {
 				prefixCount++
 				stack.AppendStateToken(inputToken)
 
@@ -365,33 +311,35 @@ func (w *coppWorker) parse(ctx context.Context, stack *COPPStack, tokens *LOS[To
 				continue
 			}
 
-			lhs, ruleNum := w.parser.g.findMatch(rhs[:len(rhs)-prefixCount-1])
-			if lhs != TokenEmpty && w.parser.g.Rules[ruleNum].Type == RuleCyclic {
-				lhsToken, err := w.matchPrefix(lhs, ruleNum, rhs[:len(rhs)-prefixCount-1], rhsTokens[:len(rhsTokens)-prefixCount-1])
-				if err != nil {
-					errCh <- fmt.Errorf("worker %d could not match: %v", w.id, err)
-					return
-				}
-
-				// Reset state
-				stack.StateTokenStack.Tos = stack.State.CurrentIndex
-				stack.State.CurrentLen = 0
-				stack.AppendStateToken(lhsToken)
-
-				prefixCount = 0
+			lhsToken, err := w.matchPrefix(lhs, ruleNum, rhsTokens[:len(rhsTokens)-prefixCount-1], stack)
+			if err != nil {
+				errCh <- fmt.Errorf("worker %d could not match: %v", w.id, err)
+				return
 			}
+
+			// Reset state
+			stack.StateTokenStack.Tos = stack.State.CurrentIndex
+			stack.State.CurrentLen = 0
+			stack.AppendStateToken(lhsToken)
+
+			prefixCount = 0
 
 			stack.AppendStateToken(inputToken)
 
 			// Replace the topmost token on the stack, keeping its state unchanged.
+			// TODO: Consider adding a Shift method to stack.
 			_, s := stack.Pop2()
 			stack.PushWithState(inputToken, *s)
 
 			inputToken = tokensIt.Next()
 		} else if prec == PrecTakes {
-			//If there are no tokens yielding precedence on the stack, push inputToken onto the stack.
-			//Otherwise, perform a reduction. (Reduction == Pop/Shift move?)
+			// If there are no tokens yielding precedence on the stack, push inputToken onto the stack.
+			// Otherwise, perform a reduction.
 			if stack.YieldingPrecedence() == 0 {
+				if firstTerminal != nil && firstTerminal.Precedence != PrecEmpty {
+					firstTerminal.Precedence = PrecEquals
+				}
+
 				inputToken.Precedence = prec
 				stack.Push(inputToken)
 
@@ -402,7 +350,7 @@ func (w *coppWorker) parse(ctx context.Context, stack *COPPStack, tokens *LOS[To
 				inputToken = tokensIt.Next()
 			} else {
 				var i int
-				// Prefix is made of a single nonterminal
+
 				rhsTokens = rhsTokens[:0]
 				rhs = rhs[:0]
 
@@ -432,14 +380,11 @@ func (w *coppWorker) parse(ctx context.Context, stack *COPPStack, tokens *LOS[To
 					stack.State.PreviousLen = st.CurrentLen
 				}
 
-				lhsToken, err := w.match(rhs, rhsTokens)
+				lhsToken, err := w.match(rhs, rhsTokens, stack)
 				if err != nil {
 					errCh <- fmt.Errorf("worker %d could not match: %v", w.id, err)
 					return
 				}
-
-				rhsTokens = rhsTokens[:0]
-				rhs = rhs[:0]
 
 				// Reset state
 				stack.StateTokenStack.Tos = stack.State.PreviousIndex + stack.State.PreviousLen + 1
@@ -449,6 +394,9 @@ func (w *coppWorker) parse(ctx context.Context, stack *COPPStack, tokens *LOS[To
 
 				prefixCount = 0
 			}
+
+			rhsTokens = rhsTokens[:0]
+			rhs = rhs[:0]
 		} else {
 			//If there's no precedence relation, abort the parsing
 			errCh <- fmt.Errorf("no precedence relation found")
@@ -459,73 +407,145 @@ func (w *coppWorker) parse(ctx context.Context, stack *COPPStack, tokens *LOS[To
 	resultCh <- parseResult[COPPStack]{w.id, stack}
 }
 
-func (w *coppWorker) matchPrefix(lhs TokenType, ruleNum uint16, rhs []TokenType, rhsTokens []*Token) (*Token, error) {
+func (w *coppWorker) matchPrefix(lhs TokenType, ruleNum uint16, rhsTokens []*Token, s *COPPStack) (*Token, error) {
 	var lhsToken *Token
+	var rf RuleFlags
 
 	firstToken := rhsTokens[0]
 
-	parentToken, ok := w.producedTokens[rhsTokens[0]]
+	parentToken, ok := s.ProducedTokens[firstToken]
 	if !ok {
 		lhsToken = w.ntPool.Get()
 		lhsToken.Type = lhs
+
+		rf = rf.Set(RuleCyclic)
 	} else {
 		lhsToken = parentToken
 
-		rhsTokens[0] = lhsToken
-		rhs[0] = lhs
+		rf = rf.Set(RuleAppend)
+	}
 
-		// TODO: RuleType could be directly set from here.
-		lhs, ruleNum = w.parser.g.findMatch(rhs)
-		if lhs == TokenEmpty {
-			return nil, fmt.Errorf("could not find match for rhs %v", rhs)
-		}
+	rightParent, ok := s.ProducedTokens[rhsTokens[len(rhsTokens)-1]]
+	if ok {
+		rhsTokens[len(rhsTokens)-1] = rightParent
+		rf = rf.Set(RuleCombine)
 	}
 
 	//Execute the semantic action
-	w.parser.g.Func(ruleNum, lhsToken, rhsTokens, w.id)
+	w.parser.g.Func(ruleNum, rf, lhsToken, rhsTokens, w.id)
 
-	w.producedTokens[rhsTokens[0]] = lhsToken
+	s.ProducedTokens[rhsTokens[0]] = lhsToken
 
 	return firstToken, nil
 }
 
-func (w *coppWorker) match(rhs []TokenType, rhsTokens []*Token) (*Token, error) {
-	lhs, ruleNum := w.parser.g.findMatch(rhs)
+func (w *coppWorker) match(rhs []TokenType, rhsTokens []*Token, s *COPPStack) (*Token, error) {
+	lhs, ruleNum := w.parser.g.findRuleMatch(rhs)
 	if lhs == TokenEmpty {
 		return nil, fmt.Errorf("could not find match for rhs %v", rhs)
 	}
 
 	var lhsToken *Token
 
-	parentToken, ok := w.producedTokens[rhsTokens[0]]
+	rt := RuleCyclic
+
+	parentToken, ok := s.ProducedTokens[rhsTokens[0]]
 	if !ok {
 		lhsToken = w.ntPool.Get()
 		lhsToken.Type = lhs
 	} else {
 		lhsToken = parentToken
+		rt = RuleAppend
+	}
 
-		rhs[0] = lhs
-		rhsTokens[0] = lhsToken
-
-		// TODO: RuleType could be directly set from here.
-		lhs, ruleNum = w.parser.g.findMatch(rhs)
-		if lhs == TokenEmpty {
-			return nil, fmt.Errorf("could not find match for rhs %v", rhs)
-		}
+	rightParent, ok := s.ProducedTokens[rhsTokens[len(rhsTokens)-1]]
+	if ok {
+		rhsTokens[len(rhsTokens)-1] = rightParent
+		rt = RuleCombine
 	}
 
 	//Execute the semantic action
-	w.parser.g.Func(ruleNum, lhsToken, rhsTokens, w.id)
+	w.parser.g.Func(ruleNum, rt, lhsToken, rhsTokens, w.id)
 
 	return lhsToken, nil
 }
 
-func (w *coppWorker) getNonterminal(rhsTokens []*Token) *Token {
-	// Try to find the token associated to the leftmost token.
-	lhsToken, ok := w.producedTokens[rhsTokens[0]]
-	if !ok {
-		lhsToken = w.ntPool.Get()
+func (p *COPParser) CombineSweepLOS(pool *Pool[stack[Token]], stacks []*COPPStack) (*LOS[Token], map[*Token]*Token) {
+	input := NewLOS[Token](pool)
+	newProducedTokens := make(map[*Token]*Token)
+
+	tokenSet := make(map[*Token]struct{}, stacks[0].Length())
+
+	for i := 0; i < p.concurrency-1; i++ {
+		it := stacks[i].Iterator()
+
+		//Ignore the first token.
+		t, st := it.Next()
+		tokenSet[t] = struct{}{}
+		for _, t := range stacks[i].StateTokenStack.Slice(st.CurrentIndex, st.CurrentLen) {
+			tokenSet[t] = struct{}{}
+		}
+
+		for t, st = it.Next(); t != nil; t, st = it.Next() {
+			if t.Precedence == PrecEquals && it.IsLast() {
+				for _, stateToken := range stacks[i].Previous() {
+					if _, ok := tokenSet[stateToken]; !ok {
+						stateToken.Precedence = PrecEmpty
+
+						newToken := input.Push(*stateToken)
+						parentToken, ok := stacks[i].ProducedTokens[stateToken]
+						if ok {
+							newProducedTokens[newToken] = parentToken
+						}
+
+						tokenSet[stateToken] = struct{}{}
+					}
+				}
+
+				for _, stateToken := range stacks[i].Current() {
+					if _, ok := tokenSet[stateToken]; !ok {
+						stateToken.Precedence = PrecEmpty
+
+						newToken := input.Push(*stateToken)
+						parentToken, ok := stacks[i].ProducedTokens[stateToken]
+						if ok {
+							newProducedTokens[newToken] = parentToken
+						}
+
+						tokenSet[stateToken] = struct{}{}
+					}
+				}
+
+				continue
+			}
+
+			for _, stateToken := range stacks[i].StateTokenStack.Slice(st.CurrentIndex, st.CurrentLen) {
+				if _, ok := tokenSet[stateToken]; !ok {
+					stateToken.Precedence = PrecEmpty
+
+					newToken := input.Push(*stateToken)
+					parentToken, ok := stacks[i].ProducedTokens[stateToken]
+					if ok {
+						newProducedTokens[newToken] = parentToken
+					}
+
+					tokenSet[stateToken] = struct{}{}
+				}
+			}
+
+			if _, ok := tokenSet[t]; !ok {
+				t.Precedence = PrecEmpty
+
+				newToken := input.Push(*t)
+				parentToken, ok := stacks[i].ProducedTokens[t]
+				if ok {
+					newProducedTokens[newToken] = parentToken
+				}
+
+				tokenSet[t] = struct{}{}
+			}
+		}
 	}
 
-	return lhsToken
+	return input, newProducedTokens
 }

@@ -1,7 +1,6 @@
 package generator
 
 import (
-	"fmt"
 	"github.com/giornetta/gopapageno"
 )
 
@@ -13,7 +12,7 @@ type triePtrNode struct {
 
 // trieNode is a node of a trie.
 // It has pointers to other trieNodes and may have (if it's the terminal node of a rhs) a value (the corresponding lhs)
-// as well as the number of the rule (needed for the semantic function).
+// as well as the number of the ruleDescription (needed for the semantic function).
 type trieNode struct {
 	HasValue bool
 	Value    gopapageno.TokenType
@@ -57,20 +56,18 @@ func (n *trieNode) Find(rhs []gopapageno.TokenType) (*trieNode, bool) {
 	return curNode, true
 }
 
-/*
-newTrie creates a trie from a set of rules and returns it.
-The rhs of the rules must be sorted.
-*/
-func newTrie(rules []rule, nonterminals *set[string], terminals *set[string]) (*trieNode, error) {
+// newRulesTrie creates a trie from a slice of rules.
+// The rhs of the rules must be sorted.
+func newRulesTrie(rules []ruleDescription, nonterminals *set[string], terminals *set[string]) (*trieNode, error) {
 	root := &trieNode{false, 0, 0, make([]triePtrNode, 0)}
 
 	nonterminalSlice := nonterminals.Slice()
-	if err := moveToFront(nonterminalSlice, "_EMPTY"); err != nil {
+	if err := moveToFront(nonterminalSlice, emptyToken); err != nil {
 		return nil, err
 	}
 
 	terminalSlice := terminals.Slice()
-	if err := moveToFront(terminalSlice, "_TERM"); err != nil {
+	if err := moveToFront(terminalSlice, termToken); err != nil {
 		return nil, err
 	}
 
@@ -87,7 +84,7 @@ func newTrie(rules []rule, nonterminals *set[string], terminals *set[string]) (*
 			}
 			curNode = nextNode
 
-			// If we're at the last token of the rule, assign the current LHS to the last node created.
+			// If we're at the last token of the ruleDescription, assign the current LHS to the last node created.
 			if j == len(rule.RHS)-1 {
 				curNode.HasValue = true
 				curNode.Value = tokenValue(rule.LHS, nonterminalSlice, terminalSlice)
@@ -99,8 +96,48 @@ func newTrie(rules []rule, nonterminals *set[string], terminals *set[string]) (*
 	return root, nil
 }
 
+func newPrefixesTrie(rules []ruleDescription, nonterminals *set[string], terminals *set[string]) (*trieNode, error) {
+	root := &trieNode{false, 0, 0, make([]triePtrNode, 0)}
+
+	nonterminalSlice := nonterminals.Slice()
+	if err := moveToFront(nonterminalSlice, emptyToken); err != nil {
+		return nil, err
+	}
+
+	terminalSlice := terminals.Slice()
+	if err := moveToFront(terminalSlice, termToken); err != nil {
+		return nil, err
+	}
+
+	for i, rule := range rules {
+		for _, prefix := range rule.Prefixes {
+			curNode := root
+			for j, strToken := range prefix {
+				// Find the current token in the nodes' children.
+				token := tokenValue(strToken, nonterminalSlice, terminalSlice)
+				nextNode, ok := curNode.Get(token)
+				// If not found, create a new empty node and append it as a child to the current one.
+				if !ok {
+					nextNode = &trieNode{false, 0, 0, make([]triePtrNode, 0)}
+					curNode.Branches = append(curNode.Branches, triePtrNode{token, nextNode})
+				}
+				curNode = nextNode
+
+				// If we're at the last token of the ruleDescription, assign the current LHS to the last node created.
+				if j == len(prefix)-1 {
+					curNode.HasValue = true
+					curNode.Value = tokenValue(rule.LHS, nonterminalSlice, terminalSlice)
+					curNode.RuleNum = i
+				}
+			}
+		}
+	}
+
+	return root, nil
+}
+
 func (n *trieNode) compressR(newTrie *[]gopapageno.TokenType, curpos *uint16, nonterminals *set[string], terminals *set[string]) {
-	//Append the value of this node if it has one, and the rule number
+	//Append the value of this node if it has one, and the ruleDescription number
 	if n.HasValue {
 		*newTrie = append(*newTrie, n.Value)
 		*newTrie = append(*newTrie, gopapageno.TokenType(n.RuleNum))
@@ -157,26 +194,4 @@ func tokenValue(token string, nonterminals []string, terminals []string) gopapag
 	}
 
 	return gopapageno.TokenEmpty
-}
-
-func (n *trieNode) printR(curDepth int) {
-	if n.HasValue {
-		fmt.Println(" ->", n.Value)
-	} else {
-		fmt.Println()
-	}
-	for _, nodePtr := range n.Branches {
-		for i := 0; i < curDepth; i++ {
-			fmt.Print("  ")
-		}
-
-		fmt.Print(nodePtr.Key)
-		nodePtr.Ptr.printR(curDepth + 1)
-	}
-}
-
-// Println prints a representation of the trie.
-func (n *trieNode) Println() {
-	n.printR(0)
-	fmt.Println()
 }

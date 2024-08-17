@@ -19,6 +19,10 @@ type COPPStack struct {
 	StateTokenStack *stack[*Token]
 
 	State CyclicAutomataState
+
+	ProducedTokens map[*Token]*Token
+
+	yieldsPrec int
 }
 
 // NewCOPPStack creates a new COPPStack initialized with one empty stack.
@@ -27,6 +31,9 @@ func NewCOPPStack(tokenStackPool *Pool[stack[*Token]], stateStackPool *Pool[stac
 		parserStack:     newParserStack(tokenStackPool),
 		StatesLOS:       NewLOS[CyclicAutomataState](stateStackPool),
 		StateTokenStack: tokenStackPool.Get(),
+
+		// ProducedTokens maps the leftmost rhs-token of a prefix production with its temporary parent.
+		ProducedTokens: make(map[*Token]*Token),
 
 		State: CyclicAutomataState{},
 	}
@@ -71,11 +78,21 @@ func (s *COPPStack) PushWithState(token *Token, state CyclicAutomataState) *Toke
 }
 
 func (s *COPPStack) YieldingPrecedence() int {
-	if s.firstTerminal.Precedence == PrecYields || s.firstTerminal.Precedence == PrecEquals {
+	ft := s.FirstTerminal()
+	if ft.Precedence != PrecYields && ft.Precedence != PrecEquals {
+		return 0
+	}
+
+	if s.firstTerminalPos <= s.headFirst {
 		return 1
 	}
 
-	return 0
+	lt := s.firstTerminalStack.Data[s.firstTerminalPos-1]
+	if (lt.Precedence == PrecTakes || lt.Precedence == PrecEmpty) && lt.Type == ft.Type {
+		return 0
+	}
+
+	return 1
 }
 
 func (s *COPPStack) Pop2() (*Token, *CyclicAutomataState) {
@@ -137,12 +154,13 @@ func (s *COPPStack) Combine() *COPPStack {
 	return s
 }
 
-func (s *COPPStack) CombineLOS(pool *Pool[stack[Token]]) *LOS[Token] {
+func (s *COPPStack) CombineLOS(pool *Pool[stack[Token]]) (*LOS[Token], map[*Token]*Token) {
 	list := NewLOS[Token](pool)
+	newProducedTokens := make(map[*Token]*Token)
 
 	it := s.Iterator()
-	t, st := it.Next()
 
+	t, st := it.Next()
 	tokenSet := make(map[*Token]struct{}, s.Length())
 	tokenSet[t] = struct{}{}
 	for _, t := range s.StateTokenStack.Slice(st.CurrentIndex, st.CurrentLen) {
@@ -152,18 +170,28 @@ func (s *COPPStack) CombineLOS(pool *Pool[stack[Token]]) *LOS[Token] {
 	if s.Length() == 1 {
 		for _, t := range s.StateTokenStack.Slice(s.State.CurrentIndex, s.State.CurrentLen) {
 			t.Precedence = PrecEmpty
-			list.Push(*t)
+
+			newToken := list.Push(*t)
+			parentToken, ok := s.ProducedTokens[t]
+			if ok {
+				newProducedTokens[newToken] = parentToken
+			}
 		}
 
-		return list
+		return list, newProducedTokens
 	}
 
-	for t, st := it.Next(); t != nil && (t.Precedence != PrecYields && t.Precedence != PrecEquals); t, st = it.Next() {
+	for t, st = it.Next(); t != nil && t.Precedence != PrecYields; t, st = it.Next() {
 		for _, stateToken := range s.StateTokenStack.Slice(st.CurrentIndex, st.CurrentLen) {
 			_, ok := tokenSet[stateToken]
 			if !ok {
 				stateToken.Precedence = PrecEmpty
-				list.Push(*stateToken)
+
+				newToken := list.Push(*stateToken)
+				parentToken, ok := s.ProducedTokens[stateToken]
+				if ok {
+					newProducedTokens[newToken] = parentToken
+				}
 
 				tokenSet[stateToken] = struct{}{}
 			}
@@ -172,13 +200,18 @@ func (s *COPPStack) CombineLOS(pool *Pool[stack[Token]]) *LOS[Token] {
 		_, ok := tokenSet[t]
 		if !ok {
 			t.Precedence = PrecEmpty
-			list.Push(*t)
+
+			newToken := list.Push(*t)
+			parentToken, ok := s.ProducedTokens[t]
+			if ok {
+				newProducedTokens[newToken] = parentToken
+			}
 
 			tokenSet[t] = struct{}{}
 		}
 	}
 
-	return list
+	return list, newProducedTokens
 }
 
 func (s *COPPStack) LastNonterminal() (*Token, error) {

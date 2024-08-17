@@ -12,7 +12,7 @@ type rulesDictionary struct {
 
 	ValuesLHS  []*set[string]
 	SemActions []*string
-	Types      []gopapageno.RuleType
+	Flags      []gopapageno.RuleFlags
 	Prefixes   [][][]string
 }
 
@@ -21,12 +21,12 @@ func newRulesDictionary(capacity int) *rulesDictionary {
 		KeysRHS:    make([][]string, 0, capacity),
 		ValuesLHS:  make([]*set[string], 0, capacity),
 		SemActions: make([]*string, 0, capacity),
-		Types:      make([]gopapageno.RuleType, 0, capacity),
+		Flags:      make([]gopapageno.RuleFlags, 0, capacity),
 		Prefixes:   make([][][]string, 0, capacity),
 	}
 }
 
-func (d *rulesDictionary) Add(r *rule) {
+func (d *rulesDictionary) Add(r *ruleDescription) {
 	for i, keyRhs := range d.KeysRHS {
 		if slices.Equal(keyRhs, r.RHS) {
 			d.ValuesLHS[i].Add(r.LHS)
@@ -41,7 +41,7 @@ func (d *rulesDictionary) Add(r *rule) {
 	d.ValuesLHS[len(d.ValuesLHS)-1].Add(r.LHS)
 
 	d.SemActions = append(d.SemActions, &r.Action)
-	d.Types = append(d.Types, r.Type)
+	d.Flags = append(d.Flags, r.Flags)
 
 	d.Prefixes = append(d.Prefixes, r.Prefixes)
 }
@@ -53,7 +53,7 @@ func (d *rulesDictionary) Remove(rhs []string) {
 
 			d.ValuesLHS = append(d.ValuesLHS[:i], d.ValuesLHS[i+1:]...)
 			d.SemActions = append(d.SemActions[:i], d.SemActions[i+1:]...)
-			d.Types = append(d.Types[:i], d.Types[i+1:]...)
+			d.Flags = append(d.Flags[:i], d.Flags[i+1:]...)
 			d.Prefixes = append(d.Prefixes[:i], d.Prefixes[i+1:]...)
 		}
 	}
@@ -72,7 +72,7 @@ func (d *rulesDictionary) Copy() *rulesDictionary {
 
 		newDict.ValuesLHS = append(newDict.ValuesLHS, d.ValuesLHS[i].Copy())
 		newDict.SemActions = append(newDict.SemActions, d.SemActions[i])
-		newDict.Types = append(newDict.Types, d.Types[i])
+		newDict.Flags = append(newDict.Flags, d.Flags[i])
 		newDict.Prefixes = append(newDict.Prefixes, d.Prefixes[i])
 	}
 

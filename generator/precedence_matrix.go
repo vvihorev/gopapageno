@@ -27,7 +27,7 @@ func newPrecedenceMap(terminals []string) precedenceMap {
 	return m
 }
 
-func (m precedenceMap) computeEqualsPrecedence(s gopapageno.ParsingStrategy, rules []rule, terminals []string, nonterminals *set[string]) error {
+func (m precedenceMap) computeEqualsPrecedence(s gopapageno.ParsingStrategy, rules []ruleDescription, terminals []string, nonterminals *set[string]) error {
 	for _, r := range rules {
 		// Equals
 		for _, term1 := range terminals {
@@ -66,7 +66,7 @@ func (m precedenceMap) computeEqualsPrecedence(s gopapageno.ParsingStrategy, rul
 	return nil
 }
 
-func (m precedenceMap) computeTakesPrecedence(s gopapageno.ParsingStrategy, rules []rule, terminals []string, nonterminals *set[string], rts map[string]*set[string]) error {
+func (m precedenceMap) computeTakesPrecedence(s gopapageno.ParsingStrategy, rules []ruleDescription, terminals []string, nonterminals *set[string], rts map[string]*set[string]) error {
 	for _, rule := range rules {
 		for _, term1 := range terminals {
 			for _, term2 := range terminals {
@@ -115,7 +115,7 @@ func allIndices[T comparable](slice []T, el T) []int {
 	return indices
 }
 
-func (m precedenceMap) computeYieldsPrecedence(s gopapageno.ParsingStrategy, rules []rule, terminals []string, nonterminals *set[string], lts map[string]*set[string]) error {
+func (m precedenceMap) computeYieldsPrecedence(s gopapageno.ParsingStrategy, rules []ruleDescription, terminals []string, nonterminals *set[string], lts map[string]*set[string]) error {
 	for _, rule := range rules {
 		for _, term1 := range terminals {
 			for _, term2 := range terminals {
@@ -132,7 +132,7 @@ func (m precedenceMap) computeYieldsPrecedence(s gopapageno.ParsingStrategy, rul
 						break
 					}
 
-					//i1 := slices.Index(rule.RHS, term1)
+					//i1 := slices.Index(ruleDescription.RHS, term1)
 					//if i1 == -1 {
 					//	continue
 					//}
@@ -159,12 +159,12 @@ func (m precedenceMap) computeYieldsPrecedence(s gopapageno.ParsingStrategy, rul
 
 func (m precedenceMap) buildMatrix(terminals []string) (precedenceMatrix, error) {
 	for _, terminal := range terminals {
-		if terminal != "_TERM" {
-			m["_TERM"][terminal] = gopapageno.PrecYields
-			m[terminal]["_TERM"] = gopapageno.PrecTakes
+		if terminal != termToken {
+			m[termToken][terminal] = gopapageno.PrecYields
+			m[terminal][termToken] = gopapageno.PrecTakes
 		}
 	}
-	m["_TERM"]["_TERM"] = gopapageno.PrecEquals
+	m[termToken][termToken] = gopapageno.PrecEquals
 
 	precMatrix := make([][]gopapageno.Precedence, len(terminals))
 	for i, t1 := range terminals {
@@ -180,7 +180,7 @@ func (m precedenceMap) buildMatrix(terminals []string) (precedenceMatrix, error)
 
 func (p *grammarDescription) newPrecedenceMatrix(opts *Options) (matrix precedenceMatrix, err error) {
 	terminals := p.terminals.Slice()
-	if err := moveToFront(terminals, "_TERM"); err != nil {
+	if err := moveToFront(terminals, termToken); err != nil {
 		return nil, fmt.Errorf("could not move _TERM to front: %w", err)
 	}
 
@@ -236,7 +236,7 @@ func (p *grammarDescription) newPrecedenceMatrix(opts *Options) (matrix preceden
 }
 
 type conflict struct {
-	rule rule
+	rule ruleDescription
 	i    int
 	j    int
 }
@@ -313,32 +313,32 @@ func (p *grammarDescription) newAssociativePrecedenceMatrix() (precedenceMatrix,
 
 	//set precedence for #
 	for _, terminal := range p.terminals.Iter {
-		if terminal != "_TERM" {
-			m["_TERM"][terminal][gopapageno.PrecYields] = append(m["_TERM"][terminal][gopapageno.PrecYields], conflict{
+		if terminal != termToken {
+			m[termToken][terminal][gopapageno.PrecYields] = append(m[termToken][terminal][gopapageno.PrecYields], conflict{
 				rule: p.rules[0],
 				i:    0,
 				j:    0,
 			})
 
-			m[terminal]["_TERM"][gopapageno.PrecTakes] = append(m[terminal]["_TERM"][gopapageno.PrecTakes], conflict{
+			m[terminal][termToken][gopapageno.PrecTakes] = append(m[terminal][termToken][gopapageno.PrecTakes], conflict{
 				rule: p.rules[0],
 				i:    0,
 				j:    0,
 			})
 		}
 	}
-	m["_TERM"]["_TERM"][gopapageno.PrecEquals] = append(m["_TERM"]["_TERM"][gopapageno.PrecEquals], conflict{
+	m[termToken][termToken][gopapageno.PrecEquals] = append(m[termToken][termToken][gopapageno.PrecEquals], conflict{
 		rule: p.rules[0],
 		i:    0,
 		j:    0,
 	})
 
 	if len(nonOP) > 0 {
-		return nil, fmt.Errorf("rule %s violates OP form: no two nonterminals may be adjacent", nonOP[0].rule)
+		return nil, fmt.Errorf("ruleDescription %s violates OP form: no two nonterminals may be adjacent", nonOP[0].rule)
 	}
 
 	terminals := p.terminals.Slice()
-	if err := moveToFront(terminals, "_TERM"); err != nil {
+	if err := moveToFront(terminals, termToken); err != nil {
 		return nil, fmt.Errorf("could not move _TERM to front: %w", err)
 	}
 

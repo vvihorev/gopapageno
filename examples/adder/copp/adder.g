@@ -10,9 +10,18 @@ S : E
 
 E : (T PLUS)+ T
 {
-    newValue := parserPools[thread].Get()
-    *newValue = *$1.Value.(*int64) + *$3.Value.(*int64)
-    $$.Value = newValue
+    var firstValue, secondValue int64
+
+    if !ruleFlags.Has(gopapageno.RuleAppend) {
+        $$.Value = parserPools[thread].Get()
+
+        firstValue = *$1.Value.(*int64)
+    } else {
+        firstValue = *$$.Value.(*int64)
+    }
+
+    secondValue = *$3.Value.(*int64)
+    *$$.Value.(*int64) = firstValue + secondValue
 };
 
 T : LPAR T RPAR

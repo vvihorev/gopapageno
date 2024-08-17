@@ -300,7 +300,7 @@ func (w *oppWorker) parse(ctx context.Context, stack *OPPStack, tokens *LOS[Toke
 				rhs = rhsBuf[pos:]
 
 				//Find corresponding lhs and ruleNum
-				lhs, ruleNum := w.parser.g.findMatch(rhs)
+				lhs, ruleNum := w.parser.g.findRuleMatch(rhs)
 				if lhs == TokenEmpty {
 					errCh <- fmt.Errorf("could not find match for rhs %v", rhs)
 					return
@@ -311,7 +311,7 @@ func (w *oppWorker) parse(ctx context.Context, stack *OPPStack, tokens *LOS[Toke
 				*lhsToken = newNonTerm
 
 				//Execute the semantic action
-				w.parser.g.Func(ruleNum, lhsToken, rhsTokens, w.id)
+				w.parser.g.Func(ruleNum, RuleSimple, lhsToken, rhsTokens, w.id)
 
 				//Push the new nonterminal onto the stack
 				stack.Push(lhsToken)

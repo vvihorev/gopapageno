@@ -279,9 +279,9 @@ func (l *lexerDescriptor) emit(opts *Options, packageName string) error {
 	/******************
 	 * Lexer Function *
 	 ******************/
-	fmt.Fprintf(f, "\tfn := func(rule int, text string, start int, end int, thread int, token *gopapageno.Token) gopapageno.LexResult {\n")
+	fmt.Fprintf(f, "\tfn := func(ruleDescription int, text string, start int, end int, thread int, token *gopapageno.Token) gopapageno.LexResult {\n")
 	fmt.Fprintf(f, "\t\ttoken.Type = gopapageno.TokenTerm\n")
-	fmt.Fprintf(f, "\t\tswitch rule {\n")
+	fmt.Fprintf(f, "\t\tswitch ruleDescription {\n")
 	for i, rule := range l.rules {
 		fmt.Fprintf(f, "\t\tcase %d:\n", i)
 		for _, line := range strings.Split(rule.Action, "\n") {
