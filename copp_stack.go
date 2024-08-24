@@ -26,14 +26,14 @@ type COPPStack struct {
 }
 
 // NewCOPPStack creates a new COPPStack initialized with one empty stack.
-func NewCOPPStack(tokenStackPool *Pool[stack[*Token]], stateStackPool *Pool[stack[CyclicAutomataState]]) *COPPStack {
+func NewCOPPStack(tokenStackPool *Pool[stack[*Token]], stateStackPool *Pool[stack[CyclicAutomataState]], producedTokens map[*Token]*Token) *COPPStack {
 	return &COPPStack{
 		parserStack:     newParserStack(tokenStackPool),
 		StatesLOS:       NewLOS[CyclicAutomataState](stateStackPool),
 		StateTokenStack: tokenStackPool.Get(),
 
 		// ProducedTokens maps the leftmost rhs-token of a prefix production with its temporary parent.
-		ProducedTokens: make(map[*Token]*Token),
+		ProducedTokens: producedTokens,
 
 		State: CyclicAutomataState{},
 	}

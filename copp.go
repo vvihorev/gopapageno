@@ -22,6 +22,8 @@ type COPParser struct {
 		sweepInput      *Pool[stack[Token]]
 		sweepStack      *Pool[stack[*Token]]
 		sweepStateStack *Pool[stack[CyclicAutomataState]]
+
+		producedTokensMap []map[*Token]*Token
 	}
 
 	workers []*coppWorker
@@ -53,15 +55,21 @@ func NewCOPParser(
 	// Initialize memory pools for cyclic states.
 	p.pools.stateStacks = make([]*Pool[stack[CyclicAutomataState]], p.concurrency)
 
+	p.pools.producedTokensMap = make([]map[*Token]*Token, p.concurrency)
+
 	for thread := 0; thread < p.concurrency; thread++ {
 		stackPoolMultiplier := .25
 		if strategy == ReductionParallel {
 			//stackPoolMultiplier = p.concurrency - thread
 		}
+		ntMultiplier := 1.
 
 		p.pools.stacks[thread] = NewPool(int(float64(stackPoolBaseSize)*stackPoolMultiplier), WithConstructor(newStack[*Token]))
-		p.pools.nonterminals[thread] = NewPool[Token](int(float64(ntPoolBaseSize) * stackPoolMultiplier))
+		p.pools.nonterminals[thread] = NewPool[Token](int(float64(ntPoolBaseSize) * ntMultiplier))
 		p.pools.stateStacks[thread] = NewPool(int(float64(stackPoolBaseSize)*stackPoolMultiplier), WithConstructor(newStack[CyclicAutomataState]))
+
+		//p.pools.producedTokensMap[thread] = make(map[*Token]*Token, ntPoolBaseSize/int(math.Pow(float64(p.g.MaxPrefixLength*p.g.MaxRHSLength), 2)))
+		p.pools.producedTokensMap[thread] = make(map[*Token]*Token)
 	}
 
 	// If reduction is sweep or mixed, we create another stack and input for the final pass.
@@ -105,7 +113,7 @@ func (p *COPParser) Parse(ctx context.Context, tokensLists []*LOS[Token]) (*Toke
 			nextToken = nextInputListIter.Next()
 		}
 
-		s := NewCOPPStack(p.pools.stacks[thread], p.pools.stateStacks[thread])
+		s := NewCOPPStack(p.pools.stacks[thread], p.pools.stateStacks[thread], p.pools.producedTokensMap[thread])
 		go p.workers[thread].parse(ctx, s, tokensLists[thread], nextToken, false, resultCh, errCh)
 	}
 
@@ -321,7 +329,7 @@ func (w *coppWorker) parse(ctx context.Context, stack *COPPStack, tokens *LOS[To
 			stack.StateTokenStack.Tos = stack.State.CurrentIndex
 			stack.State.CurrentLen = 0
 			stack.AppendStateToken(lhsToken)
-			
+
 			for i := len(rhsTokens) - prefixCount - 1; i < len(rhsTokens); i++ {
 				stack.AppendStateToken(rhsTokens[i])
 			}

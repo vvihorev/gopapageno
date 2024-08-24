@@ -1,7 +1,7 @@
 """Combine Benchmarks
 
 This scripts takes as input a number of Go benchmark files, possibly obtained by benchmarks in different packages,
-and outputs a single file that can be used with utilities such as `benchstat` or `benchplot`.
+and outputs a single file that can be used with utilities such as `benchplot`.
 """
 import sys
 

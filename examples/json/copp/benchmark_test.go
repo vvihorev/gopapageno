@@ -10,8 +10,9 @@ import (
 const baseFolder = "../data/"
 
 var table = map[string]any{
-	baseFolder + "generated-1000.json": nil,
-	baseFolder + "emojis-100.json":     nil,
+	baseFolder + "citylots.json":         nil,
+	baseFolder + "emojis-1000.json":      nil,
+	baseFolder + "wikidata-lexemes.json": nil,
 }
 
 func BenchmarkParse(b *testing.B) {

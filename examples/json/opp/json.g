@@ -33,6 +33,8 @@ Value : STRING
 {
 } | BOOL
 {
+} | NULL
+{
 };
 
 Array : LSQUARE RSQUARE
