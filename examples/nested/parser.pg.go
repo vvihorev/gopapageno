@@ -2,10 +2,11 @@
 package main
 
 import (
-	"fmt"
 	"github.com/giornetta/gopapageno"
 	"strings"
+	"fmt"
 )
+
 
 // Non-terminals
 const (
@@ -21,7 +22,7 @@ const (
 	TIMES
 )
 
-func SprintToken(root *gopapageno.Token) string {
+func SprintToken[ValueType any](root *gopapageno.Token) string {
 	var sprintRec func(t *gopapageno.Token, sb *strings.Builder, indent string)
 
 	sprintRec = func(t *gopapageno.Token, sb *strings.Builder, indent string) {
@@ -58,19 +59,23 @@ func SprintToken(root *gopapageno.Token) string {
 		default:
 			sb.WriteString("Unknown")
 		}
-		if t.Value != nil {
-			sb.WriteString(fmt.Sprintf(": %v", t.Value))
-		}
-		sb.WriteString("\n")
 
+		if t.Value != nil {
+			if v, ok := any(t.Value).(*ValueType); ok {
+				sb.WriteString(fmt.Sprintf(": %v", *v))
+			}
+		}
+		
+		sb.WriteString("\n")
+		
 		sprintRec(t.Child, sb, indent)
 		sprintRec(t.Next, sb, indent[:len(indent)-4])
 	}
 
 	var sb strings.Builder
-
+	
 	sprintRec(root, &sb, "")
-
+	
 	return sb.String()
 }
 
@@ -81,20 +86,17 @@ func NewGrammar() *gopapageno.Grammar {
 	maxRHSLen := 4
 	rules := []gopapageno.Rule{
 		{S, []gopapageno.TokenType{E}, gopapageno.RuleSimple},
-		{E, []gopapageno.TokenType{E, TIMES, OPERATOR, E}, gopapageno.RuleCombine},
-		{E, []gopapageno.TokenType{E, TIMES, OPERATOR, TIMES}, gopapageno.RuleAppendRight},
-		{S, []gopapageno.TokenType{S}, gopapageno.RuleSimple},
-		{E, []gopapageno.TokenType{V, TIMES, OPERATOR, E}, gopapageno.RuleAppendLeft},
-		{E, []gopapageno.TokenType{V, TIMES, OPERATOR, TIMES}, gopapageno.RuleCyclic},
+		{E, []gopapageno.TokenType{V, TIMES, OPERATOR, V}, gopapageno.RuleCyclic},
 		{V, []gopapageno.TokenType{NUMBER}, gopapageno.RuleSimple},
 	}
-	compressedRules := []uint16{0, 0, 4, 1, 11, 2, 34, 3, 37, 32769, 60, 2, 0, 1, 32771, 16, 0, 0, 1, 32770, 21, 0, 0, 2, 1, 28, 32771, 31, 1, 1, 0, 1, 2, 0, 2, 3, 0, 0, 0, 1, 32771, 42, 0, 0, 1, 32770, 47, 0, 0, 2, 1, 54, 32771, 57, 1, 4, 0, 1, 5, 0, 3, 6, 0}
+	compressedRules := []uint16{0, 0, 3, 1, 9, 3, 12, 32769, 30, 2, 0, 0, 0, 0, 1, 32771, 17, 0, 0, 1, 32770, 22, 0, 0, 1, 3, 27, 1, 1, 0, 3, 2, 0	}
 
 	maxPrefixLength := 6
 	prefixes := [][]gopapageno.TokenType{
-		{V, TIMES, OPERATOR},
 		{V, TIMES, OPERATOR, V, TIMES, OPERATOR},
 	}
+	compressedPrefixes := []uint16{0, 0, 1, 3, 5, 0, 0, 1, 32771, 10, 0, 0, 1, 32770, 15, 0, 0, 1, 3, 20, 0, 0, 1, 32771, 25, 0, 0, 1, 32770, 30, 1, 1, 0	}
+
 	precMatrix := [][]gopapageno.Precedence{
 		{gopapageno.PrecEquals, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields},
 		{gopapageno.PrecTakes, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecTakes},
@@ -102,15 +104,12 @@ func NewGrammar() *gopapageno.Grammar {
 		{gopapageno.PrecTakes, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEquals},
 	}
 	bitPackedMatrix := []uint64{
-		33981012,
+		33981012, 
 	}
 
-	fn := func(rule uint16, lhs *gopapageno.Token, rhs []*gopapageno.Token, thread int) {
-		var ruleType gopapageno.RuleFlags
-		switch rule {
+	fn := func(ruleDescription uint16, ruleFlags gopapageno.RuleFlags, lhs *gopapageno.Token, rhs []*gopapageno.Token, thread int){
+		switch ruleDescription {
 		case 0:
-			ruleType = gopapageno.RuleSimple
-
 			S0 := lhs
 			E1 := rhs[0]
 
@@ -118,148 +117,49 @@ func NewGrammar() *gopapageno.Grammar {
 			S0.LastChild = E1
 
 			{
-				S0.Value = E1.Value
+			    S0.Value = E1.Value
 			}
 			_ = E1
 		case 1:
-			ruleType = gopapageno.RuleCombine
-
 			E0 := lhs
-			E1 := rhs[0]
+			V1 := rhs[0]
 			TIMES2 := rhs[1]
 			OPERATOR3 := rhs[2]
-			E4 := rhs[3]
+			V4 := rhs[3]
 
-			E0.LastChild.Next = TIMES2
+			if ruleFlags.Has(gopapageno.RuleAppend) {
+				E0.LastChild.Next = TIMES2
+			} else {
+				E0.Child = V1
+				V1.Next = TIMES2
+			}
+
 			TIMES2.Next = OPERATOR3
-			OPERATOR3.Next = E4.Child
-			E0.LastChild = E4.LastChild
+			OPERATOR3.Next = V4
+
+			if ruleFlags.Has(gopapageno.RuleCombine) {
+				OPERATOR3.Next = V4.Child
+				E0.LastChild = V4.LastChild
+			} else {
+				OPERATOR3.Next = V4
+				E0.LastChild = V4
+			}
 
 			{
-				switch ruleType {
-				case gopapageno.RuleCyclic:
-					E0.Value = E1.Value.(int64)
-				case gopapageno.RuleAppendRight:
-					E0.Value = E0.Value.(int64) * 2
-				case gopapageno.RuleAppendLeft:
-					E0.Value = E0.Value.(int64) * 2
-				case gopapageno.RuleCombine:
-					E0.Value = E1.Value.(int64) + E4.Value.(int64)
-				}
+			    v1 := V1.Value.(int64)
+			    v2 := V4.Value.(int64)
+			
+			    if ruleFlags.Has(gopapageno.RuleAppend) || ruleFlags.Has(gopapageno.RuleCombine) {
+			        E0.Value = E0.Value.(int64) + v2
+			    } else {
+			        E0.Value = v1 + v2
+			    }
 			}
-			_ = E1
+			_ = V1
 			_ = TIMES2
 			_ = OPERATOR3
-			_ = E4
+			_ = V4
 		case 2:
-			ruleType = gopapageno.RuleAppendRight
-
-			E0 := lhs
-			E1 := rhs[0]
-			TIMES2 := rhs[1]
-			OPERATOR3 := rhs[2]
-			TIMES4 := rhs[3]
-
-			E0.LastChild.Next = TIMES2
-			TIMES2.Next = OPERATOR3
-			OPERATOR3.Next = TIMES4
-			E0.LastChild = TIMES4
-
-			{
-				switch ruleType {
-				case gopapageno.RuleCyclic:
-					E0.Value = E1.Value.(int64)
-				case gopapageno.RuleAppendRight:
-					E0.Value = E0.Value.(int64) * 2
-				case gopapageno.RuleAppendLeft:
-					E0.Value = E0.Value.(int64) * 2
-				case gopapageno.RuleCombine:
-					E0.Value = E1.Value.(int64) + TIMES4.Value.(int64)
-				}
-			}
-			_ = E1
-			_ = TIMES2
-			_ = OPERATOR3
-			_ = TIMES4
-		case 3:
-			ruleType = gopapageno.RuleSimple
-
-			S0 := lhs
-			S1 := rhs[0]
-
-			S0.Child = S1
-			S0.LastChild = S1
-
-			{
-				S0.Value = S1.Value
-			}
-			_ = S1
-		case 4:
-			ruleType = gopapageno.RuleAppendLeft
-
-			E0 := lhs
-			V1 := rhs[0]
-			TIMES2 := rhs[1]
-			OPERATOR3 := rhs[2]
-			E4 := rhs[3]
-
-			oldChild := E0
-			E0.Child = V1
-			V1.Next = TIMES2
-			TIMES2.Next = OPERATOR3
-			OPERATOR3.Next = E4
-			E4.Next = oldChild
-
-			{
-				switch ruleType {
-				case gopapageno.RuleCyclic:
-					E0.Value = V1.Value.(int64)
-				case gopapageno.RuleAppendRight:
-					E0.Value = E0.Value.(int64) * 2
-				case gopapageno.RuleAppendLeft:
-					E0.Value = E0.Value.(int64) * 2
-				case gopapageno.RuleCombine:
-					E0.Value = V1.Value.(int64) + E4.Value.(int64)
-				}
-			}
-			_ = V1
-			_ = TIMES2
-			_ = OPERATOR3
-			_ = E4
-		case 5:
-			ruleType = gopapageno.RuleCyclic
-
-			E0 := lhs
-			V1 := rhs[0]
-			TIMES2 := rhs[1]
-			OPERATOR3 := rhs[2]
-			TIMES4 := rhs[3]
-
-			E0.Child = V1
-			V1.Next = TIMES2
-			TIMES2.Next = OPERATOR3
-			OPERATOR3.Next = TIMES4
-			E0.LastChild = TIMES4
-
-			{
-				switch ruleType {
-				case gopapageno.RuleCyclic:
-					E0.Value = V1.Value.(int64)
-				case gopapageno.RuleAppendRight:
-					E0.Value = E0.Value.(int64) * 2
-				case gopapageno.RuleAppendLeft:
-					E0.Value = E0.Value.(int64) * 2
-				case gopapageno.RuleCombine:
-					E0.Value = V1.Value.(int64) + TIMES4.Value.(int64)
-				}
-			}
-			_ = V1
-			_ = TIMES2
-			_ = OPERATOR3
-			_ = TIMES4
-		case 6:
-			ruleType = gopapageno.RuleSimple
-
 			V0 := lhs
 			NUMBER1 := rhs[0]
 
@@ -267,24 +167,26 @@ func NewGrammar() *gopapageno.Grammar {
 			V0.LastChild = NUMBER1
 
 			{
-				V0.Value = NUMBER1.Value
+			    V0.Value = NUMBER1.Value
 			}
 			_ = NUMBER1
 		}
-		_ = ruleType
+		_ = ruleFlags
 	}
 
 	return &gopapageno.Grammar{
-		NumTerminals:              numTerminals,
-		NumNonterminals:           numNonTerminals,
-		MaxRHSLength:              maxRHSLen,
-		Rules:                     rules,
-		CompressedRules:           compressedRules,
-		PrecedenceMatrix:          precMatrix,
+		NumTerminals:  numTerminals,
+		NumNonterminals: numNonTerminals,
+		MaxRHSLength: maxRHSLen,
+		Rules: rules,
+		CompressedRules: compressedRules,
+		PrecedenceMatrix: precMatrix,
 		BitPackedPrecedenceMatrix: bitPackedMatrix,
-		MaxPrefixLength:           maxPrefixLength,
-		Prefixes:                  prefixes,
-		Func:                      fn,
-		ParsingStrategy:           gopapageno.COPP,
+		MaxPrefixLength: maxPrefixLength,
+		Prefixes: prefixes,
+		CompressedPrefixes: compressedPrefixes,
+		Func: fn,
+		ParsingStrategy: gopapageno.COPP,
 	}
 }
+

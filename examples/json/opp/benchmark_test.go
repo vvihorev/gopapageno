@@ -23,7 +23,7 @@ func TestProfile(t *testing.T) {
 	avgLen := gopapageno.DefaultAverageTokenLength
 	strat := gopapageno.ReductionParallel
 
-	filename := ""
+	filename := baseFolder + "example.json"
 
 	benchmark.Profile(
 		t,

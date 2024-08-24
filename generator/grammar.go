@@ -158,7 +158,7 @@ func parseRules(input string, strategy gopapageno.ParsingStrategy) ([]ruleDescri
 
 		// Read Rhs
 		r.RHS = make([]string, 0)
-		r.Prefixes = make([][]string, 1)
+		r.Prefixes = make([][]string, 0)
 
 		tokensAfterPrefix := 0
 
@@ -183,6 +183,9 @@ func parseRules(input string, strategy gopapageno.ParsingStrategy) ([]ruleDescri
 
 					tokensAfterPrefix = 0
 
+					if len(r.Prefixes) == 0 {
+						r.Prefixes = make([][]string, 1)
+					}
 					// Add each produced alternative to every rhs found so far.
 					newPrefixes := make([][]string, len(r.Prefixes)*len(alternatives))
 					for i := 0; i < len(r.Prefixes); i++ {
@@ -218,7 +221,7 @@ func parseRules(input string, strategy gopapageno.ParsingStrategy) ([]ruleDescri
 			r.Flags = gopapageno.RuleSimple
 			rules = append(rules, r)
 		} else {
-			if len(r.Prefixes) > 1 {
+			if len(r.Prefixes) >= 1 {
 				fullPrefixes := r.Prefixes
 
 				newPrefixes := make([][]string, len(r.Prefixes))
@@ -281,9 +284,7 @@ func (p *grammarDescription) compile(opts *Options) error {
 	}
 	p.precMatrix = precMatrix
 
-	if opts.Strategy == gopapageno.COPP {
-		p.removePrefixRules()
-	}
+	p.removePrefixRules()
 
 	p.sortRulesByRHS()
 
@@ -421,40 +422,42 @@ func (p *grammarDescription) emit(opts *Options, packageName string) error {
 	///*****************
 	// * COPP Prefixes *
 	// *****************/
-	maxPrefixLen := 0
-	for _, rule := range p.rules {
-		for _, prefix := range rule.Prefixes {
-			if len(prefix) > maxPrefixLen {
-				maxPrefixLen = len(prefix)
+	if opts.Strategy == gopapageno.COPP {
+		maxPrefixLen := 0
+		for _, rule := range p.rules {
+			for _, prefix := range rule.Prefixes {
+				if len(prefix) > maxPrefixLen {
+					maxPrefixLen = len(prefix)
+				}
 			}
 		}
-	}
 
-	fmt.Fprintf(f, "\tmaxPrefixLength := %d\n", maxPrefixLen)
-	fmt.Fprint(f, "\tprefixes := [][]gopapageno.TokenType{\n")
-	for _, rule := range p.rules {
-		for _, prefix := range rule.Prefixes {
-			fmt.Fprintf(f, "\t\t{%s},\n", strings.Join(prefix, ", "))
+		fmt.Fprintf(f, "\tmaxPrefixLength := %d\n", maxPrefixLen)
+		fmt.Fprint(f, "\tprefixes := [][]gopapageno.TokenType{\n")
+		for _, rule := range p.rules {
+			for _, prefix := range rule.Prefixes {
+				fmt.Fprintf(f, "\t\t{%s},\n", strings.Join(prefix, ", "))
+			}
 		}
-	}
-	fmt.Fprintf(f, "\t}\n")
+		fmt.Fprintf(f, "\t}\n")
 
-	prefixTrie, err := newPrefixesTrie(p.rules, p.nonterminals, p.terminals)
-	if err != nil {
-		// TODO: Change this handling.
-		panic(err)
-	}
-
-	compressedPrefixTrie := prefixTrie.Compress(p.nonterminals, p.terminals)
-
-	fmt.Fprintf(f, "\tcompressedPrefixes := []uint16{")
-	if len(compressedPrefixTrie) > 0 {
-		fmt.Fprintf(f, "%d", compressedPrefixTrie[0])
-		for i := 1; i < len(compressedPrefixTrie); i++ {
-			fmt.Fprintf(f, ", %d", compressedPrefixTrie[i])
+		prefixTrie, err := newPrefixesTrie(p.rules, p.nonterminals, p.terminals)
+		if err != nil {
+			// TODO: Change this handling.
+			panic(err)
 		}
+
+		compressedPrefixTrie := prefixTrie.Compress(p.nonterminals, p.terminals)
+
+		fmt.Fprintf(f, "\tcompressedPrefixes := []uint16{")
+		if len(compressedPrefixTrie) > 0 {
+			fmt.Fprintf(f, "%d", compressedPrefixTrie[0])
+			for i := 1; i < len(compressedPrefixTrie); i++ {
+				fmt.Fprintf(f, ", %d", compressedPrefixTrie[i])
+			}
+		}
+		fmt.Fprintf(f, "\t}\n\n")
 	}
-	fmt.Fprintf(f, "\t}\n\n")
 
 	/*********************
 	 * Precedence Matrix *
@@ -497,9 +500,11 @@ func (p *grammarDescription) emit(opts *Options, packageName string) error {
 	fmt.Fprintf(f, "\t\tCompressedRules: compressedRules,\n")
 	fmt.Fprintf(f, "\t\tPrecedenceMatrix: precMatrix,\n")
 	fmt.Fprintf(f, "\t\tBitPackedPrecedenceMatrix: bitPackedMatrix,\n")
-	fmt.Fprintf(f, "\t\tMaxPrefixLength: maxPrefixLength,\n")
-	fmt.Fprintf(f, "\t\tPrefixes: prefixes,\n")
-	fmt.Fprintf(f, "\t\tCompressedPrefixes: compressedPrefixes,\n")
+	if opts.Strategy == gopapageno.COPP {
+		fmt.Fprintf(f, "\t\tMaxPrefixLength: maxPrefixLength,\n")
+		fmt.Fprintf(f, "\t\tPrefixes: prefixes,\n")
+		fmt.Fprintf(f, "\t\tCompressedPrefixes: compressedPrefixes,\n")
+	}
 	fmt.Fprintf(f, "\t\tFunc: fn,\n")
 	fmt.Fprintf(f, "\t\tParsingStrategy: gopapageno.%s,\n", opts.Strategy)
 

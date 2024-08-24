@@ -2,10 +2,11 @@
 package main
 
 import (
-	"fmt"
 	"github.com/giornetta/gopapageno"
 	"strings"
+	"fmt"
 )
+
 
 // Non-terminals
 const (
@@ -30,7 +31,7 @@ const (
 	STRING
 )
 
-func SprintToken[TokenValue any](root *gopapageno.Token) string {
+func SprintToken[ValueType any](root *gopapageno.Token) string {
 	var sprintRec func(t *gopapageno.Token, sb *strings.Builder, indent string)
 
 	sprintRec = func(t *gopapageno.Token, sb *strings.Builder, indent string) {
@@ -85,19 +86,23 @@ func SprintToken[TokenValue any](root *gopapageno.Token) string {
 		default:
 			sb.WriteString("Unknown")
 		}
-		if t.Value != nil {
-			sb.WriteString(fmt.Sprintf(": %v", *t.Value.(*TokenValue)))
-		}
-		sb.WriteString("\n")
 
+		if t.Value != nil {
+			if v, ok := any(t.Value).(*ValueType); ok {
+				sb.WriteString(fmt.Sprintf(": %v", *v))
+			}
+		}
+		
+		sb.WriteString("\n")
+		
 		sprintRec(t.Child, sb, indent)
 		sprintRec(t.Next, sb, indent[:len(indent)-4])
 	}
 
 	var sb strings.Builder
-
+	
 	sprintRec(root, &sb, "")
-
+	
 	return sb.String()
 }
 
@@ -111,7 +116,6 @@ func NewGrammar() *gopapageno.Grammar {
 		{Elements, []gopapageno.TokenType{Array_Elements_Value, COMMA, Elements}, gopapageno.RuleSimple},
 		{Elements, []gopapageno.TokenType{Array_Elements_Value, COMMA, Elements_Object_Value}, gopapageno.RuleSimple},
 		{Elements, []gopapageno.TokenType{Array_Elements_Value, COMMA, Elements_Value}, gopapageno.RuleSimple},
-		{Document, []gopapageno.TokenType{Document}, gopapageno.RuleSimple},
 		{Elements, []gopapageno.TokenType{Elements, COMMA, Array_Elements_Value}, gopapageno.RuleSimple},
 		{Elements, []gopapageno.TokenType{Elements, COMMA, Elements}, gopapageno.RuleSimple},
 		{Elements, []gopapageno.TokenType{Elements, COMMA, Elements_Object_Value}, gopapageno.RuleSimple},
@@ -139,10 +143,8 @@ func NewGrammar() *gopapageno.Grammar {
 		{Members, []gopapageno.TokenType{STRING, COLON, Elements_Object_Value}, gopapageno.RuleSimple},
 		{Members, []gopapageno.TokenType{STRING, COLON, Elements_Value}, gopapageno.RuleSimple},
 	}
-	compressedRules := []uint16{0, 0, 11, 1, 25, 2, 53, 3, 56, 4, 84, 5, 112, 6, 140, 32769, 153, 32772, 156, 32773, 174, 32774, 222, 32777, 225, 0, 0, 1, 32771, 30, 0, 0, 4, 1, 41, 3, 44, 4, 47, 5, 50, 3, 0, 0, 3, 1, 0, 3, 2, 0, 3, 3, 0, 2, 4, 0, 0, 0, 1, 32771, 61, 0, 0, 4, 1, 72, 3, 75, 4, 78, 5, 81, 3, 5, 0, 3, 6, 0, 3, 7, 0, 3, 8, 0, 0, 0, 1, 32771, 89, 0, 0, 4, 1, 100, 3, 103, 4, 106, 5, 109, 3, 9, 0, 3, 10, 0, 3, 11, 0, 3, 12, 0, 0, 0, 1, 32771, 117, 0, 0, 4, 1, 128, 3, 131, 4, 134, 5, 137, 3, 13, 0, 3, 14, 0, 3, 15, 0, 3, 16, 0, 0, 0, 1, 32771, 145, 0, 0, 1, 6, 150, 6, 17, 0, 5, 18, 0, 0, 0, 2, 6, 163, 32775, 171, 0, 0, 1, 32775, 168, 4, 19, 0, 4, 20, 0, 0, 0, 5, 1, 187, 3, 195, 4, 203, 5, 211, 32776, 219, 0, 0, 1, 32776, 192, 1, 21, 0, 0, 0, 1, 32776, 200, 1, 22, 0, 0, 0, 1, 32776, 208, 1, 23, 0, 0, 0, 1, 32776, 216, 1, 24, 0, 1, 25, 0, 5, 26, 0, 5, 27, 1, 32770, 230, 0, 0, 3, 1, 239, 4, 242, 5, 245, 6, 28, 0, 6, 29, 0, 6, 30, 0}
+	compressedRules := []uint16{0, 0, 10, 1, 23, 3, 51, 4, 79, 5, 107, 6, 135, 32769, 148, 32772, 151, 32773, 169, 32774, 217, 32777, 220, 0, 0, 1, 32771, 28, 0, 0, 4, 1, 39, 3, 42, 4, 45, 5, 48, 3, 0, 0, 3, 1, 0, 3, 2, 0, 3, 3, 0, 0, 0, 1, 32771, 56, 0, 0, 4, 1, 67, 3, 70, 4, 73, 5, 76, 3, 4, 0, 3, 5, 0, 3, 6, 0, 3, 7, 0, 0, 0, 1, 32771, 84, 0, 0, 4, 1, 95, 3, 98, 4, 101, 5, 104, 3, 8, 0, 3, 9, 0, 3, 10, 0, 3, 11, 0, 0, 0, 1, 32771, 112, 0, 0, 4, 1, 123, 3, 126, 4, 129, 5, 132, 3, 12, 0, 3, 13, 0, 3, 14, 0, 3, 15, 0, 0, 0, 1, 32771, 140, 0, 0, 1, 6, 145, 6, 16, 0, 5, 17, 0, 0, 0, 2, 6, 158, 32775, 166, 0, 0, 1, 32775, 163, 4, 18, 0, 4, 19, 0, 0, 0, 5, 1, 182, 3, 190, 4, 198, 5, 206, 32776, 214, 0, 0, 1, 32776, 187, 1, 20, 0, 0, 0, 1, 32776, 195, 1, 21, 0, 0, 0, 1, 32776, 203, 1, 22, 0, 0, 0, 1, 32776, 211, 1, 23, 0, 1, 24, 0, 5, 25, 0, 5, 26, 1, 32770, 225, 0, 0, 3, 1, 234, 4, 237, 5, 240, 6, 27, 0, 6, 28, 0, 6, 29, 0	}
 
-	maxPrefixLength := 0
-	prefixes := [][]gopapageno.TokenType{}
 	precMatrix := [][]gopapageno.Precedence{
 		{gopapageno.PrecEquals, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields},
 		{gopapageno.PrecTakes, gopapageno.PrecEquals, gopapageno.PrecEquals, gopapageno.PrecTakes, gopapageno.PrecEquals, gopapageno.PrecEquals, gopapageno.PrecEquals, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecEquals},
@@ -156,15 +158,12 @@ func NewGrammar() *gopapageno.Grammar {
 		{gopapageno.PrecTakes, gopapageno.PrecEquals, gopapageno.PrecEquals, gopapageno.PrecTakes, gopapageno.PrecEquals, gopapageno.PrecEquals, gopapageno.PrecEquals, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecEquals},
 	}
 	bitPackedMatrix := []uint64{
-		7247846681816159572, 9385875886894639452, 586172198017311360, 40,
+		7247846681816159572, 9385875886894639452, 586172198017311360, 40, 
 	}
 
-	fn := func(rule uint16, lhs *gopapageno.Token, rhs []*gopapageno.Token, thread int) {
-		var ruleType gopapageno.RuleFlags
-		switch rule {
+	fn := func(ruleDescription uint16, ruleFlags gopapageno.RuleFlags, lhs *gopapageno.Token, rhs []*gopapageno.Token, thread int){
+		switch ruleDescription {
 		case 0:
-			ruleType = gopapageno.RuleSimple
-
 			Elements0 := lhs
 			Array_Elements_Value1 := rhs[0]
 			COMMA2 := rhs[1]
@@ -181,8 +180,6 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = COMMA2
 			_ = Array_Elements_Value3
 		case 1:
-			ruleType = gopapageno.RuleSimple
-
 			Elements0 := lhs
 			Array_Elements_Value1 := rhs[0]
 			COMMA2 := rhs[1]
@@ -199,8 +196,6 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = COMMA2
 			_ = Elements3
 		case 2:
-			ruleType = gopapageno.RuleSimple
-
 			Elements0 := lhs
 			Array_Elements_Value1 := rhs[0]
 			COMMA2 := rhs[1]
@@ -217,8 +212,6 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = COMMA2
 			_ = Elements_Object_Value3
 		case 3:
-			ruleType = gopapageno.RuleSimple
-
 			Elements0 := lhs
 			Array_Elements_Value1 := rhs[0]
 			COMMA2 := rhs[1]
@@ -235,129 +228,102 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = COMMA2
 			_ = Elements_Value3
 		case 4:
-			ruleType = gopapageno.RuleSimple
+			Elements0 := lhs
+			Elements1 := rhs[0]
+			COMMA2 := rhs[1]
+			Array_Elements_Value3 := rhs[2]
 
-			Document0 := lhs
-			Document1 := rhs[0]
-
-			Document0.Child = Document1
-			Document0.LastChild = Document1
+			Elements0.Child = Elements1
+			Elements1.Next = COMMA2
+			COMMA2.Next = Array_Elements_Value3
+			Elements0.LastChild = Array_Elements_Value3
 
 			{
-				Document0.Value = Document1.Value
 			}
-			_ = Document1
+			_ = Elements1
+			_ = COMMA2
+			_ = Array_Elements_Value3
 		case 5:
-			ruleType = gopapageno.RuleSimple
-
 			Elements0 := lhs
 			Elements1 := rhs[0]
 			COMMA2 := rhs[1]
-			Array_Elements_Value3 := rhs[2]
+			Elements3 := rhs[2]
 
 			Elements0.Child = Elements1
 			Elements1.Next = COMMA2
-			COMMA2.Next = Array_Elements_Value3
-			Elements0.LastChild = Array_Elements_Value3
+			COMMA2.Next = Elements3
+			Elements0.LastChild = Elements3
 
 			{
 			}
 			_ = Elements1
 			_ = COMMA2
-			_ = Array_Elements_Value3
+			_ = Elements3
 		case 6:
-			ruleType = gopapageno.RuleSimple
-
 			Elements0 := lhs
 			Elements1 := rhs[0]
 			COMMA2 := rhs[1]
-			Elements3 := rhs[2]
+			Elements_Object_Value3 := rhs[2]
 
 			Elements0.Child = Elements1
 			Elements1.Next = COMMA2
-			COMMA2.Next = Elements3
-			Elements0.LastChild = Elements3
+			COMMA2.Next = Elements_Object_Value3
+			Elements0.LastChild = Elements_Object_Value3
 
 			{
 			}
 			_ = Elements1
 			_ = COMMA2
-			_ = Elements3
+			_ = Elements_Object_Value3
 		case 7:
-			ruleType = gopapageno.RuleSimple
-
 			Elements0 := lhs
 			Elements1 := rhs[0]
 			COMMA2 := rhs[1]
-			Elements_Object_Value3 := rhs[2]
+			Elements_Value3 := rhs[2]
 
 			Elements0.Child = Elements1
 			Elements1.Next = COMMA2
-			COMMA2.Next = Elements_Object_Value3
-			Elements0.LastChild = Elements_Object_Value3
+			COMMA2.Next = Elements_Value3
+			Elements0.LastChild = Elements_Value3
 
 			{
 			}
 			_ = Elements1
 			_ = COMMA2
-			_ = Elements_Object_Value3
+			_ = Elements_Value3
 		case 8:
-			ruleType = gopapageno.RuleSimple
-
 			Elements0 := lhs
-			Elements1 := rhs[0]
+			Elements_Object_Value1 := rhs[0]
 			COMMA2 := rhs[1]
-			Elements_Value3 := rhs[2]
+			Array_Elements_Value3 := rhs[2]
 
-			Elements0.Child = Elements1
-			Elements1.Next = COMMA2
-			COMMA2.Next = Elements_Value3
-			Elements0.LastChild = Elements_Value3
+			Elements0.Child = Elements_Object_Value1
+			Elements_Object_Value1.Next = COMMA2
+			COMMA2.Next = Array_Elements_Value3
+			Elements0.LastChild = Array_Elements_Value3
 
 			{
 			}
-			_ = Elements1
+			_ = Elements_Object_Value1
 			_ = COMMA2
-			_ = Elements_Value3
+			_ = Array_Elements_Value3
 		case 9:
-			ruleType = gopapageno.RuleSimple
-
 			Elements0 := lhs
 			Elements_Object_Value1 := rhs[0]
 			COMMA2 := rhs[1]
-			Array_Elements_Value3 := rhs[2]
+			Elements3 := rhs[2]
 
 			Elements0.Child = Elements_Object_Value1
 			Elements_Object_Value1.Next = COMMA2
-			COMMA2.Next = Array_Elements_Value3
-			Elements0.LastChild = Array_Elements_Value3
+			COMMA2.Next = Elements3
+			Elements0.LastChild = Elements3
 
 			{
 			}
 			_ = Elements_Object_Value1
 			_ = COMMA2
-			_ = Array_Elements_Value3
+			_ = Elements3
 		case 10:
-			ruleType = gopapageno.RuleSimple
-
-			Elements0 := lhs
-			Elements_Object_Value1 := rhs[0]
-			COMMA2 := rhs[1]
-			Elements3 := rhs[2]
-
-			Elements0.Child = Elements_Object_Value1
-			Elements_Object_Value1.Next = COMMA2
-			COMMA2.Next = Elements3
-			Elements0.LastChild = Elements3
-
-			{
-			}
-			_ = Elements_Object_Value1
-			_ = COMMA2
-			_ = Elements3
-		case 11:
-			ruleType = gopapageno.RuleSimple
-
 			Elements0 := lhs
 			Elements_Object_Value1 := rhs[0]
 			COMMA2 := rhs[1]
@@ -373,9 +339,7 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = Elements_Object_Value1
 			_ = COMMA2
 			_ = Elements_Object_Value3
-		case 12:
-			ruleType = gopapageno.RuleSimple
-
+		case 11:
 			Elements0 := lhs
 			Elements_Object_Value1 := rhs[0]
 			COMMA2 := rhs[1]
@@ -391,9 +355,7 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = Elements_Object_Value1
 			_ = COMMA2
 			_ = Elements_Value3
-		case 13:
-			ruleType = gopapageno.RuleSimple
-
+		case 12:
 			Elements0 := lhs
 			Elements_Value1 := rhs[0]
 			COMMA2 := rhs[1]
@@ -409,9 +371,7 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = Elements_Value1
 			_ = COMMA2
 			_ = Array_Elements_Value3
-		case 14:
-			ruleType = gopapageno.RuleSimple
-
+		case 13:
 			Elements0 := lhs
 			Elements_Value1 := rhs[0]
 			COMMA2 := rhs[1]
@@ -427,9 +387,7 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = Elements_Value1
 			_ = COMMA2
 			_ = Elements3
-		case 15:
-			ruleType = gopapageno.RuleSimple
-
+		case 14:
 			Elements0 := lhs
 			Elements_Value1 := rhs[0]
 			COMMA2 := rhs[1]
@@ -445,9 +403,7 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = Elements_Value1
 			_ = COMMA2
 			_ = Elements_Object_Value3
-		case 16:
-			ruleType = gopapageno.RuleSimple
-
+		case 15:
 			Elements0 := lhs
 			Elements_Value1 := rhs[0]
 			COMMA2 := rhs[1]
@@ -463,9 +419,7 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = Elements_Value1
 			_ = COMMA2
 			_ = Elements_Value3
-		case 17:
-			ruleType = gopapageno.RuleSimple
-
+		case 16:
 			Members0 := lhs
 			Members1 := rhs[0]
 			COMMA2 := rhs[1]
@@ -481,9 +435,7 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = Members1
 			_ = COMMA2
 			_ = Members3
-		case 18:
-			ruleType = gopapageno.RuleSimple
-
+		case 17:
 			Elements_Value0 := lhs
 			BOOL1 := rhs[0]
 
@@ -493,9 +445,7 @@ func NewGrammar() *gopapageno.Grammar {
 			{
 			}
 			_ = BOOL1
-		case 19:
-			ruleType = gopapageno.RuleSimple
-
+		case 18:
 			Elements_Object_Value0 := lhs
 			LCURLY1 := rhs[0]
 			Members2 := rhs[1]
@@ -511,9 +461,7 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = LCURLY1
 			_ = Members2
 			_ = RCURLY3
-		case 20:
-			ruleType = gopapageno.RuleSimple
-
+		case 19:
 			Elements_Object_Value0 := lhs
 			LCURLY1 := rhs[0]
 			RCURLY2 := rhs[1]
@@ -526,9 +474,7 @@ func NewGrammar() *gopapageno.Grammar {
 			}
 			_ = LCURLY1
 			_ = RCURLY2
-		case 21:
-			ruleType = gopapageno.RuleSimple
-
+		case 20:
 			Array_Elements_Value0 := lhs
 			LSQUARE1 := rhs[0]
 			Array_Elements_Value2 := rhs[1]
@@ -544,9 +490,7 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = LSQUARE1
 			_ = Array_Elements_Value2
 			_ = RSQUARE3
-		case 22:
-			ruleType = gopapageno.RuleSimple
-
+		case 21:
 			Array_Elements_Value0 := lhs
 			LSQUARE1 := rhs[0]
 			Elements2 := rhs[1]
@@ -562,9 +506,7 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = LSQUARE1
 			_ = Elements2
 			_ = RSQUARE3
-		case 23:
-			ruleType = gopapageno.RuleSimple
-
+		case 22:
 			Array_Elements_Value0 := lhs
 			LSQUARE1 := rhs[0]
 			Elements_Object_Value2 := rhs[1]
@@ -580,9 +522,7 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = LSQUARE1
 			_ = Elements_Object_Value2
 			_ = RSQUARE3
-		case 24:
-			ruleType = gopapageno.RuleSimple
-
+		case 23:
 			Array_Elements_Value0 := lhs
 			LSQUARE1 := rhs[0]
 			Elements_Value2 := rhs[1]
@@ -598,9 +538,7 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = LSQUARE1
 			_ = Elements_Value2
 			_ = RSQUARE3
-		case 25:
-			ruleType = gopapageno.RuleSimple
-
+		case 24:
 			Array_Elements_Value0 := lhs
 			LSQUARE1 := rhs[0]
 			RSQUARE2 := rhs[1]
@@ -613,9 +551,7 @@ func NewGrammar() *gopapageno.Grammar {
 			}
 			_ = LSQUARE1
 			_ = RSQUARE2
-		case 26:
-			ruleType = gopapageno.RuleSimple
-
+		case 25:
 			Elements_Value0 := lhs
 			NUMBER1 := rhs[0]
 
@@ -625,9 +561,7 @@ func NewGrammar() *gopapageno.Grammar {
 			{
 			}
 			_ = NUMBER1
-		case 27:
-			ruleType = gopapageno.RuleSimple
-
+		case 26:
 			Elements_Value0 := lhs
 			STRING1 := rhs[0]
 
@@ -637,9 +571,7 @@ func NewGrammar() *gopapageno.Grammar {
 			{
 			}
 			_ = STRING1
-		case 28:
-			ruleType = gopapageno.RuleSimple
-
+		case 27:
 			Members0 := lhs
 			STRING1 := rhs[0]
 			COLON2 := rhs[1]
@@ -655,9 +587,7 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = STRING1
 			_ = COLON2
 			_ = Array_Elements_Value3
-		case 29:
-			ruleType = gopapageno.RuleSimple
-
+		case 28:
 			Members0 := lhs
 			STRING1 := rhs[0]
 			COLON2 := rhs[1]
@@ -673,9 +603,7 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = STRING1
 			_ = COLON2
 			_ = Elements_Object_Value3
-		case 30:
-			ruleType = gopapageno.RuleSimple
-
+		case 29:
 			Members0 := lhs
 			STRING1 := rhs[0]
 			COLON2 := rhs[1]
@@ -692,20 +620,19 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = COLON2
 			_ = Elements_Value3
 		}
-		_ = ruleType
+		_ = ruleFlags
 	}
 
 	return &gopapageno.Grammar{
-		NumTerminals:              numTerminals,
-		NumNonterminals:           numNonTerminals,
-		MaxRHSLength:              maxRHSLen,
-		Rules:                     rules,
-		CompressedRules:           compressedRules,
-		PrecedenceMatrix:          precMatrix,
+		NumTerminals:  numTerminals,
+		NumNonterminals: numNonTerminals,
+		MaxRHSLength: maxRHSLen,
+		Rules: rules,
+		CompressedRules: compressedRules,
+		PrecedenceMatrix: precMatrix,
 		BitPackedPrecedenceMatrix: bitPackedMatrix,
-		MaxPrefixLength:           maxPrefixLength,
-		Prefixes:                  prefixes,
-		Func:                      fn,
-		ParsingStrategy:           gopapageno.AOPP,
+		Func: fn,
+		ParsingStrategy: gopapageno.AOPP,
 	}
 }
+

@@ -321,10 +321,12 @@ func (w *coppWorker) parse(ctx context.Context, stack *COPPStack, tokens *LOS[To
 			stack.StateTokenStack.Tos = stack.State.CurrentIndex
 			stack.State.CurrentLen = 0
 			stack.AppendStateToken(lhsToken)
+			
+			for i := len(rhsTokens) - prefixCount - 1; i < len(rhsTokens); i++ {
+				stack.AppendStateToken(rhsTokens[i])
+			}
 
 			prefixCount = 0
-
-			stack.AppendStateToken(inputToken)
 
 			// Replace the topmost token on the stack, keeping its state unchanged.
 			// TODO: Consider adding a Shift method to stack.

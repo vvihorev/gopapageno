@@ -63,7 +63,7 @@ func run() error {
 	if *strategyFlag == "parallel" {
 		strat = gopapageno.ReductionParallel
 	} else if *strategyFlag == "mixed" {
-		strat = gopapageno.ReductionMixed
+		strat = gopapageno.ReductionMixed	
 	}
 
 	r := gopapageno.NewRunner(
@@ -86,12 +86,12 @@ func run() error {
 
 	fmt.Printf("Parsing took: %v\n", time.Since(start))
 	// fmt.Printf("Result: %v\n", root.Value)
-
+	
 	h := root.Height()
 	s := root.Size()
 	fmt.Printf("Height: %d\nSize: %d\n", h, s)
 	if h < 10 && s < 100 {
-		fmt.Println(SprintToken(root))
+		fmt.Println(SprintToken[any](root))
 	}
 
 	return nil

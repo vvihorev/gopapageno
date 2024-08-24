@@ -7,17 +7,15 @@ S : E
     $$.Value = $1.Value
 };
 
-E : (V TIMES OPERATOR)+ TIMES
+E : (V TIMES OPERATOR)+ V
 {
-    switch ruleType {
-    case gopapageno.RuleCyclic:
-        $$.Value = $1.Value.(int64)
-    case gopapageno.RuleAppendRight:
-        $$.Value = $$.Value.(int64) * 2
-    case gopapageno.RuleAppendLeft:
-        $$.Value = $$.Value.(int64) * 2
-    case gopapageno.RuleCombine:
-        $$.Value = $1.Value.(int64) + $4.Value.(int64)
+    v1 := $1.Value.(int64)
+    v2 := $4.Value.(int64)
+
+    if ruleFlags.Has(gopapageno.RuleAppend) || ruleFlags.Has(gopapageno.RuleCombine) {
+        $$.Value = $$.Value.(int64) + v2
+    } else {
+        $$.Value = v1 + v2
     }
 };
 

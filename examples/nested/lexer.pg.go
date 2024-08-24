@@ -3,9 +3,11 @@ package main
 
 import "github.com/giornetta/gopapageno"
 
+
 import (
 	"strconv"
 )
+
 
 func NewLexer() *gopapageno.Lexer {
 	automaton := []gopapageno.LexerDFAState{
@@ -22,26 +24,26 @@ func NewLexer() *gopapageno.Lexer {
 		{[256]int{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, true, []int{}},
 	}
 
-	fn := func(rule int, text string, start int, end int, thread int, token *gopapageno.Token) gopapageno.LexResult {
+	fn := func(ruleDescription int, text string, start int, end int, thread int, token *gopapageno.Token) gopapageno.LexResult {
 		token.Type = gopapageno.TokenTerm
-		switch rule {
+		switch ruleDescription {
 		case 0:
 			{
-				num, err := strconv.ParseInt(text, 10, 64)
-				if err != nil {
-					return gopapageno.LexErr
-				}
-
-				token.Type = NUMBER
-				token.Value = num
+			    num, err := strconv.ParseInt(text, 10, 64)
+			    if err != nil {
+			        return gopapageno.LexErr
+			    }
+			
+			    token.Type = NUMBER
+			    token.Value = num
 			}
 		case 1:
 			{
-				token.Type = TIMES
+			    token.Type = TIMES
 			}
 		case 2:
 			{
-				token.Type = OPERATOR
+			    token.Type = OPERATOR
 			}
 		case 3:
 			{
@@ -55,8 +57,8 @@ func NewLexer() *gopapageno.Lexer {
 	}
 
 	return &gopapageno.Lexer{
-		Automaton:          automaton,
+		Automaton: automaton,
 		CutPointsAutomaton: cutPointsAutomaton,
-		Func:               fn,
+		Func: fn,
 	}
 }

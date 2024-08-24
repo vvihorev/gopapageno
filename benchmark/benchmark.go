@@ -70,7 +70,7 @@ func Run(b *testing.B, r *gopapageno.Runner, filename string) {
 
 	bytes, err := os.ReadFile(filename)
 	if err != nil {
-		b.Fatalf("could not read source file: %v", err)
+		b.Fatalf("could not read source file %s: %v", filename, err)
 	}
 
 	ctx := context.Background()
