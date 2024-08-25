@@ -46,7 +46,7 @@ func (s ReductionStrategy) String() string {
 type ParsingStrategy uint8
 
 const (
-	// OPP is Operator-Precedence Parsing. It is the original parsing reductionStrategy.
+	// OPP is Operator-Precedence Parsing. It is the original parsing ReductionStrategy.
 	OPP ParsingStrategy = iota
 	// AOPP is Associative Operator Precedence Parsing.
 	AOPP
@@ -92,14 +92,14 @@ type Parser interface {
 	Parse(ctx context.Context, tokensLists []*LOS[Token]) (*Token, error)
 }
 
-func (g *Grammar) Parser(src []byte, concurrency int, avgTokenLen int, strat ReductionStrategy) Parser {
+func (g *Grammar) Parser(src []byte, opts *RunOptions) Parser {
 	switch g.ParsingStrategy {
 	case OPP:
-		return NewOPParser(g, src, concurrency, avgTokenLen, strat)
+		return NewOPParser(g, src, opts)
 	case AOPP:
-		return NewOPParser(g, src, concurrency, avgTokenLen, strat)
+		return NewAOPParser(g, src, opts)
 	case COPP:
-		return NewCOPParser(g, src, concurrency, avgTokenLen, strat)
+		return NewCOPParser(g, src, opts)
 	default:
 		panic("unknown parser strategy")
 	}

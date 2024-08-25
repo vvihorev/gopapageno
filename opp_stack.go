@@ -54,6 +54,10 @@ func (s *OPPStack) Combine() *OPPStack {
 	it := s.HeadIterator()
 	for t := it.Next(); t != nil && t.Precedence != PrecYields; t = it.Next() {
 		topLeft = *t
+
+		if t.Type == TokenTerm {
+			break
+		}
 	}
 
 	list := NewOPPStack(s.pool)
@@ -71,8 +75,6 @@ func (s *OPPStack) Combine() *OPPStack {
 }
 
 func (s *OPPStack) CombineLOS(pool *Pool[stack[Token]]) *LOS[Token] {
-	var tok Token
-
 	list := NewLOS[Token](pool)
 
 	it := s.HeadIterator()
@@ -81,9 +83,8 @@ func (s *OPPStack) CombineLOS(pool *Pool[stack[Token]]) *LOS[Token] {
 	it.Next()
 
 	for t := it.Next(); t != nil && t.Precedence != PrecYields; t = it.Next() {
-		tok = *t
-		tok.Precedence = PrecEmpty
-		list.Push(tok)
+		t.Precedence = PrecEmpty
+		list.Push(*t)
 	}
 
 	return list

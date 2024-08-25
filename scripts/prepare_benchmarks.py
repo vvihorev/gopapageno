@@ -5,20 +5,23 @@ and modifies them so that they can be used to compare them with utilities such a
 """
 import sys
 import os
+import subprocess
 
 
 def print_usage():
-    print('Usage: prepare_benchmarks file1 file2 ... fileN')
+    print('Usage: prepare_benchmarks file1 file2 ... fileN outfile')
     sys.exit(1)
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
+    if len(sys.argv) < 4:
         print_usage()
 
     strategies = ['copp', 'aopp', 'opp']
 
-    for i, filename in enumerate(sys.argv[1:]):
+    stat = []
+
+    for i, filename in enumerate(sys.argv[1:-1]):
         with open(filename) as f:
             lines = f.read()
 
@@ -27,5 +30,14 @@ if __name__ == '__main__':
                 lines = lines.replace(strat.upper(), '')
 
         fn, ext = os.path.splitext(filename)
-        with open(fn + "_stat" + ext, 'w') as f:
+        statfname = fn + "_stat" + ext
+        with open(statfname, 'w') as f:
             f.write(lines)
+
+        stat.append(statfname)
+
+    with open(sys.argv[-1], 'w') as f:
+        subprocess.run(['benchstat'] + stat, stdout=f)
+
+    for fname in stat:
+        os.remove(fname)

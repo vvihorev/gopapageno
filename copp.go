@@ -31,20 +31,18 @@ type COPParser struct {
 }
 
 // NewCOPParser allocates all required resources for a COPParser to be usable.
-func NewCOPParser(
-	g *Grammar,
-	src []byte, concurrency int, avgTokenLength int, strategy ReductionStrategy) *COPParser {
+func NewCOPParser(g *Grammar, src []byte, opts *RunOptions) *COPParser {
 	p := &COPParser{
 		g:                 g,
-		concurrency:       concurrency,
-		reductionStrategy: strategy,
-		workers:           make([]*coppWorker, concurrency),
-		results:           make([]*COPPStack, concurrency),
+		concurrency:       opts.Concurrency,
+		reductionStrategy: opts.ReductionStrategy,
+		workers:           make([]*coppWorker, opts.Concurrency),
+		results:           make([]*COPPStack, opts.Concurrency),
 	}
 
 	srcLen := len(src)
-	stackPoolBaseSize := stacksCount[*Token](src, p.concurrency, avgTokenLength)
-	ntPoolBaseSize := srcLen / avgTokenLength / p.concurrency
+	stackPoolBaseSize := stacksCountFactored[*Token](src, opts)
+	ntPoolBaseSize := srcLen / opts.AvgTokenLength / p.concurrency
 
 	// Initialize memory pools for stacks.
 	p.pools.stacks = make([]*Pool[stack[*Token]], p.concurrency)
@@ -57,32 +55,30 @@ func NewCOPParser(
 
 	p.pools.producedTokensMap = make([]map[*Token]*Token, p.concurrency)
 
+	stackMult := 1.0
+	if stackPoolBaseSize == 0 {
+		stackMult = 1.0 - (0.999 * opts.ParallelFactor)
+	}
+	ntMultiplier := 1.0 - (0.6 * opts.ParallelFactor)
+
 	for thread := 0; thread < p.concurrency; thread++ {
-		stackPoolMultiplier := .25
-		if strategy == ReductionParallel {
-			//stackPoolMultiplier = p.concurrency - thread
-		}
-		ntMultiplier := 1.
-
-		p.pools.stacks[thread] = NewPool(int(float64(stackPoolBaseSize)*stackPoolMultiplier), WithConstructor(newStack[*Token]))
+		p.pools.stacks[thread] = NewPool(stackPoolBaseSize+1, WithConstructor(newStackFactory[*Token](stackMult)))
 		p.pools.nonterminals[thread] = NewPool[Token](int(float64(ntPoolBaseSize) * ntMultiplier))
-		p.pools.stateStacks[thread] = NewPool(int(float64(stackPoolBaseSize)*stackPoolMultiplier), WithConstructor(newStack[CyclicAutomataState]))
+		p.pools.stateStacks[thread] = NewPool(stackPoolBaseSize+1, WithConstructor(newStackFactory[CyclicAutomataState](stackMult)))
 
-		//p.pools.producedTokensMap[thread] = make(map[*Token]*Token, ntPoolBaseSize/int(math.Pow(float64(p.g.MaxPrefixLength*p.g.MaxRHSLength), 2)))
-		p.pools.producedTokensMap[thread] = make(map[*Token]*Token)
+		p.pools.producedTokensMap[thread] = make(map[*Token]*Token, int(float64(ntPoolBaseSize)*ntMultiplier))
 	}
 
 	// If reduction is sweep or mixed, we create another stack and input for the final pass.
-	// TODO: Is this strictly necessary?
-	if strategy == ReductionSweep || strategy == ReductionMixed {
-		inputPoolBaseSize := stacksCount[Token](src, p.concurrency, avgTokenLength)
+	if p.concurrency > 1 && (p.reductionStrategy == ReductionSweep || p.reductionStrategy == ReductionMixed) {
+		inputPoolBaseSize := stacksCount[Token](src, p.concurrency, opts.AvgTokenLength)
 
 		p.pools.sweepInput = NewPool(inputPoolBaseSize, WithConstructor(newStack[Token]))
-		p.pools.sweepStack = NewPool(stackPoolBaseSize, WithConstructor(newStack[*Token]))
-		p.pools.sweepStateStack = NewPool(stackPoolBaseSize, WithConstructor(newStack[CyclicAutomataState]))
+		p.pools.sweepStack = NewPool(stackPoolBaseSize+1, WithConstructor(newStackFactory[*Token](stackMult)))
+		p.pools.sweepStateStack = NewPool(stackPoolBaseSize+1, WithConstructor(newStackFactory[CyclicAutomataState](stackMult)))
 	}
 
-	for thread := 0; thread < concurrency; thread++ {
+	for thread := 0; thread < p.concurrency; thread++ {
 		p.workers[thread] = &coppWorker{
 			parser: p,
 			id:     thread,
@@ -129,7 +125,7 @@ func (p *COPParser) Parse(ctx context.Context, tokensLists []*LOS[Token]) (*Toke
 		// This branch performs a final sweep, it's taken either if ReductionSweep has been selected as a strategy
 		// and if ReductionMixed has already performed the maximum number of parallel passes.
 		if p.reductionStrategy == ReductionSweep || (p.reductionStrategy == ReductionMixed && reductionPasses >= 2) {
-			// Nullifies the previous p.concurrency-- (concurrency is used by CombineSweepLOS)
+			// Nullifies the previous p.Concurrency-- (Concurrency is used by CombineSweepLOS)
 			p.concurrency++
 
 			// Create the final input by joining together the stacks from the previous step.
@@ -142,7 +138,7 @@ func (p *COPParser) Parse(ctx context.Context, tokensLists []*LOS[Token]) (*Toke
 				stack.ProducedTokens[k] = v
 			}
 
-			// Sets correct concurrency level for final sweep.
+			// Sets correct Concurrency level for final sweep.
 			p.concurrency = 1
 
 			go p.workers[0].parse(ctx, stack, input, nil, true, resultCh, errCh)

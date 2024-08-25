@@ -40,7 +40,7 @@ const (
 	RPAR
 )
 
-func SprintToken(root *gopapageno.Token) string {
+func SprintToken[ValueType any](root *gopapageno.Token) string {
 	var sprintRec func(t *gopapageno.Token, sb *strings.Builder, indent string)
 
 	sprintRec = func(t *gopapageno.Token, sb *strings.Builder, indent string) {
@@ -79,9 +79,13 @@ func SprintToken(root *gopapageno.Token) string {
 		default:
 			sb.WriteString("Unknown")
 		}
+
 		if t.Value != nil {
-			sb.WriteString(fmt.Sprintf(": %v", t.Value))
+			if v, ok := any(t.Value).(*ValueType); ok {
+				sb.WriteString(fmt.Sprintf(": %v", *v))
+			}
 		}
+
 		sb.WriteString("\n")
 
 		sprintRec(t.Child, sb, indent)
@@ -105,15 +109,12 @@ func NewGrammar() *gopapageno.Grammar {
 		{E, []gopapageno.TokenType{E, PLUS, E_T}, gopapageno.RuleSimple},
 		{S, []gopapageno.TokenType{E_T}, gopapageno.RuleSimple},
 		{E, []gopapageno.TokenType{E_T, PLUS, E_T}, gopapageno.RuleSimple},
-		{S, []gopapageno.TokenType{S}, gopapageno.RuleSimple},
 		{E_T, []gopapageno.TokenType{LPAR, E, RPAR}, gopapageno.RuleSimple},
 		{E_T, []gopapageno.TokenType{LPAR, E_T, RPAR}, gopapageno.RuleSimple},
 		{E_T, []gopapageno.TokenType{NUMBER}, gopapageno.RuleSimple},
 	}
-	compressedRules := []uint16{0, 0, 5, 1, 13, 2, 26, 3, 39, 32769, 42, 32770, 65, 3, 0, 1, 32771, 18, 0, 0, 1, 2, 23, 1, 1, 0, 3, 2, 1, 32771, 31, 0, 0, 1, 2, 36, 1, 3, 0, 3, 4, 0, 0, 0, 2, 1, 49, 2, 57, 0, 0, 1, 32772, 54, 2, 5, 0, 0, 0, 1, 32772, 62, 2, 6, 0, 2, 7, 0}
+	compressedRules := []uint16{0, 0, 4, 1, 11, 2, 24, 32769, 37, 32770, 60, 3, 0, 1, 32771, 16, 0, 0, 1, 2, 21, 1, 1, 0, 3, 2, 1, 32771, 29, 0, 0, 1, 2, 34, 1, 3, 0, 0, 0, 2, 1, 44, 2, 52, 0, 0, 1, 32772, 49, 2, 4, 0, 0, 0, 1, 32772, 57, 2, 5, 0, 2, 6, 0}
 
-	maxPrefixLength := 0
-	prefixes := [][]gopapageno.TokenType{}
 	precMatrix := [][]gopapageno.Precedence{
 		{gopapageno.PrecEquals, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields},
 		{gopapageno.PrecTakes, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecEquals},
@@ -125,12 +126,9 @@ func NewGrammar() *gopapageno.Grammar {
 		706597955393876,
 	}
 
-	fn := func(rule uint16, lhs *gopapageno.Token, rhs []*gopapageno.Token, thread int) {
-		var ruleType gopapageno.RuleFlags
-		switch rule {
+	fn := func(ruleDescription uint16, ruleFlags gopapageno.RuleFlags, lhs *gopapageno.Token, rhs []*gopapageno.Token, thread int) {
+		switch ruleDescription {
 		case 0:
-			ruleType = gopapageno.RuleSimple
-
 			S0 := lhs
 			E1 := rhs[0]
 
@@ -142,8 +140,6 @@ func NewGrammar() *gopapageno.Grammar {
 			}
 			_ = E1
 		case 1:
-			ruleType = gopapageno.RuleSimple
-
 			E0 := lhs
 			E1 := rhs[0]
 			PLUS2 := rhs[1]
@@ -163,8 +159,6 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = PLUS2
 			_ = E_T3
 		case 2:
-			ruleType = gopapageno.RuleSimple
-
 			S0 := lhs
 			E_T1 := rhs[0]
 
@@ -176,8 +170,6 @@ func NewGrammar() *gopapageno.Grammar {
 			}
 			_ = E_T1
 		case 3:
-			ruleType = gopapageno.RuleSimple
-
 			E0 := lhs
 			E_T1 := rhs[0]
 			PLUS2 := rhs[1]
@@ -197,21 +189,6 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = PLUS2
 			_ = E_T3
 		case 4:
-			ruleType = gopapageno.RuleSimple
-
-			S0 := lhs
-			S1 := rhs[0]
-
-			S0.Child = S1
-			S0.LastChild = S1
-
-			{
-				S0.Value = S1.Value
-			}
-			_ = S1
-		case 5:
-			ruleType = gopapageno.RuleSimple
-
 			E_T0 := lhs
 			LPAR1 := rhs[0]
 			E2 := rhs[1]
@@ -228,9 +205,7 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = LPAR1
 			_ = E2
 			_ = RPAR3
-		case 6:
-			ruleType = gopapageno.RuleSimple
-
+		case 5:
 			E_T0 := lhs
 			LPAR1 := rhs[0]
 			E_T2 := rhs[1]
@@ -247,9 +222,7 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = LPAR1
 			_ = E_T2
 			_ = RPAR3
-		case 7:
-			ruleType = gopapageno.RuleSimple
-
+		case 6:
 			E_T0 := lhs
 			NUMBER1 := rhs[0]
 
@@ -261,7 +234,7 @@ func NewGrammar() *gopapageno.Grammar {
 			}
 			_ = NUMBER1
 		}
-		_ = ruleType
+		_ = ruleFlags
 	}
 
 	return &gopapageno.Grammar{
@@ -272,8 +245,6 @@ func NewGrammar() *gopapageno.Grammar {
 		CompressedRules:           compressedRules,
 		PrecedenceMatrix:          precMatrix,
 		BitPackedPrecedenceMatrix: bitPackedMatrix,
-		MaxPrefixLength:           maxPrefixLength,
-		Prefixes:                  prefixes,
 		Func:                      fn,
 		ParsingStrategy:           gopapageno.OPP,
 		PreambleFunc:              ParserPreallocMem,

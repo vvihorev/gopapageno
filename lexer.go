@@ -42,9 +42,9 @@ type Scanner struct {
 	pools []*Pool[stack[Token]]
 }
 
-func (l *Lexer) Scanner(src []byte, concurrency int, avgTokenLen int) *Scanner {
-	if concurrency < 1 {
-		concurrency = 1
+func (l *Lexer) Scanner(src []byte, opts *RunOptions) *Scanner {
+	if opts.Concurrency < 1 {
+		opts.Concurrency = 1
 	}
 
 	s := &Scanner{
@@ -55,20 +55,18 @@ func (l *Lexer) Scanner(src []byte, concurrency int, avgTokenLen int) *Scanner {
 		concurrency: 1,
 	}
 
-	s.cutPoints, s.concurrency = s.findCutPoints(concurrency)
+	s.cutPoints, s.concurrency = s.findCutPoints(opts.Concurrency)
 
 	s.pools = make([]*Pool[stack[Token]], s.concurrency)
 
-	if avgTokenLen < 1 {
-		avgTokenLen = 1
+	if opts.AvgTokenLength < 1 {
+		opts.AvgTokenLength = 1
 	}
 
-	stacksNum := stacksCount[Token](s.source, s.concurrency, avgTokenLen)
+	stacksNum := stacksCount[Token](s.source, s.concurrency, opts.AvgTokenLength)
 
-	// TODO: Does this need more work?
-	multiplier := 1 // (s.concurrency-thread)
 	for thread := 0; thread < s.concurrency; thread++ {
-		s.pools[thread] = NewPool[stack[Token]](stacksNum*multiplier, WithConstructor[stack[Token]](newStack[Token]))
+		s.pools[thread] = NewPool(stacksNum, WithConstructor(newStack[Token]))
 	}
 
 	return s

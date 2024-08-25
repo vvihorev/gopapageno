@@ -85,13 +85,13 @@ func run() error {
 	}
 
 	fmt.Printf("Parsing took: %v\n", time.Since(start))
-	// fmt.Printf("Result: %v\n", root.Value)
+	fmt.Printf("Result: %v\n", *root.Value.(*int64))
 
 	h := root.Height()
 	s := root.Size()
 	fmt.Printf("Height: %d\nSize: %d\n", h, s)
 	if h < 10 && s < 100 {
-		fmt.Println(SprintToken(root))
+		fmt.Println(SprintToken[any](root))
 	}
 
 	return nil

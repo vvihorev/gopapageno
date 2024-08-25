@@ -52,22 +52,28 @@ func (s *parserStack) findFirstTerminal() (*stack[*Token], int) {
 
 	pos := curStack.Tos - 1
 
-	for pos < 0 {
+	for pos < s.headFirst {
 		pos = -1
 		if curStack.Prev == nil {
 			return nil, 0
 		}
+
+		s.headFirst = 0
+
 		curStack = curStack.Prev
 		pos = curStack.Tos - 1
 	}
 
 	for !curStack.Data[pos].Type.IsTerminal() {
 		pos--
-		for pos < 0 {
+		for pos < s.headFirst {
 			pos = -1
 			if curStack.Prev == nil {
 				return nil, 0
 			}
+
+			s.headFirst = 0
+
 			curStack = curStack.Prev
 			pos = curStack.Tos - 1
 		}

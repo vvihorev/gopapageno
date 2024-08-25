@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"runtime/debug"
 	"runtime/pprof"
 )
 
@@ -12,16 +13,23 @@ type Runner struct {
 	Lexer  *Lexer
 	Parser *Grammar
 
-	concurrency        int
-	initialConcurrency int
-	reductionStrategy  ReductionStrategy
+	options RunOptions
+}
 
-	avgTokenLength int
+type RunOptions struct {
+	Concurrency        int
+	initialConcurrency int
+	ReductionStrategy  ReductionStrategy
+
+	AvgTokenLength int
+	ParallelFactor float64
 
 	logger *log.Logger
 
 	cpuProfileWriter io.Writer
 	memProfileWriter io.Writer
+
+	gc bool
 }
 
 type RunnerOpt func(p *Runner)
@@ -32,7 +40,7 @@ func WithConcurrency(n int) RunnerOpt {
 			n = 1
 		}
 
-		r.initialConcurrency = n
+		r.options.initialConcurrency = n
 	}
 }
 
@@ -42,25 +50,25 @@ func WithLogging(logger *log.Logger) RunnerOpt {
 			logger = discardLogger
 		}
 
-		r.logger = logger
+		r.options.logger = logger
 	}
 }
 
 func WithCPUProfiling(w io.Writer) RunnerOpt {
 	return func(r *Runner) {
-		r.cpuProfileWriter = w
+		r.options.cpuProfileWriter = w
 	}
 }
 
 func WithMemoryProfiling(w io.Writer) RunnerOpt {
 	return func(r *Runner) {
-		r.memProfileWriter = w
+		r.options.memProfileWriter = w
 	}
 }
 
 func WithReductionStrategy(strat ReductionStrategy) RunnerOpt {
 	return func(r *Runner) {
-		r.reductionStrategy = strat
+		r.options.ReductionStrategy = strat
 	}
 }
 
@@ -68,7 +76,27 @@ const DefaultAverageTokenLength int = 4
 
 func WithAverageTokenLength(length int) RunnerOpt {
 	return func(r *Runner) {
-		r.avgTokenLength = length
+		r.options.AvgTokenLength = length
+	}
+}
+
+const DefaultParallelFactor float64 = 0.5
+
+func WithParallelFactor(factor float64) RunnerOpt {
+	if factor <= 0 {
+		factor = 0.0
+	} else if factor >= 1.0 {
+		factor = 1.0
+	}
+
+	return func(r *Runner) {
+		r.options.ParallelFactor = factor
+	}
+}
+
+func WithGarbageCollection(on bool) RunnerOpt {
+	return func(r *Runner) {
+		r.options.gc = on
 	}
 }
 
@@ -77,13 +105,17 @@ func NewRunner(lexer *Lexer, parser *Grammar, opts ...RunnerOpt) *Runner {
 		Lexer:  lexer,
 		Parser: parser,
 
-		concurrency:        1,
-		initialConcurrency: 1,
-		reductionStrategy:  ReductionSweep,
-		avgTokenLength:     DefaultAverageTokenLength,
-		logger:             discardLogger,
-		cpuProfileWriter:   nil,
-		memProfileWriter:   nil,
+		options: RunOptions{
+			Concurrency:        1,
+			initialConcurrency: 1,
+			ReductionStrategy:  ReductionSweep,
+			AvgTokenLength:     DefaultAverageTokenLength,
+			ParallelFactor:     DefaultParallelFactor,
+			logger:             discardLogger,
+			cpuProfileWriter:   nil,
+			memProfileWriter:   nil,
+			gc:                 true,
+		},
 	}
 
 	for _, opt := range opts {
@@ -94,7 +126,20 @@ func NewRunner(lexer *Lexer, parser *Grammar, opts ...RunnerOpt) *Runner {
 }
 
 func (r *Runner) Run(ctx context.Context, src []byte) (*Token, error) {
-	r.concurrency = r.initialConcurrency
+	// Old code forced a GC Run to occur, so that it would - hopefully - stop GCs from happening again during computation.
+	// However, a GC run can still be very slow.
+	// runtime.GC()
+
+	// Deferring this will cause the GC to still run at the end of computation...
+	// defer debug.SetGCPercent(1)
+
+	// This new version stops the GC from running entirely.
+	// It makes sense as an option since parsers are mostly used as standalone programs.
+	if !r.options.gc {
+		debug.SetGCPercent(-1)
+	}
+
+	r.options.Concurrency = r.options.initialConcurrency
 
 	// Profiling
 	cleanupFunc := r.startProfiling()
@@ -102,27 +147,16 @@ func (r *Runner) Run(ctx context.Context, src []byte) (*Token, error) {
 
 	// Run preamble functions before anything else.
 	if r.Lexer.PreambleFunc != nil {
-		r.Lexer.PreambleFunc(len(src), r.concurrency)
+		r.Lexer.PreambleFunc(len(src), r.options.Concurrency)
 	}
 
 	if r.Parser.PreambleFunc != nil {
-		r.Parser.PreambleFunc(len(src), r.concurrency)
+		r.Parser.PreambleFunc(len(src), r.options.Concurrency)
 	}
 
 	// Initialize Scanner and Grammar
-	scanner := r.Lexer.Scanner(src, r.concurrency, r.avgTokenLength)
-	parser := r.Parser.Parser(src, r.concurrency, r.avgTokenLength, r.reductionStrategy)
-
-	// TODO: Investigate this section better.
-	// Old code forced a GC Run to occur, so that it would - hopefully - stop GCs from happening again during computation.
-	// However a GC run can still be very slow.
-	// runtime.GC()
-
-	// This new version stops the GC from running entirely.
-	// debug.SetGCPercent(-1)
-
-	// Deferring this will cause the GC to still run at the end of computation...
-	// defer debug.SetGCPercent(1)
+	scanner := r.Lexer.Scanner(src, &r.options)
+	parser := r.Parser.Parser(src, &r.options)
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -130,13 +164,6 @@ func (r *Runner) Run(ctx context.Context, src []byte) (*Token, error) {
 	tokensLists, err := scanner.Lex(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not lex: %w", err)
-	}
-
-	// If there are not enough stacks in the input, reduce the number of threads.
-	// The input is split by splitting stacks, not stack contents.
-	if len(tokensLists) < r.concurrency {
-		r.concurrency = len(tokensLists)
-		r.logger.Printf("Not enough stacks in lexer output, lowering parser concurrency to %d", r.concurrency)
 	}
 
 	token, err := parser.Parse(ctx, tokensLists)
@@ -148,17 +175,17 @@ func (r *Runner) Run(ctx context.Context, src []byte) (*Token, error) {
 }
 
 func (r *Runner) startProfiling() func() {
-	if r.cpuProfileWriter == nil || r.cpuProfileWriter != io.Discard {
+	if r.options.cpuProfileWriter == nil || r.options.cpuProfileWriter != io.Discard {
 		return func() {}
 	}
 
-	if err := pprof.StartCPUProfile(r.cpuProfileWriter); err != nil {
+	if err := pprof.StartCPUProfile(r.options.cpuProfileWriter); err != nil {
 		log.Printf("could not start CPU profiling: %v", err)
 	}
 
 	return func() {
-		if r.memProfileWriter != nil && r.memProfileWriter != io.Discard {
-			if err := pprof.WriteHeapProfile(r.memProfileWriter); err != nil {
+		if r.options.memProfileWriter != nil && r.options.memProfileWriter != io.Discard {
+			if err := pprof.WriteHeapProfile(r.options.memProfileWriter); err != nil {
 				log.Printf("Could not write memory profile: %v", err)
 			}
 		}

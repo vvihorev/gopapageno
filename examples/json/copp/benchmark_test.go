@@ -3,32 +3,45 @@ package main
 import (
 	"github.com/giornetta/gopapageno"
 	"github.com/giornetta/gopapageno/benchmark"
-	"runtime"
 	"testing"
 )
 
 const baseFolder = "../data/"
 
-var table = map[string]any{
-	baseFolder + "citylots.json":         nil,
-	baseFolder + "emojis-1000.json":      nil,
-	baseFolder + "wikidata-lexemes.json": nil,
+var entries = []*benchmark.Entry[any]{
+	{
+		Filename:       baseFolder + "citylots.json",
+		ParallelFactor: 0.5,
+		AvgTokenLength: 4,
+		Result:         nil,
+	},
+	{
+		Filename:       baseFolder + "emojis-1000.json",
+		ParallelFactor: 1,
+		AvgTokenLength: 8,
+		Result:         nil,
+	},
+	{
+		Filename:       baseFolder + "wikidata-lexemes.json",
+		ParallelFactor: 0,
+		AvgTokenLength: 4,
+		Result:         nil,
+	},
 }
 
 func BenchmarkParse(b *testing.B) {
-	benchmark.Runner[any](b, gopapageno.COPP, NewLexer, NewGrammar, table)
+	benchmark.Runner[any](b, gopapageno.COPP, NewLexer, NewGrammar, entries)
 }
 
 func TestProfile(t *testing.T) {
-	c := runtime.NumCPU()
-	avgLen := gopapageno.DefaultAverageTokenLength
-	strat := gopapageno.ReductionParallel
+	opts := &gopapageno.RunOptions{
+		Concurrency:       12,
+		AvgTokenLength:    8,
+		ReductionStrategy: gopapageno.ReductionParallel,
+		ParallelFactor:    1,
+	}
 
-	filename := baseFolder + "example.json"
+	filename := baseFolder + "emojis-1000.json"
 
-	benchmark.Profile(
-		t,
-		NewLexer, NewGrammar,
-		c, avgLen, strat,
-		filename)
+	benchmark.Profile(t, NewLexer, NewGrammar, opts, filename)
 }

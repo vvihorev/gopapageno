@@ -85,7 +85,7 @@ func run() error {
 	}
 
 	fmt.Printf("Parsing took: %v\n", time.Since(start))
-	// fmt.Printf("Result: %v\n", root.Value)
+	fmt.Printf("Result: %v\n", *root.Value.(*int64))
 
 	h := root.Height()
 	s := root.Size()

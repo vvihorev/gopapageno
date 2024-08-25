@@ -139,6 +139,9 @@ func (s *COPPStack) Combine() *COPPStack {
 	s.parserStack.headFirst = tlPosition
 	s.StatesLOS.headFirst = tlPosition
 
+	s.parserStack.head.Prev = nil
+	s.StatesLOS.head.Prev = nil
+
 	s.parserStack.len -= removedTokens
 	s.StatesLOS.len -= removedTokens
 

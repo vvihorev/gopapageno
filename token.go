@@ -53,21 +53,17 @@ func (t *Token) Height() int {
 
 // Size returns the number of tokens in the AST rooted in `t`.
 func (t *Token) Size() int {
-	var rec func(t *Token, root bool) int
+	var rec func(t *Token) int
 
-	rec = func(t *Token, root bool) int {
+	rec = func(t *Token) int {
 		if t == nil {
 			return 0
 		}
 
-		if root {
-			return 1 + rec(t.Child, false)
-		} else {
-			return 1 + rec(t.Child, false) + rec(t.Next, false)
-		}
+		return 1 + rec(t.Child) + rec(t.Next)
 	}
 
-	return rec(t, true)
+	return rec(t)
 }
 
 // String returns a string representation of the AST rooted in `t`.

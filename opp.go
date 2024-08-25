@@ -24,19 +24,18 @@ type OPParser struct {
 	results []*OPPStack
 }
 
-func NewOPParser(g *Grammar,
-	src []byte, concurrency int, avgTokenLength int, strategy ReductionStrategy) *OPParser {
+func NewOPParser(g *Grammar, src []byte, opts *RunOptions) *OPParser {
 	p := &OPParser{
 		g:                 g,
-		concurrency:       concurrency,
-		reductionStrategy: strategy,
-		workers:           make([]*oppWorker, concurrency),
-		results:           make([]*OPPStack, concurrency),
+		concurrency:       opts.Concurrency,
+		reductionStrategy: opts.ReductionStrategy,
+		workers:           make([]*oppWorker, opts.Concurrency),
+		results:           make([]*OPPStack, opts.Concurrency),
 	}
 
 	srcLen := len(src)
-	stackPoolBaseSize := stacksCount[*Token](src, p.concurrency, avgTokenLength)
-	ntPoolBaseSize := srcLen / avgTokenLength / p.concurrency
+	stackPoolBaseSize := stacksCount[*Token](src, p.concurrency, opts.AvgTokenLength)
+	ntPoolBaseSize := int(float64(srcLen/opts.AvgTokenLength/p.concurrency) * 1.5)
 
 	// Initialize memory pools for stacks.
 	p.pools.stacks = make([]*Pool[stack[*Token]], p.concurrency)
@@ -45,25 +44,18 @@ func NewOPParser(g *Grammar,
 	p.pools.nonterminals = make([]*Pool[Token], p.concurrency)
 
 	for thread := 0; thread < p.concurrency; thread++ {
-		stackPoolMultiplier := .25
-		if strategy == ReductionParallel {
-			//stackPoolMultiplier = p.concurrency - thread
-		}
-
-		p.pools.stacks[thread] = NewPool(int(float64(stackPoolBaseSize)*stackPoolMultiplier), WithConstructor(newStack[*Token]))
+		p.pools.stacks[thread] = NewPool(stackPoolBaseSize, WithConstructor(newStack[*Token]))
 		p.pools.nonterminals[thread] = NewPool[Token](ntPoolBaseSize)
 	}
 
-	// If reduction is sweep or mixed, we create another stack and input for the final pass.
-	// TODO: Is this strictly necessary?
-	if strategy == ReductionSweep || strategy == ReductionMixed {
-		inputPoolBaseSize := stacksCount[Token](src, p.concurrency, avgTokenLength)
+	if p.concurrency > 1 && (p.reductionStrategy == ReductionSweep || p.reductionStrategy == ReductionMixed) {
+		inputPoolBaseSize := stacksCount[Token](src, p.concurrency, opts.AvgTokenLength)
 
 		p.pools.sweepInput = NewPool(inputPoolBaseSize, WithConstructor(newStack[Token]))
 		p.pools.sweepStack = NewPool(stackPoolBaseSize, WithConstructor(newStack[*Token]))
 	}
 
-	for thread := 0; thread < concurrency; thread++ {
+	for thread := 0; thread < p.concurrency; thread++ {
 		p.workers[thread] = &oppWorker{
 			parser: p,
 			id:     thread,
@@ -115,14 +107,14 @@ func (p *OPParser) Parse(ctx context.Context, tokensLists []*LOS[Token]) (*Token
 	for p.concurrency--; p.concurrency >= 1; p.concurrency-- {
 		if p.reductionStrategy == ReductionSweep || (p.reductionStrategy == ReductionMixed && reductionPasses >= 2) {
 
-			// Nullifies the previous p.concurrency--
+			// Nullifies the previous p.Concurrency--
 			p.concurrency++
 
 			// Create the final input by joining together the stacks from the previous step.
 			stack := p.results[0].Combine()
 			input := p.CombineSweepLOS(p.pools.sweepInput, p.results[1:])
 
-			// Sets correct concurrency level for final sweep.
+			// Sets correct Concurrency level for final sweep.
 			p.concurrency = 1
 
 			go p.workers[0].parse(ctx, stack, input, nil, true, resultCh, errCh)

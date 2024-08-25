@@ -44,6 +44,7 @@ func NewPool[T any](length int, opts ...PoolOpt[T]) *Pool[T] {
 // It is not thread-safe.
 func (p *Pool[T]) Get() *T {
 	if p.cur >= len(p.pool) {
+		p.cur++
 		if p.constructor == nil {
 			return new(T)
 		}
@@ -60,4 +61,13 @@ func (p *Pool[T]) Get() *T {
 // Left returns the number of items remaining in the pool.
 func (p *Pool[T]) Left() int {
 	return len(p.pool) - p.cur
+}
+
+// NumAllocated returns the number of items allocated so far.
+func (p *Pool[T]) NumAllocated() int {
+	if p.cur >= len(p.pool) {
+		return p.cur
+	}
+
+	return len(p.pool)
 }
