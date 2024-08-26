@@ -37,6 +37,6 @@ if __name__ == '__main__':
             raise TypeError(f"Unsupported JSON content type: {type(data)}")
 
     fn, ext = os.path.splitext(source_filename)
-    dest_filename = f"${fn}-${num_copies}${ext}"
+    dest_filename = f"{fn}-{num_copies}{ext}"
     with open(dest_filename, 'w') as f:
         json.dump(result, f, indent=2)
