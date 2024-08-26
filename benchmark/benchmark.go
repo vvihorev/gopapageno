@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/giornetta/gopapageno"
+	"math"
 	"os"
 	"path"
 	"runtime"
@@ -20,7 +21,7 @@ type Entry[T any] struct {
 func Runner[T any](b *testing.B, parsingStrategy gopapageno.ParsingStrategy, newLexer func() *gopapageno.Lexer, newGrammar func() *gopapageno.Grammar, entries []*Entry[T]) {
 	reductionStrategies := []gopapageno.ReductionStrategy{gopapageno.ReductionSweep, gopapageno.ReductionParallel, gopapageno.ReductionMixed}
 
-	threads := runtime.NumCPU()
+	threads := int(math.Min(float64(runtime.NumCPU()), 32))
 
 	b.Run(fmt.Sprintf("strategy=%s", parsingStrategy), func(b *testing.B) {
 		for _, entry := range entries {
