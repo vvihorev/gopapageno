@@ -4,19 +4,19 @@ This scripts reads a JSON file and writes a new JSON file obtained by replicated
 """
 import sys
 import json
+import os
 
 
 def print_usage():
-    print('Usage: json_mult source.json n dest.json')
+    print('Usage: json_mult source.json n')
     sys.exit(1)
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 4:
+    if len(sys.argv) < 3:
         print_usage()
 
     source_filename = sys.argv[1]
-    dest_filename = sys.argv[3]
     num_copies = 1
 
     try:
@@ -36,5 +36,7 @@ if __name__ == '__main__':
         else:
             raise TypeError(f"Unsupported JSON content type: {type(data)}")
 
+    fn, ext = os.path.splitext(source_filename)
+    dest_filename = f"${fn}-${num_copies}${ext}"
     with open(dest_filename, 'w') as f:
         json.dump(result, f, indent=2)
