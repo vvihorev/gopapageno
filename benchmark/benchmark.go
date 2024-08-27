@@ -54,7 +54,51 @@ func Runner[T any](b *testing.B, parsingStrategy gopapageno.ParsingStrategy, new
 			})
 		}
 	})
+}
 
+func ParserRunner[T any](b *testing.B, parsingStrategy gopapageno.ParsingStrategy, newLexer func() *gopapageno.Lexer, newGrammar func() *gopapageno.Grammar, entries []*Entry[T]) {
+	reductionStrategies := []gopapageno.ReductionStrategy{gopapageno.ReductionSweep, gopapageno.ReductionParallel, gopapageno.ReductionMixed}
+
+	threads := int(math.Min(float64(runtime.NumCPU()), 32))
+
+	b.Run(fmt.Sprintf("strategy=%s", parsingStrategy), func(b *testing.B) {
+		for _, entry := range entries {
+			b.Run(fmt.Sprintf("file=%s", path.Base(entry.Filename)), func(b *testing.B) {
+				for c := 1; c <= threads; c++ {
+					b.Run(fmt.Sprintf("goroutines=%d", c), func(b *testing.B) {
+						for _, reductionStrat := range reductionStrategies {
+							b.Run(fmt.Sprintf("reduction=%s", reductionStrat), func(b *testing.B) {
+								bytes, err := os.ReadFile(entry.Filename)
+								if err != nil {
+									b.Fatalf("could not read source file %s: %v", entry.Filename, err)
+								}
+
+								r := gopapageno.NewRunner(
+									newLexer(),
+									newGrammar(),
+									gopapageno.WithConcurrency(c),
+									gopapageno.WithReductionStrategy(reductionStrat),
+									gopapageno.WithParallelFactor(entry.ParallelFactor),
+									gopapageno.WithAverageTokenLength(entry.AvgTokenLength),
+								)
+
+								b.StopTimer()
+								b.ResetTimer()
+								b.StartTimer()
+
+								for i := 0; i < b.N; i++ {
+									_, err := runParser(b, r, bytes)
+									if err != nil {
+										b.Fatalf("could not parse source file: %v", err)
+									}
+								}
+							})
+						}
+					})
+				}
+			})
+		}
+	})
 }
 
 func RunExpect[T comparable](b *testing.B, r *gopapageno.Runner, bytes []byte, expected T) {
@@ -91,6 +135,47 @@ func Run(b *testing.B, r *gopapageno.Runner, bytes []byte) {
 			b.Fatalf("could not parse source file: %v", err)
 		}
 	}
+}
+
+func runParser(b *testing.B, r *gopapageno.Runner, src []byte) (*gopapageno.Token, error) {
+	b.StopTimer()
+
+	r.Options.Concurrency = r.Options.InitialConcurrency
+
+	// Run preamble functions before anything else.
+	if r.Lexer.PreambleFunc != nil {
+		r.Lexer.PreambleFunc(len(src), r.Options.Concurrency)
+	}
+
+	if r.Parser.PreambleFunc != nil {
+		r.Parser.PreambleFunc(len(src), r.Options.Concurrency)
+	}
+
+	// Initialize Scanner and Grammar
+	scanner := r.Lexer.Scanner(src, &r.Options)
+
+	b.StartTimer()
+
+	parser := r.Parser.Parser(src, &r.Options)
+
+	b.StopTimer()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	tokensLists, err := scanner.Lex(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("could not lex: %w", err)
+	}
+
+	b.StartTimer()
+
+	token, err := parser.Parse(ctx, tokensLists)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse: %w", err)
+	}
+
+	return token, nil
 }
 
 func Profile(t *testing.T,

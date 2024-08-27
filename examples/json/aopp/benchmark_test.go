@@ -33,6 +33,10 @@ func BenchmarkParse(b *testing.B) {
 	benchmark.Runner[any](b, gopapageno.AOPP, NewLexer, NewGrammar, entries)
 }
 
+func BenchmarkParseOnly(b *testing.B) {
+	benchmark.ParserRunner[any](b, gopapageno.AOPP, NewLexer, NewGrammar, entries)
+}
+
 func TestProfile(t *testing.T) {
 	opts := &gopapageno.RunOptions{
 		Concurrency:       12,

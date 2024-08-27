@@ -282,11 +282,6 @@ func (w *coppWorker) parse(ctx context.Context, stack *COPPStack, tokens *LOS[To
 		} else if prec == PrecEquals {
 			inputToken.Precedence = prec
 
-			if inputToken.Type == TokenTerm {
-				stack.Push(inputToken)
-				break
-			}
-
 			// If the current construction is a single nonterminal, prepend the previous construction to it.
 			if stack.IsCurrentSingleNonterminal() {
 				stack.State.CurrentIndex = stack.State.PreviousIndex

@@ -13,12 +13,12 @@ type Runner struct {
 	Lexer  *Lexer
 	Parser *Grammar
 
-	options RunOptions
+	Options RunOptions
 }
 
 type RunOptions struct {
 	Concurrency        int
-	initialConcurrency int
+	InitialConcurrency int
 	ReductionStrategy  ReductionStrategy
 
 	AvgTokenLength int
@@ -40,7 +40,7 @@ func WithConcurrency(n int) RunnerOpt {
 			n = 1
 		}
 
-		r.options.initialConcurrency = n
+		r.Options.InitialConcurrency = n
 	}
 }
 
@@ -50,25 +50,25 @@ func WithLogging(logger *log.Logger) RunnerOpt {
 			logger = discardLogger
 		}
 
-		r.options.logger = logger
+		r.Options.logger = logger
 	}
 }
 
 func WithCPUProfiling(w io.Writer) RunnerOpt {
 	return func(r *Runner) {
-		r.options.cpuProfileWriter = w
+		r.Options.cpuProfileWriter = w
 	}
 }
 
 func WithMemoryProfiling(w io.Writer) RunnerOpt {
 	return func(r *Runner) {
-		r.options.memProfileWriter = w
+		r.Options.memProfileWriter = w
 	}
 }
 
 func WithReductionStrategy(strat ReductionStrategy) RunnerOpt {
 	return func(r *Runner) {
-		r.options.ReductionStrategy = strat
+		r.Options.ReductionStrategy = strat
 	}
 }
 
@@ -76,7 +76,7 @@ const DefaultAverageTokenLength int = 4
 
 func WithAverageTokenLength(length int) RunnerOpt {
 	return func(r *Runner) {
-		r.options.AvgTokenLength = length
+		r.Options.AvgTokenLength = length
 	}
 }
 
@@ -90,13 +90,13 @@ func WithParallelFactor(factor float64) RunnerOpt {
 	}
 
 	return func(r *Runner) {
-		r.options.ParallelFactor = factor
+		r.Options.ParallelFactor = factor
 	}
 }
 
 func WithGarbageCollection(on bool) RunnerOpt {
 	return func(r *Runner) {
-		r.options.gc = on
+		r.Options.gc = on
 	}
 }
 
@@ -105,9 +105,9 @@ func NewRunner(lexer *Lexer, parser *Grammar, opts ...RunnerOpt) *Runner {
 		Lexer:  lexer,
 		Parser: parser,
 
-		options: RunOptions{
+		Options: RunOptions{
 			Concurrency:        1,
-			initialConcurrency: 1,
+			InitialConcurrency: 1,
 			ReductionStrategy:  ReductionSweep,
 			AvgTokenLength:     DefaultAverageTokenLength,
 			ParallelFactor:     DefaultParallelFactor,
@@ -135,11 +135,11 @@ func (r *Runner) Run(ctx context.Context, src []byte) (*Token, error) {
 
 	// This new version stops the GC from running entirely.
 	// It makes sense as an option since parsers are mostly used as standalone programs.
-	if !r.options.gc {
+	if !r.Options.gc {
 		debug.SetGCPercent(-1)
 	}
 
-	r.options.Concurrency = r.options.initialConcurrency
+	r.Options.Concurrency = r.Options.InitialConcurrency
 
 	// Profiling
 	cleanupFunc := r.startProfiling()
@@ -147,16 +147,16 @@ func (r *Runner) Run(ctx context.Context, src []byte) (*Token, error) {
 
 	// Run preamble functions before anything else.
 	if r.Lexer.PreambleFunc != nil {
-		r.Lexer.PreambleFunc(len(src), r.options.Concurrency)
+		r.Lexer.PreambleFunc(len(src), r.Options.Concurrency)
 	}
 
 	if r.Parser.PreambleFunc != nil {
-		r.Parser.PreambleFunc(len(src), r.options.Concurrency)
+		r.Parser.PreambleFunc(len(src), r.Options.Concurrency)
 	}
 
 	// Initialize Scanner and Grammar
-	scanner := r.Lexer.Scanner(src, &r.options)
-	parser := r.Parser.Parser(src, &r.options)
+	scanner := r.Lexer.Scanner(src, &r.Options)
+	parser := r.Parser.Parser(src, &r.Options)
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -175,17 +175,17 @@ func (r *Runner) Run(ctx context.Context, src []byte) (*Token, error) {
 }
 
 func (r *Runner) startProfiling() func() {
-	if r.options.cpuProfileWriter == nil || r.options.cpuProfileWriter != io.Discard {
+	if r.Options.cpuProfileWriter == nil || r.Options.cpuProfileWriter != io.Discard {
 		return func() {}
 	}
 
-	if err := pprof.StartCPUProfile(r.options.cpuProfileWriter); err != nil {
+	if err := pprof.StartCPUProfile(r.Options.cpuProfileWriter); err != nil {
 		log.Printf("could not start CPU profiling: %v", err)
 	}
 
 	return func() {
-		if r.options.memProfileWriter != nil && r.options.memProfileWriter != io.Discard {
-			if err := pprof.WriteHeapProfile(r.options.memProfileWriter); err != nil {
+		if r.Options.memProfileWriter != nil && r.Options.memProfileWriter != io.Discard {
+			if err := pprof.WriteHeapProfile(r.Options.memProfileWriter); err != nil {
 				log.Printf("Could not write memory profile: %v", err)
 			}
 		}
