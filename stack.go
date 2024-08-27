@@ -17,15 +17,17 @@ type stack[T any] struct {
 	Next *stack[T]
 }
 
-func newStackFactory[T any](sizeFactor float64) func() *stack[T] {
-	stackLen := int(float64(stackSize[T]()) * sizeFactor)
-
+func newStackFactory[T any](length int) func() *stack[T] {
 	return func() *stack[T] {
 		return &stack[T]{
-			Data: make([]T, stackLen),
-			Size: stackLen,
+			Data: make([]T, length),
+			Size: length,
 		}
 	}
+}
+
+func stackLengthFor[T any](sizeFactor float64) int {
+	return int(float64(stackSize[T]()) * sizeFactor)
 }
 
 func newStack[T any]() *stack[T] {
@@ -34,6 +36,13 @@ func newStack[T any]() *stack[T] {
 	return &stack[T]{
 		Data: make([]T, stackLen),
 		Size: stackLen,
+	}
+}
+
+func newStackOf[T any](length int) *stack[T] {
+	return &stack[T]{
+		Data: make([]T, length),
+		Size: length,
 	}
 }
 

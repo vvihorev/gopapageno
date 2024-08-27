@@ -61,10 +61,12 @@ func NewCOPParser(g *Grammar, src []byte, opts *RunOptions) *COPParser {
 	}
 	ntMultiplier := 1.0 - (0.6 * opts.ParallelFactor)
 
+	stackLen := stackLengthFor[*Token](stackMult)
+
 	for thread := 0; thread < p.concurrency; thread++ {
-		p.pools.stacks[thread] = NewPool(stackPoolBaseSize+1, WithConstructor(newStackFactory[*Token](stackMult)))
+		p.pools.stacks[thread] = NewPool(stackPoolBaseSize+1, WithConstructor(newStackFactory[*Token](stackLen)))
 		p.pools.nonterminals[thread] = NewPool[Token](int(float64(ntPoolBaseSize) * ntMultiplier))
-		p.pools.stateStacks[thread] = NewPool(stackPoolBaseSize+1, WithConstructor(newStackFactory[CyclicAutomataState](stackMult)))
+		p.pools.stateStacks[thread] = NewPool(stackPoolBaseSize+1, WithConstructor(newStackFactory[CyclicAutomataState](stackLen)))
 
 		p.pools.producedTokensMap[thread] = make(map[*Token]*Token, int(float64(ntPoolBaseSize)*ntMultiplier))
 	}
@@ -74,8 +76,8 @@ func NewCOPParser(g *Grammar, src []byte, opts *RunOptions) *COPParser {
 		inputPoolBaseSize := stacksCount[Token](src, p.concurrency, opts.AvgTokenLength)
 
 		p.pools.sweepInput = NewPool(inputPoolBaseSize, WithConstructor(newStack[Token]))
-		p.pools.sweepStack = NewPool(stackPoolBaseSize+1, WithConstructor(newStackFactory[*Token](stackMult)))
-		p.pools.sweepStateStack = NewPool(stackPoolBaseSize+1, WithConstructor(newStackFactory[CyclicAutomataState](stackMult)))
+		p.pools.sweepStack = NewPool(stackPoolBaseSize+1, WithConstructor(newStackFactory[*Token](stackLen)))
+		p.pools.sweepStateStack = NewPool(stackPoolBaseSize+1, WithConstructor(newStackFactory[CyclicAutomataState](stackLen)))
 	}
 
 	for thread := 0; thread < p.concurrency; thread++ {

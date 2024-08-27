@@ -30,8 +30,10 @@ func NewAOPParser(g *Grammar, src []byte, opts *RunOptions) *AOPParser {
 		stackMult = 1.0 - (0.999 * opts.ParallelFactor)
 	}
 
+	stackLen := stackLengthFor[*Token](stackMult)
+
 	for thread := 0; thread < p.concurrency; thread++ {
-		p.pools.stacks[thread] = NewPool(stackPoolBaseSize+1, WithConstructor(newStackFactory[*Token](stackMult)))
+		p.pools.stacks[thread] = NewPool(stackPoolBaseSize+1, WithConstructor(newStackFactory[*Token](stackLen)))
 		p.pools.nonterminals[thread] = NewPool[Token](ntPoolBaseSize)
 	}
 
@@ -40,7 +42,7 @@ func NewAOPParser(g *Grammar, src []byte, opts *RunOptions) *AOPParser {
 		inputPoolBaseSize := stacksCount[Token](src, p.concurrency, opts.AvgTokenLength)
 
 		p.pools.sweepInput = NewPool(inputPoolBaseSize, WithConstructor(newStack[Token]))
-		p.pools.sweepStack = NewPool(stackPoolBaseSize+1, WithConstructor(newStackFactory[*Token](stackMult)))
+		p.pools.sweepStack = NewPool(stackPoolBaseSize+1, WithConstructor(newStackFactory[*Token](stackLen)))
 	}
 
 	for thread := 0; thread < p.concurrency; thread++ {
