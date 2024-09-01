@@ -547,7 +547,7 @@ func (p *grammarDescription) emitParserFunctions(f io.Writer) {
 			fmt.Fprintf(f, "\t\t\t\t%s1.Next = %s%d\n", rule.RHS[0], rule.RHS[1], 2)
 			fmt.Fprintf(f, "\t\t\t}\n\n")
 
-			for j := 1; j < len(rule.RHS)-1; j++ { // -2?
+			for j := 1; j < len(rule.RHS)-1; j++ {
 				fmt.Fprintf(f, "\t\t\t%s%d.Next = %s%d\n", rule.RHS[j], j+1, rule.RHS[j+1], j+2)
 			}
 

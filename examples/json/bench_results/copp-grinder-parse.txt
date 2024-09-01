@@ -2883,3 +2883,4 @@ BenchmarkParseOnly/strategy=COPP/file=wikidata-lexemes.json/goroutines=32/reduct
 BenchmarkParseOnly/strategy=COPP/file=wikidata-lexemes.json/goroutines=32/reduction=mixed-128           	       1	3998373922 ns/op	5391925256 B/op	    2634 allocs/op
 BenchmarkParseOnly/strategy=COPP/file=wikidata-lexemes.json/goroutines=32/reduction=mixed-128           	       1	4261572612 ns/op	5391925160 B/op	    2634 allocs/op
 PASS
+ok  	github.com/giornetta/gopapageno/examples/json/copp	2448.477s
