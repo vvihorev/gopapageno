@@ -1,6 +1,7 @@
 %cut <
-
 %preamble LexerPreallocMem
+
+%%
 
 IDENTIFIER [a-zA-Z0-9_\-:]+
 INFO [^<]+

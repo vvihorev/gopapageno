@@ -63,16 +63,28 @@ func parseLexerDescription(r io.Reader, logger *log.Logger) (*lexerDescriptor, e
 			break
 		}
 
-		if match := definitionRegex.FindStringSubmatch(l); match != nil {
-			definitions[match[1]] = strings.TrimSpace(match[2])
-		} else if match := cutPointsRegex.FindStringSubmatch(l); match != nil {
+		if match := cutPointsRegex.FindStringSubmatch(l); match != nil {
 			cutPoints = match[1]
 		} else if match := preambleRegex.FindStringSubmatch(l); match != nil {
 			preambleFunc = match[1]
+		} else if l != "" {
+			return nil, fmt.Errorf("unrecognized lexer option: %s", l)
 		}
 	}
 
 	logger.Printf("Cut Points: %s\n", cutPoints)
+	logger.Printf("Preamble Func: %s\n", cutPoints)
+
+	for scanner.Scan() {
+		l := scanner.Text()
+		if separatorRegexp.MatchString(l) {
+			break
+		}
+
+		if match := definitionRegex.FindStringSubmatch(l); match != nil {
+			definitions[match[1]] = strings.TrimSpace(match[2])
+		}
+	}
 
 	logger.Printf("Definitions:\n")
 	for k, v := range definitions {
@@ -267,9 +279,9 @@ func (l *lexerDescriptor) emit(opts *Options, packageName string) error {
 	/******************
 	 * Lexer Function *
 	 ******************/
-	fmt.Fprintf(f, "\tfn := func(rule int, text string, start int, end int, thread int, token *gopapageno.Token) gopapageno.LexResult {\n")
+	fmt.Fprintf(f, "\tfn := func(ruleDescription int, text string, start int, end int, thread int, token *gopapageno.Token) gopapageno.LexResult {\n")
 	fmt.Fprintf(f, "\t\ttoken.Type = gopapageno.TokenTerm\n")
-	fmt.Fprintf(f, "\t\tswitch rule {\n")
+	fmt.Fprintf(f, "\t\tswitch ruleDescription {\n")
 	for i, rule := range l.rules {
 		fmt.Fprintf(f, "\t\tcase %d:\n", i)
 		for _, line := range strings.Split(rule.Action, "\n") {

@@ -46,9 +46,9 @@ func tokenToString(token uint16) string {
 	case SET_ITEMS:
 		return "SET_ITEMS"
 	case _EMPTY:
-		return "_EMPTY"
+		return "__EMPTY__"
 	case _TERM:
-		return "_TERM"
+		return "__TERM__"
 	case anyc:
 		return "anyc"
 	case caret:

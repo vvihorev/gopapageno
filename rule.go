@@ -1,26 +1,39 @@
 package gopapageno
 
-type RuleType uint8
+type RuleFlags uint8
 
 const (
-	RuleSimple = iota
-	RuleAppendLeft
-	RuleAppendRight
+	RuleSimple RuleFlags = 1 << iota
+	RuleAppend
 	RuleCombine
 	RuleCyclic
 	RulePrefix
 )
 
-func (t RuleType) String() string {
+func (t RuleFlags) Set(flag RuleFlags) RuleFlags {
+	return t | flag
+}
+
+func (t RuleFlags) Clear(flag RuleFlags) RuleFlags {
+	return t &^ flag
+}
+
+func (t RuleFlags) Toggle(flag RuleFlags) RuleFlags {
+	return t ^ flag
+}
+
+func (t RuleFlags) Has(flag RuleFlags) bool {
+	return t&flag != 0
+}
+
+func (t RuleFlags) String() string {
 	switch t {
 	case RuleSimple:
 		return "RuleSimple"
-	case RuleAppendLeft:
-		return "RuleAppendLeft"
-	case RuleAppendRight:
-		return "RuleAppendRight"
 	case RuleCombine:
 		return "RuleCombine"
+	case RulePrefix:
+		return "RulePrefix"
 	case RuleCyclic:
 		return "RuleCyclic"
 	default:
@@ -31,5 +44,5 @@ func (t RuleType) String() string {
 type Rule struct {
 	Lhs  TokenType
 	Rhs  []TokenType
-	Type RuleType
+	Type RuleFlags
 }

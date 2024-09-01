@@ -8,7 +8,8 @@ import (
 type parserStack struct {
 	*LOPS[Token]
 
-	firstTerminal *Token
+	firstTerminalStack *stack[*Token]
+	firstTerminalPos   int
 }
 
 // newParserStack creates an empty parserStack.
@@ -25,7 +26,8 @@ func (s *parserStack) Push(token *Token) *Token {
 
 	//If the token is a terminal update the firstTerminal pointer
 	if token.Type.IsTerminal() {
-		s.firstTerminal = token
+		s.firstTerminalStack = s.LOPS.cur
+		s.firstTerminalPos = s.LOPS.cur.Tos - 1
 	}
 
 	return token
@@ -33,45 +35,51 @@ func (s *parserStack) Push(token *Token) *Token {
 
 // FirstTerminal returns a pointer to the first terminal token on the stack.
 func (s *parserStack) FirstTerminal() *Token {
-	return s.firstTerminal
+	return s.firstTerminalStack.Data[s.firstTerminalPos]
 }
 
 // UpdateFirstTerminal should be used after a reduction in order to update the first terminal counter.
 // In fact, in order to save some time, only the Push operation automatically updates the first terminal pointer,
 // while the Pop operation does not.
 func (s *parserStack) UpdateFirstTerminal() {
-	s.firstTerminal = s.findFirstTerminal()
+	s.firstTerminalStack, s.firstTerminalPos = s.findFirstTerminal()
 }
 
 // findFirstTerminal computes the first terminal on the stacks.
 // This function is for internal usage only.
-func (s *parserStack) findFirstTerminal() *Token {
+func (s *parserStack) findFirstTerminal() (*stack[*Token], int) {
 	curStack := s.cur
 
 	pos := curStack.Tos - 1
 
-	for pos < 0 {
+	for pos < s.headFirst {
 		pos = -1
 		if curStack.Prev == nil {
-			return nil
+			return nil, 0
 		}
+
+		s.headFirst = 0
+
 		curStack = curStack.Prev
 		pos = curStack.Tos - 1
 	}
 
 	for !curStack.Data[pos].Type.IsTerminal() {
 		pos--
-		for pos < 0 {
+		for pos < s.headFirst {
 			pos = -1
 			if curStack.Prev == nil {
-				return nil
+				return nil, 0
 			}
+
+			s.headFirst = 0
+
 			curStack = curStack.Prev
 			pos = curStack.Tos - 1
 		}
 	}
 
-	return curStack.Data[pos]
+	return curStack, pos
 }
 
 func (s *parserStack) LastNonterminal() (*Token, error) {

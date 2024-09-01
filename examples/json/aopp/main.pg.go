@@ -27,7 +27,7 @@ func run() error {
 	strategyFlag := flag.String("s", "sweep", "parsing strategy to execute")
 	logFlag := flag.Bool("log", false, "enable logging")
 	avgTokensFlag := flag.Int("avg", 4, "average length of tokens")
-
+	parallelFactorFlag := flag.Float64("pf", 4, "parallelism factor of the source text (0, 1]")
 	cpuProfileFlag := flag.String("cpuprof", "", "output file for CPU profiling")
 	memProfileFlag := flag.String("memprof", "", "output file for Memory profiling")
 
@@ -75,6 +75,8 @@ func run() error {
 		gopapageno.WithMemoryProfiling(memProfileWriter),
 		gopapageno.WithReductionStrategy(strat),
 		gopapageno.WithAverageTokenLength(*avgTokensFlag),
+		gopapageno.WithParallelFactor(*parallelFactorFlag),
+		gopapageno.WithGarbageCollection(false),
 	)
 
 	ctx := context.Background()
@@ -85,19 +87,13 @@ func run() error {
 	}
 
 	fmt.Printf("Parsing took: %v\n", time.Since(start))
+	// fmt.Printf("Result: %v\n", root.Value)
 
-	// fmt.Printf("Result: %v\n", *root.Value.(*int64))
-	ctx, cancel := context.WithTimeout(ctx, time.Second)
-	defer cancel()
-
-	h, err := root.Height(ctx)
-	if err != nil {
-		return nil
-	}
-
-	fmt.Printf("Height: %d\n", h)
-	if h < 10 {
-		fmt.Println(SprintToken[int64](root))
+	h := root.Height()
+	s := root.Size()
+	fmt.Printf("Height: %d\nSize: %d\n", h, s)
+	if h < 10 && s < 100 {
+		fmt.Println(SprintToken[any](root))
 	}
 
 	return nil

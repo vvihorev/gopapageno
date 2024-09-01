@@ -156,7 +156,7 @@ func run() error {
 	strategyFlag := flag.String("s", "sweep", "parsing strategy to execute")
 	logFlag := flag.Bool("log", false, "enable logging")
 	avgTokensFlag := flag.Int("avg", 4, "average length of tokens")
-
+	parallelFactorFlag := flag.Float64("pf", 4, "parallelism factor of the source text (0, 1]")
 	cpuProfileFlag := flag.String("cpuprof", "", "output file for CPU profiling")
 	memProfileFlag := flag.String("memprof", "", "output file for Memory profiling")
 
@@ -204,6 +204,8 @@ func run() error {
 		gopapageno.WithMemoryProfiling(memProfileWriter),
 		gopapageno.WithReductionStrategy(strat),
 		gopapageno.WithAverageTokenLength(*avgTokensFlag),
+		gopapageno.WithParallelFactor(*parallelFactorFlag),
+		gopapageno.WithGarbageCollection(false),
 	)
 
 	ctx := context.Background()
@@ -214,19 +216,13 @@ func run() error {
 	}
 
 	fmt.Printf("Parsing took: %%v\n", time.Since(start))
-
-	// fmt.Printf("Result: %%v\n", *root.Value.(*int64))
-	ctx, cancel := context.WithTimeout(ctx, time.Second)
-	defer cancel()
-
-	h, err := root.Height(ctx)
-	if err != nil {
-		return err
-	}
-
-	fmt.Printf("Height: %%d\n", h)
-	if h < 10 {
-		fmt.Println(SprintToken[int64](root))
+	// fmt.Printf("Result: %%v\n", root.Value)
+	
+	h := root.Height()
+	s := root.Size()
+	fmt.Printf("Height: %%d\nSize: %%d\n", h, s)
+	if h < 10 && s < 100 {
+		fmt.Println(SprintToken[any](root))
 	}
 
 	return nil
@@ -251,12 +247,8 @@ func emitBenchmarkFile(opts *Options, packageName string) error {
 
 	fmt.Fprintf(gFile, "package %s\n\n", packageName)
 	fmt.Fprintf(gFile, `import (
-	"context"
-	"flag"
-	"fmt"
 	"github.com/giornetta/gopapageno"
 	"github.com/giornetta/gopapageno/benchmark"
-	"os"
 	"path"
 	"runtime"
 	"testing"
@@ -266,80 +258,24 @@ const baseFolder = "../data/"
 
 var table = map[string]any{
 }
-var reductionFlag string
-
-func TestMain(m *testing.M) {
-	flag.StringVar(&reductionFlag, "s", "sweep", "parsing strategy to execute")
-
-	flag.Parse()
-
-	os.Exit(m.Run())
-}
 
 func BenchmarkParse(b *testing.B) {
-	strat := gopapageno.ReductionSweep
-	if reductionFlag == "parallel" {
-		strat = gopapageno.ReductionParallel
-	} else if reductionFlag == "mixed" {
-		strat = gopapageno.ReductionMixed
-	}
-
-	threads := runtime.NumCPU()
-
-	for filename, _ := range table {
-		for c := 1; c <= threads; c = min(c*2, threads) {
-			b.Run(fmt.Sprintf("%%s/%%dT", filename, c), func(b *testing.B) {
-				r := gopapageno.NewRunner(
-					NewLexer(),
-					NewGrammar(),
-					gopapageno.WithConcurrency(c),
-					gopapageno.WithReductionStrategy(strat))
-
-
-				b.ResetTimer()
-
-				benchmark.Run(b, r, path.Join(baseFolder, filename))
-			})
-
-			runtime.GC()
-
-			if c == threads {
-				break
-			}
-		}
-	}
+	benchmark.Runner[any](b, gopapageno.%s, NewLexer, NewGrammar, table)
 }
 
 func TestProfile(t *testing.T) {
-	c := runtime.NumCPU()
-	avgLen := gopapageno.DefaultAverageTokenLength
-	strat := gopapageno.ReductionParallel
-
-	var filename string
-
-	file := path.Join(baseFolder, filename)
-
-	bytes, err := os.ReadFile(file)
-	if err != nil {
-		t.Fatalf("could not read source file %%s: %%v", file, err)
+	opts := &gopapageno.RunOptions{
+		Concurrency:       runtime.NumCPU(),
+		AvgTokenLength:    gopapageno.DefaultAverageTokenLength,
+		ReductionStrategy: gopapageno.ReductionParallel,
+		ParallelFactor:    gopapageno.DefaultParallelFactor,
 	}
 
-	r := gopapageno.NewRunner(
-		NewLexer(),
-		NewGrammar(),
-		gopapageno.WithConcurrency(c),
-		gopapageno.WithAverageTokenLength(avgLen),
-		gopapageno.WithReductionStrategy(strat),
-	)
+	filename := ""
 
-	ctx := context.Background()
-
-	_, err = r.Run(ctx, bytes)
-	if err != nil {
-		t.Fatalf("could not parse source: %%v", err)
-	}
+	benchmark.Profile(t, NewLexer, NewGrammar, opts, filename)
 }
 
-`)
+`, opts.Strategy)
 	return nil
 }

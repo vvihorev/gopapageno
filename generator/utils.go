@@ -88,13 +88,12 @@ func getAlternatives(input string, index *int) ([]string, [][]string, error) {
 	*index++
 
 	// Duplicate alternatives
-	newAlternatives := make([][]string, len(alternatives)*2)
+	duplicatedAlternatives := make([][]string, len(alternatives))
 	for i, alt := range alternatives {
-		newAlternatives[i] = alt
-		newAlternatives[i+len(alternatives)] = append(alt, alt...)
+		duplicatedAlternatives[i] = append(alt, alt...)
 	}
 
-	return rhsTokens, newAlternatives, nil
+	return rhsTokens, duplicatedAlternatives, nil
 }
 
 func getSemanticFunction(input string, index *int) string {

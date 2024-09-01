@@ -1,7 +1,6 @@
 package generator
 
 import (
-	"github.com/giornetta/gopapageno"
 	"strings"
 )
 
@@ -17,9 +16,9 @@ func (p *grammarDescription) deleteCopyRules(rulesDict *rulesDictionary) {
 		if rule.LHS == p.axiom {
 			continue
 		}
-		// If the rule produces a single nonterminal token,
+		// If the ruleDescription produces a single nonterminal token,
 		// add it to the copy rules set and remove it from the rules' dictionary.
-		// Otherwise, add the rule to rhsRule.
+		// Otherwise, add the ruleDescription to rhsRule.
 		if len(rule.RHS) == 1 && p.nonterminals.Contains(rule.RHS[0]) {
 			copySets[rule.LHS].Add(rule.RHS[0])
 			rulesDict.Remove(rule.RHS)
@@ -55,7 +54,7 @@ func (p *grammarDescription) deleteCopyRules(rulesDict *rulesDictionary) {
 			for _, rhs := range rhsDict[copiedNonterm] {
 				// There's no need to specify semantic actions
 				// because they are already linked to the proper rhs
-				rulesDict.Add(&rule{
+				rulesDict.Add(&ruleDescription{
 					LHS:    nonterminal,
 					RHS:    rhs,
 					Action: "",
@@ -66,9 +65,9 @@ func (p *grammarDescription) deleteCopyRules(rulesDict *rulesDictionary) {
 }
 
 func (p *grammarDescription) deleteRepeatedRHS() {
-	newRules := make([]rule, 0)
+	newRules := make([]ruleDescription, 0)
 
-	// Create a rules dictionary and add every parsed rule to it.
+	// Create a rules dictionary and add every parsed ruleDescription to it.
 	dictRules := newRulesDictionary(len(p.rules))
 	for _, rule := range p.rules {
 		dictRules.Add(&rule)
@@ -89,12 +88,25 @@ func (p *grammarDescription) deleteRepeatedRHS() {
 	for loop {
 		// Substitutes RHS keys with newly formatted ones.
 		for i, _ := range dictRules.KeysRHS {
-			keyRHS := dictRules.KeysRHS[i]
-			valueLHS := dictRules.ValuesLHS[i]
-			semAction := dictRules.SemActions[i]
-			isPrefix := dictRules.Types[i]
+			rhs := dictRules.KeysRHS[i]
+			lhs := dictRules.ValuesLHS[i]
+			action := dictRules.SemActions[i]
+			flags := dictRules.Flags[i]
+			prefixes := dictRules.Prefixes[i]
 
-			addNewRules(dictRulesForIteration, p, keyRHS, valueLHS, semAction, isPrefix, V)
+			newRuleRHS := p.replaceTokenNames(rhs, V)
+
+			for _, lhs := range lhs.Iter {
+				for _, rhs := range newRuleRHS {
+					dictRulesForIteration.Add(&ruleDescription{
+						LHS:      lhs,
+						RHS:      rhs,
+						Action:   *action,
+						Flags:    flags,
+						Prefixes: prefixes,
+					})
+				}
+			}
 		}
 
 		valueLHSSets := dictRulesForIteration.LHSSets()
@@ -108,6 +120,7 @@ func (p *grammarDescription) deleteRepeatedRHS() {
 					break
 				}
 			}
+
 			if !contained {
 				addedNonterminals = append(addedNonterminals, curNontermSet)
 				V = append(V, curNontermSet)
@@ -117,15 +130,17 @@ func (p *grammarDescription) deleteRepeatedRHS() {
 		for i, _ := range dictRulesForIteration.KeysRHS {
 			keyRHS := dictRulesForIteration.KeysRHS[i]
 			valueLHS := dictRulesForIteration.ValuesLHS[i]
-			semAction := dictRulesForIteration.SemActions[i]
-			isPrefix := dictRulesForIteration.Types[i]
+			action := dictRulesForIteration.SemActions[i]
+			flags := dictRulesForIteration.Flags[i]
+			prefixes := dictRulesForIteration.Prefixes[i]
 
 			for _, curLHS := range valueLHS.Iter {
-				newRulesDict.Add(&rule{
-					LHS:    curLHS,
-					RHS:    keyRHS,
-					Action: *semAction,
-					Type:   isPrefix,
+				newRulesDict.Add(&ruleDescription{
+					LHS:      curLHS,
+					RHS:      keyRHS,
+					Action:   *action,
+					Flags:    flags,
+					Prefixes: prefixes,
 				})
 			}
 		}
@@ -146,7 +161,7 @@ func (p *grammarDescription) deleteRepeatedRHS() {
 
 	for _, nontermSet := range V {
 		if nontermSet.Contains(p.axiom) {
-			newRulesDict.Add(&rule{
+			newRulesDict.Add(&ruleDescription{
 				LHS:    p.axiom,
 				RHS:    []string{strings.Join(nontermSet.Slice(), "_")},
 				Action: axiomSemAction,
@@ -159,37 +174,39 @@ func (p *grammarDescription) deleteRepeatedRHS() {
 		keyRHS := newRulesDict.KeysRHS[i]
 		valueLHS := newRulesDict.ValuesLHS[i]
 		semAction := newRulesDict.SemActions[i]
-		ruleType := newRulesDict.Types[i]
+		flags := newRulesDict.Flags[i]
+		prefixes := newRulesDict.Prefixes[i]
 
-		newRules = append(newRules, rule{
-			LHS:    strings.Join(valueLHS.Slice(), "_"),
-			RHS:    keyRHS,
-			Action: *semAction,
-			Type:   ruleType,
+		newPrefixes := make([][]string, 0)
+		for _, prefix := range prefixes {
+			replacedPrefix := p.replaceTokenNames(prefix, newRulesDict.LHSSets())
+			newPrefixes = append(newPrefixes, replacedPrefix...)
+		}
+		prefixes = newPrefixes
+
+		newRules = append(newRules, ruleDescription{
+			LHS:      strings.Join(valueLHS.Slice(), "_"),
+			RHS:      keyRHS,
+			Action:   *semAction,
+			Flags:    flags,
+			Prefixes: prefixes,
 		})
 	}
 
 	p.rules = newRules
-
-	newPrefixes := make([][]string, 0)
-	for _, prefix := range p.prefixes {
-		replacedPrefix := p.replaceTokenNames(prefix, newRulesDict.LHSSets())
-		newPrefixes = append(newPrefixes, replacedPrefix...)
-	}
-	p.prefixes = newPrefixes
 
 	p.inferTokens()
 }
 
 func (p *grammarDescription) extractTerminalRules(dictRules *rulesDictionary, newRulesDict *rulesDictionary) {
 	// Range over the current rules, check if the RHS contains any nonterminal
-	// If it doesn't (i.e. it is a *terminal rule*), add it to the new rules dictionary and remove it from the old dict.
+	// If it doesn't (i.e. it is a *terminal ruleDescription*), add it to the new rules dictionary and remove it from the old dict.
 	dictCopy := dictRules.Copy()
 	for i, _ := range dictCopy.KeysRHS {
 		keyRHS := dictCopy.KeysRHS[i]
 		valueLHS := dictCopy.ValuesLHS[i]
 		semAction := dictCopy.SemActions[i]
-		isPrefix := dictCopy.Types[i]
+		isPrefix := dictCopy.Flags[i]
 
 		isTerminalRule := true
 		for _, token := range keyRHS {
@@ -201,11 +218,11 @@ func (p *grammarDescription) extractTerminalRules(dictRules *rulesDictionary, ne
 
 		if isTerminalRule {
 			for _, curLHS := range valueLHS.Iter {
-				newRulesDict.Add(&rule{
+				newRulesDict.Add(&ruleDescription{
 					LHS:    curLHS,
 					RHS:    keyRHS,
 					Action: *semAction,
-					Type:   isPrefix,
+					Flags:  isPrefix,
 				})
 			}
 
@@ -254,26 +271,12 @@ func (p *grammarDescription) replaceTokenNames(keyRHS []string, newNonterminals 
 	return newTokenNames
 }
 
-func addNewRules(dict *rulesDictionary, p *grammarDescription,
-	keyRHS []string, valueLHS *set[string], semAction *string, ruleType gopapageno.RuleType, newNonterminals []*set[string]) {
+func addNewRules(dict *rulesDictionary, index int, p *grammarDescription, newNonterminals []*set[string]) {
 
-	newRuleRHS := p.replaceTokenNames(keyRHS, newNonterminals)
-
-	for _, lhs := range valueLHS.Iter {
-		for _, rhs := range newRuleRHS {
-			dict.Add(&rule{
-				LHS:    lhs,
-				RHS:    rhs,
-				Action: *semAction,
-				Type:   ruleType,
-			})
-		}
-
-	}
 }
 
 func (p *grammarDescription) sortRulesByRHS() {
-	sortedRules := make([]rule, 0, len(p.rules))
+	sortedRules := make([]ruleDescription, 0, len(p.rules))
 
 	for _, curRule := range p.rules {
 		insertPosition := -1
@@ -286,7 +289,7 @@ func (p *grammarDescription) sortRulesByRHS() {
 		if insertPosition == -1 {
 			sortedRules = append(sortedRules, curRule)
 		} else {
-			sortedRules = append(sortedRules, rule{})
+			sortedRules = append(sortedRules, ruleDescription{})
 			copy(sortedRules[insertPosition+1:], sortedRules[insertPosition:])
 			sortedRules[insertPosition] = curRule
 		}

@@ -38,6 +38,8 @@ func (l *LOPS[T]) Push(t *T) *T {
 
 			l.cur = s
 		}
+
+		l.headFirst = 0
 	}
 
 	l.cur.Data[l.cur.Tos] = t
@@ -52,16 +54,17 @@ func (l *LOPS[T]) Push(t *T) *T {
 func (l *LOPS[T]) Pop() *T {
 	l.cur.Tos--
 
-	if l.cur.Tos >= 0 {
+	if l.cur.Tos >= l.headFirst {
 		l.len--
 		return l.cur.Data[l.cur.Tos]
 	}
 
-	l.cur.Tos = 0
+	l.cur.Tos = l.headFirst
 
 	if l.cur.Prev == nil {
 		return nil
 	}
+	l.headFirst = 0
 
 	l.cur = l.cur.Prev
 	l.cur.Tos--
@@ -72,7 +75,7 @@ func (l *LOPS[T]) Pop() *T {
 
 // Get returns the topmost element from the LOPS.
 func (l *LOPS[T]) Get() *T {
-	if l.cur.Tos > 0 {
+	if l.cur.Tos > l.headFirst {
 		return l.cur.Data[l.cur.Tos-1]
 	}
 
@@ -81,19 +84,6 @@ func (l *LOPS[T]) Get() *T {
 	}
 
 	return l.cur.Prev.Data[l.cur.Prev.Tos-1]
-}
-
-// GetNext returns the first empty element from the LOPS.
-func (l *LOPS[T]) GetNext() *T {
-	if l.cur.Tos >= 0 {
-		return l.cur.Data[l.cur.Tos]
-	}
-
-	if l.cur.Prev == nil {
-		return nil
-	}
-
-	return l.cur.Prev.Data[l.cur.Prev.Tos]
 }
 
 // Clear empties the LOPS.
@@ -110,15 +100,6 @@ func (l *LOPS[T]) Clear() {
 	l.cur = l.head
 }
 
-// Merge links the stacks of the current and of another LOPS.
-func (l *LOPS[T]) Merge(other *LOPS[T]) {
-	l.cur.Next = other.head
-	other.head.Prev = l.cur
-
-	l.cur = other.cur
-	l.len += other.len
-}
-
 // NumStacks returns the number of stacks contained in the LOPS.
 // It takes linear time (in the number of stacks) to execute.
 func (l *LOPS[T]) NumStacks() int {
@@ -128,6 +109,30 @@ func (l *LOPS[T]) NumStacks() int {
 		n++
 	}
 	return n
+}
+
+// MaxLength returns the maximum occupancy of the data structure so far, i.e. what is
+// the maximum amount of items in use at any given time.
+func (l *LOPS[T]) MaxLength() int {
+	stacks := l.NumStacks()
+
+	lastSize := l.cur.Tos
+	for _, e := range l.cur.Data[l.cur.Tos+1:] {
+		if e != nil {
+			lastSize++
+		} else {
+			break
+		}
+	}
+
+	return (stacks-1)*l.head.Size + lastSize
+}
+
+// Capacity returns the maximum capacity of the current allocated structure.
+func (l *LOPS[T]) Capacity() int {
+	stacks := l.NumStacks()
+
+	return (stacks) * l.head.Size
 }
 
 // Length returns the number of items contained in the LOPS.
@@ -156,7 +161,7 @@ func (i *LOPSIt[T]) Prev() *T {
 
 	i.pos--
 
-	if i.pos >= 0 {
+	if i.pos >= i.los.headFirst {
 		return curStack.Data[i.pos]
 	}
 
@@ -176,7 +181,7 @@ func (i *LOPSIt[T]) Prev() *T {
 func (i *LOPSIt[T]) Cur() *T {
 	curStack := i.cur
 
-	if i.pos >= 0 && i.pos < curStack.Tos {
+	if i.pos >= i.los.headFirst && i.pos < curStack.Tos {
 		return curStack.Data[i.pos]
 	}
 

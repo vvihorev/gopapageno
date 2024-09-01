@@ -1,5 +1,7 @@
 %cut \n
 
+%%
+
 LCURLY {
 RCURLY }
 LSQUARE \[
@@ -19,6 +21,8 @@ MINUS \-
 
 SPACE [ \t]
 NEWLINE [\r\n]
+
+NULL null
 
 %%
 
@@ -79,6 +83,11 @@ NEWLINE [\r\n]
 {FALSE}
 {
     token.Type = BOOL
+}
+
+{NULL}
+{
+    token.Type = NULL
 }
 
 {SPACE}
