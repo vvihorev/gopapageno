@@ -59,7 +59,7 @@ func Runner[T any](b *testing.B, parsingStrategy gopapageno.ParsingStrategy, new
 func ParserRunner[T any](b *testing.B, parsingStrategy gopapageno.ParsingStrategy, newLexer func() *gopapageno.Lexer, newGrammar func() *gopapageno.Grammar, entries []*Entry[T]) {
 	reductionStrategies := []gopapageno.ReductionStrategy{gopapageno.ReductionSweep, gopapageno.ReductionParallel, gopapageno.ReductionMixed}
 
-	threads := int(math.Min(float64(runtime.NumCPU()), 32))
+	threads := min(int(math.Min(float64(runtime.NumCPU()), 32)), 3)
 
 	b.Run(fmt.Sprintf("strategy=%s", parsingStrategy), func(b *testing.B) {
 		for _, entry := range entries {
