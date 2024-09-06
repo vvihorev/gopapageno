@@ -496,6 +496,20 @@ func (p *COPParser) CombineSweepLOS(pool *Pool[stack[Token]], stacks []*COPPStac
 					continue
 				}
 
+				for _, stateToken := range stacks[i].StateTokenStack.Slice(st.CurrentIndex, st.CurrentLen) {
+					if _, ok := tokenSet[stateToken]; !ok {
+						stateToken.Precedence = PrecEmpty
+
+						newToken := input.Push(*stateToken)
+						parentToken, ok := stacks[i].ProducedTokens[stateToken]
+						if ok {
+							newProducedTokens[newToken] = parentToken
+						}
+
+						tokenSet[stateToken] = struct{}{}
+					}
+				}
+
 				for _, stateToken := range stacks[i].Previous() {
 					if _, ok := tokenSet[stateToken]; !ok {
 						stateToken.Precedence = PrecEmpty

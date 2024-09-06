@@ -217,6 +217,20 @@ func (s *COPPStack) CombineLOS(pool *Pool[stack[Token]]) (*LOS[Token], map[*Toke
 				continue
 			}
 
+			for _, stateToken := range s.StateTokenStack.Slice(st.CurrentIndex, st.CurrentLen) {
+				if _, ok := tokenSet[stateToken]; !ok {
+					stateToken.Precedence = PrecEmpty
+
+					newToken := list.Push(*stateToken)
+					parentToken, ok := s.ProducedTokens[stateToken]
+					if ok {
+						newProducedTokens[newToken] = parentToken
+					}
+
+					tokenSet[stateToken] = struct{}{}
+				}
+			}
+
 			for _, stateToken := range s.Previous() {
 				if _, ok := tokenSet[stateToken]; !ok {
 					stateToken.Precedence = PrecEmpty
