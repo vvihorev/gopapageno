@@ -185,9 +185,71 @@ func (s *COPPStack) CombineLOS(pool *Pool[stack[Token]]) (*LOS[Token], map[*Toke
 	//}
 
 	for t, st = it.Next(); t != nil && t.Precedence != PrecYields; t, st = it.Next() {
+		//for _, stateToken := range s.StateTokenStack.Slice(st.CurrentIndex, st.CurrentLen) {
+		//	_, ok := tokenSet[stateToken]
+		//	if !ok {
+		//		stateToken.Precedence = PrecEmpty
+		//
+		//		newToken := list.Push(*stateToken)
+		//		parentToken, ok := s.ProducedTokens[stateToken]
+		//		if ok {
+		//			newProducedTokens[newToken] = parentToken
+		//		}
+		//
+		//		tokenSet[stateToken] = struct{}{}
+		//	}
+		//}
+		//
+		//_, ok := tokenSet[t]
+		//if !ok {
+		//	t.Precedence = PrecEmpty
+		//
+		//	newToken := list.Push(*t)
+		//	parentToken, ok := s.ProducedTokens[t]
+		//	if ok {
+		//		newProducedTokens[newToken] = parentToken
+		//	}
+		//
+		//	tokenSet[t] = struct{}{}
+		//}
+		if t.Precedence == PrecEquals {
+			if !it.IsLast() {
+				continue
+			}
+
+			for _, stateToken := range s.Previous() {
+				if _, ok := tokenSet[stateToken]; !ok {
+					stateToken.Precedence = PrecEmpty
+
+					newToken := list.Push(*stateToken)
+					parentToken, ok := s.ProducedTokens[stateToken]
+					if ok {
+						newProducedTokens[newToken] = parentToken
+					}
+
+					tokenSet[stateToken] = struct{}{}
+				}
+			}
+
+			for _, stateToken := range s.Current() {
+				if _, ok := tokenSet[stateToken]; !ok {
+					stateToken.Precedence = PrecEmpty
+
+					newToken := list.Push(*stateToken)
+					parentToken, ok := s.ProducedTokens[stateToken]
+					if ok {
+						newProducedTokens[newToken] = parentToken
+					}
+
+					tokenSet[stateToken] = struct{}{}
+				}
+			}
+
+			continue
+		}
+
 		for _, stateToken := range s.StateTokenStack.Slice(st.CurrentIndex, st.CurrentLen) {
-			_, ok := tokenSet[stateToken]
-			if !ok {
+			if _, ok := tokenSet[stateToken]; !ok {
 				stateToken.Precedence = PrecEmpty
 
 				newToken := list.Push(*stateToken)
@@ -200,8 +262,7 @@ func (s *COPPStack) CombineLOS(pool *Pool[stack[Token]]) (*LOS[Token], map[*Toke
 			}
 		}
 
-		_, ok := tokenSet[t]
-		if !ok {
+		if _, ok := tokenSet[t]; !ok {
 			t.Precedence = PrecEmpty
 
 			newToken := list.Push(*t)

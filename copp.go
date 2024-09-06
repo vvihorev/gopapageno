@@ -239,9 +239,6 @@ func (w *coppWorker) parse(ctx context.Context, stack *COPPStack, tokens *LOS[To
 
 		if !inputToken.Type.IsTerminal() {
 			prec = PrecYields
-
-			rhs = rhs[:0]
-			rhsTokens = rhsTokens[:0]
 		} else {
 			// TODO: Consider removing this check, it is probably unnecessary.
 			if firstTerminal == nil {
@@ -277,6 +274,10 @@ func (w *coppWorker) parse(ctx context.Context, stack *COPPStack, tokens *LOS[To
 				stack.SwapState()
 				stack.AppendStateToken(inputToken)
 			}
+
+			rhsTokens = rhsTokens[:0]
+			rhs = rhs[:0]
+			prefixCount = 0
 
 			inputToken = tokensIt.Next()
 		} else if prec == PrecEquals {
