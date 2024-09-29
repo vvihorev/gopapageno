@@ -170,48 +170,7 @@ func (s *COPPStack) CombineLOS(pool *Pool[stack[Token]]) (*LOS[Token], map[*Toke
 		tokenSet[t] = struct{}{}
 	}
 
-	//if s.Length() == 1 {
-	//	for _, t := range s.StateTokenStack.Slice(s.State.CurrentIndex, s.State.CurrentLen) {
-	//		t.Precedence = PrecEmpty
-	//
-	//		newToken := list.Push(*t)
-	//		parentToken, ok := s.ProducedTokens[t]
-	//		if ok {
-	//			newProducedTokens[newToken] = parentToken
-	//		}
-	//	}
-	//
-	//	return list, newProducedTokens
-	//}
-
 	for t, st = it.Next(); t != nil && t.Precedence != PrecYields; t, st = it.Next() {
-		//for _, stateToken := range s.StateTokenStack.Slice(st.CurrentIndex, st.CurrentLen) {
-		//	_, ok := tokenSet[stateToken]
-		//	if !ok {
-		//		stateToken.Precedence = PrecEmpty
-		//
-		//		newToken := list.Push(*stateToken)
-		//		parentToken, ok := s.ProducedTokens[stateToken]
-		//		if ok {
-		//			newProducedTokens[newToken] = parentToken
-		//		}
-		//
-		//		tokenSet[stateToken] = struct{}{}
-		//	}
-		//}
-		//
-		//_, ok := tokenSet[t]
-		//if !ok {
-		//	t.Precedence = PrecEmpty
-		//
-		//	newToken := list.Push(*t)
-		//	parentToken, ok := s.ProducedTokens[t]
-		//	if ok {
-		//		newProducedTokens[newToken] = parentToken
-		//	}
-		//
-		//	tokenSet[t] = struct{}{}
-		//}
 		if t.Precedence == PrecEquals {
 			if !it.IsLast() {
 				continue
