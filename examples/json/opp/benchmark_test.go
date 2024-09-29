@@ -39,13 +39,13 @@ func BenchmarkParseOnly(b *testing.B) {
 
 func TestProfile(t *testing.T) {
 	opts := &gopapageno.RunOptions{
-		Concurrency:       18,
+		Concurrency:       2,
 		AvgTokenLength:    8,
 		ReductionStrategy: gopapageno.ReductionParallel,
-		ParallelFactor:    1,
+		ParallelFactor:    0.5,
 	}
 
-	filename := baseFolder + "emojis-1000.json"
+	filename := baseFolder + "citylots.json"
 
 	benchmark.Profile(t, NewLexer, NewGrammar, opts, filename)
 }

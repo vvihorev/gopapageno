@@ -9,21 +9,27 @@ import (
 const baseFolder = "../data/"
 
 var entries = []*benchmark.Entry[any]{
+	//{
+	//	Filename:       baseFolder + "citylots.json",
+	//	ParallelFactor: 0.5,
+	//	AvgTokenLength: 4,
+	//	Result:         nil,
+	//},
+	//{
+	//	Filename:       baseFolder + "emojis-1000.json",
+	//	ParallelFactor: 1,
+	//	AvgTokenLength: 8,
+	//	Result:         nil,
+	//},
+	//{
+	//	Filename:       baseFolder + "wikidata-lexemes.json",
+	//	ParallelFactor: 0,
+	//	AvgTokenLength: 4,
+	//	Result:         nil,
+	//},
 	{
-		Filename:       baseFolder + "citylots.json",
+		Filename:       baseFolder + "citylots-big.json",
 		ParallelFactor: 0.5,
-		AvgTokenLength: 4,
-		Result:         nil,
-	},
-	{
-		Filename:       baseFolder + "emojis-1000.json",
-		ParallelFactor: 1,
-		AvgTokenLength: 8,
-		Result:         nil,
-	},
-	{
-		Filename:       baseFolder + "wikidata-lexemes.json",
-		ParallelFactor: 0,
 		AvgTokenLength: 4,
 		Result:         nil,
 	},
@@ -39,10 +45,10 @@ func BenchmarkParseOnly(b *testing.B) {
 
 func TestProfile(t *testing.T) {
 	opts := &gopapageno.RunOptions{
-		Concurrency:       18,
+		Concurrency:       1,
 		AvgTokenLength:    8,
 		ReductionStrategy: gopapageno.ReductionParallel,
-		ParallelFactor:    1,
+		ParallelFactor:    0.5,
 	}
 
 	filename := baseFolder + "emojis-1000.json"

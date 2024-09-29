@@ -239,9 +239,6 @@ func (w *coppWorker) parse(ctx context.Context, stack *COPPStack, tokens *LOS[To
 
 		if !inputToken.Type.IsTerminal() {
 			prec = PrecYields
-
-			rhs = rhs[:0]
-			rhsTokens = rhsTokens[:0]
 		} else {
 			// TODO: Consider removing this check, it is probably unnecessary.
 			if firstTerminal == nil {
@@ -277,6 +274,10 @@ func (w *coppWorker) parse(ctx context.Context, stack *COPPStack, tokens *LOS[To
 				stack.SwapState()
 				stack.AppendStateToken(inputToken)
 			}
+
+			rhsTokens = rhsTokens[:0]
+			rhs = rhs[:0]
+			prefixCount = 0
 
 			inputToken = tokensIt.Next()
 		} else if prec == PrecEquals {
@@ -340,7 +341,7 @@ func (w *coppWorker) parse(ctx context.Context, stack *COPPStack, tokens *LOS[To
 			// Otherwise, perform a reduction.
 			if stack.YieldingPrecedence() == 0 {
 				if firstTerminal != nil && firstTerminal.Precedence != PrecEmpty {
-					firstTerminal.Precedence = PrecEquals
+					firstTerminal.Precedence = PrecTakes
 				}
 
 				inputToken.Precedence = prec
@@ -490,7 +491,25 @@ func (p *COPParser) CombineSweepLOS(pool *Pool[stack[Token]], stacks []*COPPStac
 		}
 
 		for t, st = it.Next(); t != nil; t, st = it.Next() {
-			if t.Precedence == PrecEquals && it.IsLast() {
+			if t.Precedence == PrecEquals {
+				if !it.IsLast() {
+					continue
+				}
+
+				for _, stateToken := range stacks[i].StateTokenStack.Slice(st.CurrentIndex, st.CurrentLen) {
+					if _, ok := tokenSet[stateToken]; !ok {
+						stateToken.Precedence = PrecEmpty
+
+						newToken := input.Push(*stateToken)
+						parentToken, ok := stacks[i].ProducedTokens[stateToken]
+						if ok {
+							newProducedTokens[newToken] = parentToken
+						}
+
+						tokenSet[stateToken] = struct{}{}
+					}
+				}
+
 				for _, stateToken := range stacks[i].Previous() {
 					if _, ok := tokenSet[stateToken]; !ok {
 						stateToken.Precedence = PrecEmpty
