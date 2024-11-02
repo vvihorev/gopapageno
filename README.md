@@ -13,5 +13,5 @@ This work is based on [Papageno](https://github.com/PAPAGENO-devels/papageno), a
 ### Authors and Contributors
 
  * Michele Giornetta <michelegiornetta@gmail.com>
- * Filippo Gorlero <filgor84@gmail.com> (XPath Extension)
+ * Luca Marzi <luca.marzi@mail.polimi.it> (XPath Extension)
  * Simone Guidi <simone.guidi@mail.polimi.it> (Original Version)
