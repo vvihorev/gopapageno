@@ -12,6 +12,6 @@ This work is based on [Papageno](https://github.com/PAPAGENO-devels/papageno), a
 
 ### Authors and Contributors
 
- * Michele Giornetta <michelegiornetta@gmail.com>
+ * Michele Giornetta <michelegiornetta@gmail.com> (Refactor, AOPP and C-OPP Extensions)
  * Luca Marzi <luca.marzi@mail.polimi.it> (XPath Extension)
  * Simone Guidi <simone.guidi@mail.polimi.it> (Original Version)
