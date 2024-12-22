@@ -391,7 +391,7 @@ func (p *grammarDescription) newAssociativePrecedenceMatrix() (precedenceMatrix,
 				}
 
 				if !ok {
-					return nil, fmt.Errorf("conflicts...")
+					return nil, fmt.Errorf("conflicts... %v", conflicts)
 				}
 			}
 

@@ -220,7 +220,7 @@ func (w *scannerWorker) next(token *Token) LexResult {
 			if stateIdx == -1 {
 				// If we haven't reached any final state so far, return an error.
 				if lastFinalStateReached == nil {
-					fmt.Printf("could not parse token '%s' in surrounding %s at position %d\n", string(w.data[startPos:w.pos+1]), string(w.data[startPos-5:w.pos+5]), startPos)
+					fmt.Printf("could not parse token '%s' in surrounding %s at position %d\n", string(w.data[startPos:w.pos+1]), string(w.data), startPos)
 					return LexErr
 				}
 

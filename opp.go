@@ -294,7 +294,7 @@ func (w *oppWorker) parse(ctx context.Context, stack *OPPStack, tokens *LOS[Toke
 				//Find corresponding lhs and ruleNum
 				lhs, ruleNum := w.parser.g.findRuleMatch(rhs)
 				if lhs == TokenEmpty {
-					errCh <- fmt.Errorf("could not find match for rhs %v", rhs)
+					errCh <- fmt.Errorf("could not find match for rhs %v\n%v\n", rhs, rhsTokens)
 					return
 				}
 

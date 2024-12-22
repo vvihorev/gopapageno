@@ -657,6 +657,15 @@ func (p *grammarDescription) emitTokens(f io.Writer) {
 	}
 
 	fmt.Fprintf(f, "\t\tdefault:\n\t\t\tsb.WriteString(\"Unknown\")\n\t\t}\n")
+	// TODO: Values of non-terminals are not printed now. To print them we can add a switch case
+	//       block for every ValueType that was encountered for the Tokens. e.g:
+	//
+	//       switch v := t.Value.(type) {
+	//       case *int64:
+	//           sb.WriteString(fmt.Sprintf(": %v", *v))
+	//       case *string:
+	//           sb.WriteString(fmt.Sprintf(": %v", *v))
+	//       }
 	fmt.Fprintf(f, `
 		if t.Value != nil {
 			if v, ok := any(t.Value).(*ValueType); ok {
