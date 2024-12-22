@@ -15,6 +15,7 @@ import (
 
 var (
 	separatorRegexp = regexp.MustCompile("^%%\\s*$")
+	commentRegexp = regexp.MustCompile("^//.*$")
 
 	cutPointsRegex = regexp.MustCompile("^%cut\\s*(\\S.*)$")
 	preambleRegex  = regexp.MustCompile("^%preamble\\s*(\\S.*)$")

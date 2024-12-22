@@ -92,6 +92,8 @@ func parseGrammarDescription(r io.Reader, opts *Options) (*grammarDescription, e
 		l := scanner.Bytes()
 		if separatorRegexp.Match(l) {
 			break
+		} else if commentRegexp.Match(l) {
+			continue
 		}
 
 		sb.Write(l)
