@@ -372,7 +372,7 @@ func (p *grammarDescription) newAssociativePrecedenceMatrix() (precedenceMatrix,
 				ok := false
 				for p, cc := range conflicts {
 					if p == gopapageno.PrecEquals {
-						return nil, fmt.Errorf("strong precedence conflict")
+						return nil, fmt.Errorf("strong precedence conflict: %v", cc)
 					}
 
 					// This is NOT enough, but we can leave it as is for testing purposes
@@ -382,6 +382,8 @@ func (p *grammarDescription) newAssociativePrecedenceMatrix() (precedenceMatrix,
 							precMatrix[i][j] = gopapageno.PrecAssociative
 							ok = true
 							break
+						} else {
+							LogPrecedenceConflict(p, c)
 						}
 					}
 
@@ -391,7 +393,7 @@ func (p *grammarDescription) newAssociativePrecedenceMatrix() (precedenceMatrix,
 				}
 
 				if !ok {
-					return nil, fmt.Errorf("conflicts... %v", conflicts)
+					return nil, fmt.Errorf("unresolved conflicts...")
 				}
 			}
 

@@ -272,6 +272,11 @@ func (w *oppWorker) parse(ctx context.Context, stack *OPPStack, tokens *LOS[Toke
 					pos--
 				}
 
+				// TODO: Investigate, how could it happen that no Yield was found on the stack
+				if pos < 0 {
+					errCh <- fmt.Errorf("syntax error: no Yield precedence found on the stack %v\n%v\n", rhsBuf, rhsTokensBuf)
+					return
+				}
 				rhsTokensBuf[pos] = token
 				rhsBuf[pos] = token.Type
 
