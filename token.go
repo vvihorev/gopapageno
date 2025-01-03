@@ -22,6 +22,7 @@ func (t TokenType) Value() uint16 {
 
 type Token struct {
 	Type       TokenType
+	Text       string
 	Precedence Precedence
 
 	Value any
@@ -87,7 +88,7 @@ func (t *Token) String() string {
 			indent += "|   "
 		}
 
-		sb.WriteString(fmt.Sprintf("%d: %v\n", t.Type, t.Value))
+		sb.WriteString(fmt.Sprintf("%d (%v): %v\n", t.Type, t.Text, t.Value))
 
 		sprintRec(t.Child, sb, indent)
 		sprintRec(t.Next, sb, indent[:len(indent)-4])

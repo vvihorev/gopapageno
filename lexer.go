@@ -270,5 +270,11 @@ func (w *scannerWorker) advance(token *Token, lastFinalStatePos int, lastFinalSt
 	tokenStart := w.startingPos + startPos
 	tokenEnd := tokenStart + w.pos - startPos - 1
 
+	if text == "\n" {
+		token.Text = "\\n"
+	} else {
+		token.Text = text
+	}
+
 	return w.lexer.Func(ruleNum, text, tokenStart, tokenEnd, w.id, token)
 }

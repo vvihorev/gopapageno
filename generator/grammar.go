@@ -668,6 +668,13 @@ func (p *grammarDescription) emitTokens(f io.Writer) {
 	//       }
 	fmt.Fprintf(f, `
 		if t.Value != nil {
+	        switch v := t.Value.(type) {
+	        case *int64:
+	            sb.WriteString(fmt.Sprintf(": %%v", *v))
+	        case *string:
+	            sb.WriteString(fmt.Sprintf(": %%v", *v))
+	        }
+
 			if v, ok := any(t.Value).(*ValueType); ok {
 				sb.WriteString(fmt.Sprintf(": %%v", *v))
 			}
