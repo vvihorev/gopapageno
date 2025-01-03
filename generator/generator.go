@@ -159,6 +159,7 @@ func run() error {
 	parallelFactorFlag := flag.Float64("pf", 4, "parallelism factor of the source text (0, 1]")
 	cpuProfileFlag := flag.String("cpuprof", "", "output file for CPU profiling")
 	memProfileFlag := flag.String("memprof", "", "output file for Memory profiling")
+	dumpGraphFlag := flag.String("graph", "", "output graphviz dot file of the AST")
 
 	flag.Parse()
 
@@ -223,6 +224,13 @@ func run() error {
 	fmt.Printf("Height: %%d\nSize: %%d\n", h, s)
 	if h < 10 && s < 100 {
 		fmt.Println(SprintToken[any](root))
+	}
+
+	if *dumpGraphFlag != "" {
+		f, err := os.Create(*dumpGraphFlag)
+		if err != nil {
+			DumpGraph[any](root, f)
+		}
 	}
 
 	return nil

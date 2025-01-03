@@ -364,6 +364,7 @@ func (p *grammarDescription) emit(opts *Options, packageName string) error {
 	"github.com/giornetta/gopapageno"
 	"strings"
 	"fmt"
+	"os"
 )
 `)
 
@@ -620,6 +621,80 @@ func (p *grammarDescription) emitTokens(f io.Writer) {
 		}
 	}
 	fmt.Fprintf(f, ")\n\n")
+
+
+	fmt.Fprintf(f, `func DumpGraph[ValueType any](root *gopapageno.Token, f *os.File) {
+	sb := strings.Builder{}
+	sb.WriteString("digraph parse_tree {\n")
+	sb.WriteString("ratio = fill;\n")
+	sb.WriteString("node [style=filled];\n")
+
+	var graphPrintRec func(t *gopapageno.Token, p *gopapageno.Token, sb *strings.Builder, i int)
+	graphPrintRec = func(t *gopapageno.Token, p *gopapageno.Token, sb *strings.Builder, i int) {
+		if t == nil {
+			return
+		}
+
+		if p == nil {
+			graphPrintRec(t.Child, t, sb, i+1)
+			return
+		}
+
+		var t_name, t_color, p_name, p_color string
+`)
+
+	termColor := "0.641 0.212 1.000"
+	nonTermColor := "0.408 0.498 1.000"
+
+	fmt.Fprintf(f, "\n\t\tswitch p.Type {\n")
+	for _, token := range p.nonterminals.Slice() {
+		if token == emptyToken {
+			fmt.Fprintf(f, "\t\tcase gopapageno.TokenEmpty:\n\t\t\tp_name, p_color = \"%s\", \"%s\"\n", token, nonTermColor)
+		} else {
+			fmt.Fprintf(f, "\t\tcase %s:\n\t\t\tp_name, p_color = \"%s\", \"%s\"\n", token, token, nonTermColor)
+		}
+	}
+	for _, token := range p.terminals.Slice() {
+		if token == termToken {
+			fmt.Fprintf(f, "\t\tcase gopapageno.TokenTerm:\n\t\t\tp_name, p_color = \"%s\", \"%s\"\n", token, termColor)
+		} else {
+			fmt.Fprintf(f, "\t\tcase %s:\n\t\t\tp_name, p_color = \"%s\", \"%s\"\n", token, token, termColor)
+		}
+	}
+	fmt.Fprintf(f, "\t\t}\n")
+
+	fmt.Fprintf(f, "\n\t\tswitch t.Type {\n")
+	for _, token := range p.nonterminals.Slice() {
+		if token == emptyToken {
+			fmt.Fprintf(f, "\t\tcase gopapageno.TokenEmpty:\n\t\t\tt_name, t_color = \"%s\", \"%s\"\n", token, nonTermColor)
+		} else {
+			fmt.Fprintf(f, "\t\tcase %s:\n\t\t\tt_name, t_color = \"%s\", \"%s\"\n", token, token, nonTermColor)
+		}
+	}
+	for _, token := range p.terminals.Slice() {
+		if token == termToken {
+			fmt.Fprintf(f, "\t\tcase gopapageno.TokenTerm:\n\t\t\tt_name, t_color = \"%s\", \"%s\"\n", token, termColor)
+		} else {
+			fmt.Fprintf(f, "\t\tcase %s:\n\t\t\tt_name, t_color = \"%s\", \"%s\"\n", token, token, termColor)
+		}
+	}
+	fmt.Fprintf(f, "\t\t}\n")
+
+	fmt.Fprintf(f, `
+		sb.WriteString(fmt.Sprintf("\"%%p\" -> \"%%p\";\n", p, t))
+		sb.WriteString(fmt.Sprintf("\"%%p\" [label=\"%%s\" color=\"%%s\"];\n", p, p_name, p_color))
+		sb.WriteString(fmt.Sprintf("\"%%p\" [label=\"%%s\" color=\"%%s\"];\n", t, t_name, t_color))
+
+		graphPrintRec(t.Child, t, sb, i+1)
+		graphPrintRec(t.Next, p, sb, i)
+	}
+	graphPrintRec(root, nil, &sb, 0)
+	sb.WriteString("}\n")
+
+	fmt.Fprint(f, sb.String())
+}
+`)
+	fmt.Fprintf(f, "\n\n")
 
 	fmt.Fprintf(f, "func SprintToken[ValueType any](root *gopapageno.Token) string {\n")
 	fmt.Fprintf(f, "\tvar sprintRec func(t *gopapageno.Token, sb *strings.Builder, indent string)\n\n")
