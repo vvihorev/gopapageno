@@ -228,7 +228,7 @@ func run() error {
 
 	if *dumpGraphFlag != "" {
 		f, err := os.Create(*dumpGraphFlag)
-		if err != nil {
+		if err == nil {
 			DumpGraph[any](root, f)
 		}
 	}
