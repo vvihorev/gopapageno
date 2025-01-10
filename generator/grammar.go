@@ -105,10 +105,11 @@ func parseGrammarDescription(r io.Reader, opts *Options) (*grammarDescription, e
 		return nil, fmt.Errorf("could not parse rules: %w", err)
 	}
 
-	opts.Logger.Printf("Grammar Rules:\n")
+	opts.Logger.Printf("\n--- Grammar Rules:\n")
 	for _, rule := range rules {
 		opts.Logger.Printf("%s\n", rule)
 	}
+	opts.Logger.Printf("\n")
 
 	// Parse code
 	var preambleBuilder strings.Builder
@@ -289,6 +290,12 @@ func (p *grammarDescription) compile(opts *Options) error {
 	p.removePrefixRules()
 
 	p.sortRulesByRHS()
+
+	opts.Logger.Printf("\n--- Updated Grammar Rules:\n")
+	for _, rule := range p.rules {
+		opts.Logger.Printf("%s\n", rule)
+	}
+	opts.Logger.Printf("\n")
 
 	return nil
 }
@@ -732,7 +739,7 @@ func (p *grammarDescription) emitTokens(f io.Writer) {
 	}
 
 	fmt.Fprintf(f, "\t\tdefault:\n\t\t\tsb.WriteString(\"Unknown\")\n\t\t}\n")
-	// TODO: Values of non-terminals are not printed now. To print them we can add a switch case
+	// TODO(vvihorev): Values of non-terminals are not printed now. To print them we can add a switch case
 	//       block for every ValueType that was encountered for the Tokens. e.g:
 	//
 	//       switch v := t.Value.(type) {

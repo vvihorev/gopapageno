@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -22,6 +23,9 @@ func (p *grammarDescription) deleteCopyRules(rulesDict *rulesDictionary) {
 		if len(rule.RHS) == 1 && p.nonterminals.Contains(rule.RHS[0]) {
 			copySets[rule.LHS].Add(rule.RHS[0])
 			// TODO(vvihorev): this is where semantic actions of renaming rules are lost
+			if len(rule.Action) > 2 {
+				fmt.Println("WARNING: Dropping semantic action:", rule.Action)
+			}
 			rulesDict.Remove(rule.RHS)
 		} else {
 			if _, ok := rhsDict[rule.LHS]; ok {
@@ -80,6 +84,26 @@ func (p *grammarDescription) deleteRepeatedRHS() {
 	// TODO: This always causes problems...
 	// p.extractTerminalRules(dictRules, newRulesDict)
 
+	// TODO(vvihorev): in cpapageno we don't always remove copy rules
+	// hasAxiomWithRrhs := false
+	// for _, valueLhs := range dictRules.ValuesLHS {
+	// 	if valueLhs.Contains(p.axiom) && valueLhs.Len() > 1 {
+	// 		hasAxiomWithRrhs = true
+	// 		break
+	// 	}
+	// }
+	// hasCopyRules := false
+	// for _, rule := range p.rules {
+	// 	if rule.LHS == p.axiom {
+	// 		continue
+	// 	}
+	// 	if len(rule.RHS) == 1 && p.nonterminals.Contains(rule.RHS[0]) {
+	// 		hasCopyRules = true
+	// 	}
+	// }
+	// if hasCopyRules && hasAxiomWithRrhs {
+	//     p.deleteCopyRules(dictRules)
+	// }
 	p.deleteCopyRules(dictRules)
 
 	V := dictRules.LHSSets()
