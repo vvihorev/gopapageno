@@ -272,7 +272,7 @@ func (w *oppWorker) parse(ctx context.Context, stack *OPPStack, tokens *LOS[Toke
 					pos--
 				}
 
-				// TODO: Investigate, how could it happen that no Yield was found on the stack
+				// TODO(vvihorev): Investigate, how it could happen that no Yield was found on the stack
 				if pos < 0 {
 					errCh <- fmt.Errorf("syntax error: no Yield precedence found on the stack %v\n%v\n", rhsBuf, rhsTokensBuf)
 					return
@@ -318,6 +318,38 @@ func (w *oppWorker) parse(ctx context.Context, stack *OPPStack, tokens *LOS[Toke
 			errCh <- fmt.Errorf("no precedence relation found")
 			return
 		}
+	}
+
+	// TODO(vvihorev): verify this works for N > 1 workers
+	// reduce the axiom once all the input tokens have been parsed
+	parserStack := stack.parserStack.LOPS.head
+	if parserStack.Tos == 3 && parserStack.Data[0].Type == TokenTerm && parserStack.Data[2].Type == TokenTerm {
+		termToken := stack.Pop()
+		token := stack.Pop()
+
+		rhs = []TokenType{token.Type}
+		rhsTokens = []*Token{token}
+		lhs, ruleNum := w.parser.g.findRuleMatch(rhs)
+
+		for lhs != TokenEmpty {
+			newNonTerm.Type = lhs
+			lhsToken = w.ntPool.Get()
+			*lhsToken = newNonTerm
+
+			//Execute the semantic action of the axiom
+			w.parser.g.Func(ruleNum, RuleSimple, lhsToken, rhsTokens, w.id)
+
+			//Push the new axiom nonterminal onto the stack
+			stack.Push(lhsToken)
+
+			token = lhsToken
+			rhs = []TokenType{lhsToken.Type}
+			rhsTokens = []*Token{lhsToken}
+			lhs, ruleNum = w.parser.g.findRuleMatch(rhs)
+		}
+
+		stack.Push(token)
+		stack.Push(termToken)
 	}
 
 	resultCh <- parseResult[OPPStack]{w.id, stack}

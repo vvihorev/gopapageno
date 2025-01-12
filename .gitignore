@@ -228,3 +228,7 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/linux,windows,intellij+all,visualstudiocode,go,goland+all
+
+# Ignore tags files for vim/emacs users
+tags
+TAGS
