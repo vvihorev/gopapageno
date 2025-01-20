@@ -1,6 +1,8 @@
 package generator
 
 import (
+	"fmt"
+	"strings"
 	"github.com/giornetta/gopapageno"
 	"slices"
 )
@@ -24,6 +26,19 @@ func newRulesDictionary(capacity int) *rulesDictionary {
 		Flags:      make([]gopapageno.RuleFlags, 0, capacity),
 		Prefixes:   make([][][]string, 0, capacity),
 	}
+}
+
+// Used for debugging purposes only
+func (d *rulesDictionary) String() string {
+	sb := strings.Builder{}
+	for i, v := range d.ValuesLHS {
+		vx := make([]string, 0)
+		for _, v := range v.Iter {
+			vx = append(vx, v)
+		}
+		sb.WriteString(fmt.Sprintf("rule: (%v) %v <- %v\n", (*d.SemActions[i]), d.KeysRHS[i], vx))
+	}
+	return sb.String()
 }
 
 func (d *rulesDictionary) Add(r *ruleDescription) {

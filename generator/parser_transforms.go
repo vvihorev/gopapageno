@@ -22,9 +22,8 @@ func (p *grammarDescription) deleteCopyRules(rulesDict *rulesDictionary) {
 		// Otherwise, add the ruleDescription to rhsRule.
 		if len(rule.RHS) == 1 && p.nonterminals.Contains(rule.RHS[0]) {
 			copySets[rule.LHS].Add(rule.RHS[0])
-			// TODO(vvihorev): this is where semantic actions of renaming rules are lost
 			if len(rule.Action) > 2 {
-				fmt.Println("WARNING: Dropping semantic action:", rule.Action)
+				fmt.Println("WARNING: semantic action is deleted:", rule.LHS, rule.RHS)
 			}
 			rulesDict.Remove(rule.RHS)
 		} else {
