@@ -123,7 +123,7 @@ func NewGrammar() *gopapageno.Grammar {
 		750230570707284,
 	}
 
-	fn := func(rule uint16, lhs *gopapageno.Token, rhs []*gopapageno.Token, thread int) {
+	fn := func(rule uint16, ruleFlags gopapageno.RuleFlags, lhs *gopapageno.Token, rhs []*gopapageno.Token, thread int) {
 		var ruleType gopapageno.RuleFlags
 		switch rule {
 		case 0:
@@ -394,6 +394,6 @@ func NewGrammar() *gopapageno.Grammar {
 		BitPackedPrecedenceMatrix: bitPackedMatrix,
 		Func:                      fn,
 		ParsingStrategy:           gopapageno.OPP,
-		PreambleFunc:              LexerPreallocMem,
+		PreambleFunc:              ParserPreallocMem,
 	}
 }

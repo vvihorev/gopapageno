@@ -1,6 +1,6 @@
 %axiom ELEM
 
-%preamble LexerPreallocMem
+%preamble ParserPreallocMem
 
 %%
 
