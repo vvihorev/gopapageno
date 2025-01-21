@@ -58,31 +58,53 @@ VALUE ([^"\\]|\\.)*
 %%
 
 import (
-	"regexp"
 	"github.com/giornetta/gopapageno/ext/xpath"
 )
 
-//A regexp.Regexp is safe for concurrent use by multiple goroutines, except for configuration methods, such as Longest.
-var generalTagRegexp *(regexp.Regexp)
-var attributesRegexp *(regexp.Regexp)
-
 func getIdAndAttributesListFrom(text string) (id string, attributesList []*xpath.Attribute){
-	tagMatch := generalTagRegexp.FindStringSubmatch(text)
+	var l, r int
 
-	id = tagMatch[1]
-	attributesString := tagMatch[2]
+	l = 1
+	if text[1] == byte('/') {
+		l = 2
+	}
 
-	if(attributesString != ""){
-		attributesMatches := attributesRegexp.FindAllStringSubmatch(attributesString, -1)
-		for _, attributeMatch := range attributesMatches{
-			attribute := xpath.NewAttribute(attributeMatch[1], attributeMatch[2])
-			attributesList = append(attributesList, attribute)
+    for ; r < (len(text) - 1) && text[r] != byte(' '); r++ {}
+
+	if text[r] == byte('>') {
+		if text[r-1] == byte('/') {
+			r--
+			id = string(text[l:r])
+		} else {
+			id = string(text[l:r])
+		}
+		return
+	} else {
+		id = string(text[l:r])
+	}
+
+	for r < len(text) {
+		for ; text[r] == byte(' ') && r < len(text); r++ {}
+		l = r
+
+		for ; text[r] != byte('=') && r < len(text); r++ {}
+		key := string(text[l:r])
+		r = r + 2 // skip ="
+		l = r
+
+		for ; text[r] != byte('"') && r < len(text); r++ {}
+		value := string(text[l:r])
+		r = r + 1 // skip "
+
+		attribute := xpath.NewAttribute(key, value)
+		attributesList = append(attributesList, attribute)
+
+		if text[r] == byte('/') || text[r] == byte('>') {
+			break
 		}
 	}
 	return
 }
 
 func LexerPreallocMem(inputSize int, numThreads int){
-	generalTagRegexp = regexp.MustCompile(`^<\/?([a-zA-Z0-9_\-:]+)(?:\s*)([^\/>]*)\/?>$`)
-	attributesRegexp = regexp.MustCompile(`([a-zA-Z0-9_\-:]+)(?:=")([^"]+)(?:")`)
 }

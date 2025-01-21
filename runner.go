@@ -175,7 +175,7 @@ func (r *Runner) Run(ctx context.Context, src []byte) (*Token, error) {
 }
 
 func (r *Runner) startProfiling() func() {
-	if r.Options.cpuProfileWriter == nil || r.Options.cpuProfileWriter != io.Discard {
+	if r.Options.cpuProfileWriter == nil || r.Options.cpuProfileWriter == io.Discard {
 		return func() {}
 	}
 
