@@ -12,6 +12,7 @@ type executionTable interface {
 	iterate(callback executionTableIterableCallback)
 	recordByID(id int) (executionRecord, error)
 	mainQueryRecord() executionRecord
+	actualList() []executionRecord
 	evaluateID(udpeID int, context NonTerminal, evaluationsCount int) customBool
 	size() int
 }
@@ -24,6 +25,10 @@ func (et *executionTableImpl) iterate(callback executionTableIterableCallback) {
 	for id, er := range et.list {
 		callback(id, er)
 	}
+}
+
+func (et *executionTableImpl) actualList() []executionRecord {
+	return et.list
 }
 
 func (et *executionTableImpl) recordByID(id int) (execRecord executionRecord, err error) {
