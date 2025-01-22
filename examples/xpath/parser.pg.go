@@ -184,11 +184,11 @@ func NewGrammar() *gopapageno.Grammar {
 			ELEM0.LastChild = CLOSETAG4
 
 			{
-				openTag := OPENTAG2.Value.(xpath.OpenTagSemanticValue)
-				closeTag := CLOSETAG4.Value.(xpath.CloseTagSemanticValue)
+				openTag := OPENTAG2.Value.(*xpath.OpenTagSemanticValue)
+				closeTag := CLOSETAG4.Value.(*xpath.CloseTagSemanticValue)
 
 				element := parserElementsPools[thread].Get()
-				element.SetFromExtremeTags(openTag, closeTag)
+				element.SetFromExtremeTags(*openTag, *closeTag)
 
 				generativeNonTerminal := ELEM1.Value.(xpath.NonTerminal)
 				wrappedNonTerminal := ELEM3.Value.(xpath.NonTerminal)
@@ -219,11 +219,11 @@ func NewGrammar() *gopapageno.Grammar {
 			ELEM0.LastChild = CLOSETAG3
 
 			{
-				openTag := OPENTAG2.Value.(xpath.OpenTagSemanticValue)
-				closeTag := CLOSETAG3.Value.(xpath.CloseTagSemanticValue)
+				openTag := OPENTAG2.Value.(*xpath.OpenTagSemanticValue)
+				closeTag := CLOSETAG3.Value.(*xpath.CloseTagSemanticValue)
 
 				element := parserElementsPools[thread].Get()
-				element.SetFromExtremeTags(openTag, closeTag)
+				element.SetFromExtremeTags(*openTag, *closeTag)
 
 				generativeNonTerminal := ELEM1.Value.(xpath.NonTerminal)
 				reducedNonTerminal := xpath.NewNonTerminal().SetNode(element).SetDirectChildAndInheritItsChildren(generativeNonTerminal)
@@ -307,11 +307,11 @@ func NewGrammar() *gopapageno.Grammar {
 			ELEM0.LastChild = CLOSETAG3
 
 			{
-				openTag := OPENTAG1.Value.(xpath.OpenTagSemanticValue)
-				closeTag := CLOSETAG3.Value.(xpath.CloseTagSemanticValue)
+				openTag := OPENTAG1.Value.(*xpath.OpenTagSemanticValue)
+				closeTag := CLOSETAG3.Value.(*xpath.CloseTagSemanticValue)
 
 				element := parserElementsPools[thread].Get()
-				element.SetFromExtremeTags(openTag, closeTag)
+				element.SetFromExtremeTags(*openTag, *closeTag)
 
 				wrappedNonTerminal := ELEM2.Value.(xpath.NonTerminal)
 				reducedNonTerminal := xpath.NewNonTerminal().SetNode(element)
@@ -365,10 +365,10 @@ func NewGrammar() *gopapageno.Grammar {
 			ELEM0.LastChild = TEXT1
 
 			{
-				tsv := TEXT1.Value.(xpath.TextSemanticValue)
+				tsv := TEXT1.Value.(*xpath.TextSemanticValue)
 
 				text := new(xpath.Text)
-				text.SetFromText(tsv)
+				text.SetFromText(*tsv)
 
 				reducedNonTerminal := xpath.NewNonTerminal().SetNode(text)
 

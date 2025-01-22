@@ -38,18 +38,18 @@ func (e *Element) String() string {
 }
 
 func (e *Element) SetFromExtremeTags(openTag OpenTagSemanticValue, closeTag CloseTagSemanticValue) {
-	if openTag.id != closeTag.id {
+	if openTag.Id != closeTag.Id {
 		panic("Invalid Element construction")
 	}
-	e.name = openTag.id
-	e.attributes = openTag.attributes
-	e.posInDocument = newPosition(openTag.startPos, closeTag.endPos)
+	e.name = openTag.Id
+	e.attributes = openTag.Attributes
+	e.posInDocument = newPosition(openTag.StartPos, closeTag.EndPos)
 }
 
 func (e *Element) SetFromSingleTag(openCloseTag OpenCloseTagSemanticValue) {
-	e.name = openCloseTag.id
-	e.attributes = openCloseTag.attributes
-	e.posInDocument = newPosition(openCloseTag.startPos, openCloseTag.endPos)
+	e.name = openCloseTag.Id
+	e.attributes = openCloseTag.Attributes
+	e.posInDocument = newPosition(openCloseTag.StartPos, openCloseTag.EndPos)
 }
 
 // Text node

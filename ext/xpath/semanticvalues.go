@@ -104,40 +104,40 @@ func (p *position) Extremes() (start, end int) {
 	return
 }
 
-type semanticValue struct {
-	id string
+type SemanticValue struct {
+	Id string
 
-	startPos int
-	endPos   int
+	StartPos int
+	EndPos   int
 }
 
 type OpenTagSemanticValue struct {
-	semanticValue
+	SemanticValue
 
-	attributes []*Attribute
+	Attributes []*Attribute
 }
 
 func NewOpenTagSemanticValue(id string, attributes []*Attribute, startPos int, endPos int) *OpenTagSemanticValue {
 	return &OpenTagSemanticValue{
-		semanticValue: semanticValue{
-			id:       id,
-			startPos: startPos,
-			endPos:   endPos,
+		SemanticValue: SemanticValue{
+			Id:       id,
+			StartPos: startPos,
+			EndPos:   endPos,
 		},
-		attributes: attributes,
+		Attributes: attributes,
 	}
 }
 
 type CloseTagSemanticValue struct {
-	semanticValue
+	SemanticValue
 }
 
 func NewCloseTagSemanticValue(id string, startPos int, endPos int) *CloseTagSemanticValue {
 	return &CloseTagSemanticValue{
-		semanticValue{
-			id:       id,
-			startPos: startPos,
-			endPos:   endPos,
+		SemanticValue{
+			Id:       id,
+			StartPos: startPos,
+			EndPos:   endPos,
 		},
 	}
 }
@@ -149,12 +149,12 @@ type OpenCloseTagSemanticValue struct {
 func NewOpenCloseTagSemanticValue(id string, attributes []*Attribute, startPos int, endPos int) *OpenCloseTagSemanticValue {
 	return &OpenCloseTagSemanticValue{
 		OpenTagSemanticValue{
-			semanticValue: semanticValue{
-				id:       id,
-				startPos: startPos,
-				endPos:   endPos,
+			SemanticValue: SemanticValue{
+				Id:       id,
+				StartPos: startPos,
+				EndPos:   endPos,
 			},
-			attributes: attributes,
+			Attributes: attributes,
 		},
 	}
 }
