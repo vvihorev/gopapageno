@@ -208,14 +208,20 @@ func (er *executionRecordImpl) updateAllExecutionThreads(reduced NonTerminal) {
 // execution thread, the speculation is evaluated. If the speculation ends up to be unfounded, the speculative execution thread,
 // and all its Children recursively, are stopped
 func (er *executionRecordImpl) stopUnfoundedSpeculativeExecutionThreads(evaluator evaluator) {
-	er.etList.iterate(func(execThread executionThread) (doBreak bool) {
-		if areSpeculationsFounded := execThread.checkAndUpdateSpeculations(evaluator); !areSpeculationsFounded {
-			if isExecutionThreadRemoved := er.etList.removeExecutionThread(execThread, true); !isExecutionThreadRemoved {
+	var next *list.Element
+	for e := er.etList.actualList().Front(); e != nil; e = next {
+		next = e.Next()
+		et, ok := e.Value.(executionThread)
+		if !ok {
+			panic(`execution thread list iterate: can NOT access to the next execution thread`)
+		}
+
+		if areSpeculationsFounded := et.checkAndUpdateSpeculations(evaluator); !areSpeculationsFounded {
+			if isExecutionThreadRemoved := er.etList.removeExecutionThread(et, true); !isExecutionThreadRemoved {
 				panic("stopping unfounded speculative execution thred: cannot remove execution thread")
 			}
 		}
-		return
-	})
+	}
 }
 
 // saveReducedNTAsContextOrSolutionlIntoCompletedExecutionThreads saves the input NonTerminal as either context or solution
@@ -223,12 +229,18 @@ func (er *executionRecordImpl) stopUnfoundedSpeculativeExecutionThreads(evaluato
 // to produce context-solution items because of running speculations. Even if the execution thread can not produce context-solution
 // items, it has to save the non terminal whose reducetion caused the execution thread to complete
 func (er *executionRecordImpl) saveReducedNTAsContextOrSolutionlIntoCompletedExecutionThreads(contextOrSolution NonTerminal) {
-	er.etList.iterate(func(execThread executionThread) (doBreak bool) {
-		if execThread.isCompleted() {
-			execThread.setNTAsContextOrSolutionIfNotAlreadySet(contextOrSolution)
+	var next *list.Element
+	for e := er.etList.actualList().Front(); e != nil; e = next {
+		next = e.Next()
+		et, ok := e.Value.(executionThread)
+		if !ok {
+			panic(`execution thread list iterate: can NOT access to the next execution thread`)
 		}
-		return
-	})
+
+		if et.isCompleted() {
+			et.setNTAsContextOrSolutionIfNotAlreadySet(contextOrSolution)
+		}
+	}
 }
 
 // produceContextSolutions produce new context solutions from completed execution threads and removes

@@ -6,7 +6,7 @@ type globalUdpeTable interface {
 	newExecutionTable() executionTable
 	addFpe(fpe fpe) (id int, record globalUdpeRecord)
 	addRpe(rpe rpe) (id int, record globalUdpeRecord)
-	iterate(callback globalTableIterableCallback)
+	actualList() []globalUdpeRecord
 	mainQueryRecord() globalUdpeRecord
 }
 
@@ -33,6 +33,10 @@ func (globalUdpeTable *globalUdpeTableImpl) newExecutionTable() executionTable {
 	return et
 }
 
+func (globalUdpeTable *globalUdpeTableImpl) actualList() []globalUdpeRecord {
+	return globalUdpeTable.list
+}
+
 func (globalUdpeTable *globalUdpeTableImpl) size() int {
 	return len(globalUdpeTable.list)
 }
@@ -43,12 +47,6 @@ func (globalUdpeTable *globalUdpeTableImpl) recordByID(id int) globalUdpeRecord 
 
 func (globalUdpeTable *globalUdpeTableImpl) mainQueryRecord() globalUdpeRecord {
 	return globalUdpeTable.list[globalUdpeTable.size()-1]
-}
-
-func (globalUdpeTable *globalUdpeTableImpl) iterate(callback globalTableIterableCallback) {
-	for id, gr := range globalUdpeTable.list {
-		callback(id, gr)
-	}
 }
 
 func (globalUdpeTable *globalUdpeTableImpl) addFpe(fpe fpe) (id int, record globalUdpeRecord) {
