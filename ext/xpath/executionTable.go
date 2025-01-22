@@ -1,6 +1,7 @@
 package xpath
 
 import (
+	"container/list"
 	"fmt"
 )
 
@@ -167,36 +168,40 @@ func (er *executionRecordImpl) belongsToNudpe() bool {
 // updateExecutionThreads takes the node being reduced and asks all the running execution threads
 // to update accordingly
 func (er *executionRecordImpl) updateAllExecutionThreads(reduced NonTerminal) {
-	er.etList.iterate(func(et executionThread) (doBreak bool) {
+	var next *list.Element
+	for e := er.etList.actualList().Front(); e != nil; e = next {
+		next = e.Next()
+		et, ok := e.Value.(executionThread)
+		if !ok {
+			panic(`execution thread list iterate: can NOT access to the next execution thread`)
+		}
+
 		etPathPattern := et.pathPattern()
 		//The path pattern of the execution thread may be empty if the thread is speculative
 		//and it's not completed because of some unchecked speculation
-		if etPathPattern.isEmpty() {
-			return
-		}
+		if !etPathPattern.isEmpty() {
+			etReprBeforeUpdate := fmt.Sprintf("%v", et)
+			predicate, newPathPattern, ok := etPathPattern.matchWithReductionOf(reduced.Node(), true)
+			if ok {
+				etReprAfterUpdate := fmt.Sprintf("%v", et)
+				logger.Printf("updated execution thread: %s -> %s", etReprBeforeUpdate, etReprAfterUpdate)
 
-		etReprBeforeUpdate := fmt.Sprintf("%v", et)
-		predicate, newPathPattern, ok := etPathPattern.matchWithReductionOf(reduced.Node(), true)
-		if !ok {
-			logger.Printf("removing execution thread beacuse path pattern does NOT match: %s", etReprBeforeUpdate)
-			er.etList.removeExecutionThread(et, false)
-			return
-		}
-		etReprAfterUpdate := fmt.Sprintf("%v", et)
-		logger.Printf("updated execution thread: %s -> %s", etReprBeforeUpdate, etReprAfterUpdate)
+				var etReceivingSpeculation = et
+				if newPathPattern != nil {
+					etReceivingSpeculation = er.addExecutionThread(et.context(), et.solution(), newPathPattern)
+					et.addChild(etReceivingSpeculation)
+				}
 
-		var etReceivingSpeculation = et
-		if newPathPattern != nil {
-			etReceivingSpeculation = er.addExecutionThread(et.context(), et.solution(), newPathPattern)
-			et.addChild(etReceivingSpeculation)
+				if predicate != nil {
+					sp := etReceivingSpeculation.addSpeculation(predicate, reduced)
+					logger.Printf("adding speculation: %v to execution thread %v", sp, et)
+				}
+			} else {
+				logger.Printf("removing execution thread beacuse path pattern does NOT match: %s", etReprBeforeUpdate)
+				er.etList.removeExecutionThread(et, false)
+			}
 		}
-
-		if predicate != nil {
-			sp := etReceivingSpeculation.addSpeculation(predicate, reduced)
-			logger.Printf("adding speculation: %v to execution thread %v", sp, et)
-		}
-		return
-	})
+	}
 }
 
 // stopUnfoundedSpeculativeExecutionThreads iterates over all the running execution threads and, for each speculative

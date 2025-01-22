@@ -103,6 +103,7 @@ type executionThreadList interface {
 	removeExecutionThread(et executionThread, removeChildren bool) (ok bool)
 	hasExecutionThreadRunningFor(ctx NonTerminal) bool
 	iterate(callback executionThreadListIterableCallback)
+	actualList() *list.List
 	newIterator() executionThreadListIterator
 	len() int
 	merge(incoming executionThreadList) (result executionThreadList, ok bool)
@@ -111,6 +112,10 @@ type executionThreadList interface {
 // concrete execution thread list implementation
 type executionThreadListImpl struct {
 	list *list.List
+}
+
+func (etList *executionThreadListImpl) actualList() *list.List {
+	return etList.list
 }
 
 func newExecutionThreadList() executionThreadList {
