@@ -83,6 +83,7 @@ func (fpeBuilder *fpeBuilderImpl) end() (result udpe) {
 	return
 }
 
+// TODO(vvihorev): remove bools from this struct
 type fpeInnerTestImpl struct {
 	isEntry               bool
 	behindDescendantAxis  bool

@@ -82,19 +82,27 @@ func (et *executionThreadImpl) children() []executionThread {
 
 func (et *executionThreadImpl) checkAndUpdateSpeculations(v evaluator) (areSpeculationsFounded bool) {
 	areSpeculationsFounded = true
-	et.spList.iterate(func(sp speculation) (doBreak bool) {
-		speculationValue := sp.evaluate(v)
+
+	var next *list.Element
+	for e := et.spList.actualList().Front(); e != nil; e = next {
+		next = e.Next()
+		speculation, ok := e.Value.(speculation)
+
+		if !ok {
+			panic(`speculation list iterate: can NOT access to the next speculation`)
+		}
+
+		speculationValue := speculation.evaluate(v)
 		switch speculationValue {
 		case False:
 			areSpeculationsFounded = false
-			et.removeSpeculation(sp)
-			doBreak = true
+			et.removeSpeculation(speculation)
+			continue
 		case True:
-			et.removeSpeculation(sp)
+			et.removeSpeculation(speculation)
 		case Undefined:
 		}
-		return
-	})
+	}
 	return
 }
 

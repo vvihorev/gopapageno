@@ -45,6 +45,7 @@ type speculationList interface {
 	removeSpeculation(sp speculation) (ok bool)
 	newIterator() speculationListIterator
 	iterate(callback speculationListIterableCallback)
+	actualList() *list.List
 	len() int
 }
 
@@ -56,6 +57,10 @@ func newSpeculationList() speculationList {
 	return &speculationListImpl{
 		list: list.New(),
 	}
+}
+
+func (spl *speculationListImpl) actualList() *list.List {
+	return spl.list
 }
 
 func (spl *speculationListImpl) addSpeculation(prd predicate, ctx NonTerminal) speculation {
