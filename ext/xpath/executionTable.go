@@ -9,7 +9,6 @@ type executionTableIterableCallback func(id int, er executionRecord) (doBreak bo
 
 type executionTable interface {
 	merge(incoming executionTable) (result executionTable, ok bool)
-	iterate(callback executionTableIterableCallback)
 	recordByID(id int) (executionRecord, error)
 	mainQueryRecord() executionRecord
 	actualList() []executionRecord
@@ -19,12 +18,6 @@ type executionTable interface {
 
 type executionTableImpl struct {
 	list []executionRecord
-}
-
-func (et *executionTableImpl) iterate(callback executionTableIterableCallback) {
-	for id, er := range et.list {
-		callback(id, er)
-	}
 }
 
 func (et *executionTableImpl) actualList() []executionRecord {
@@ -53,21 +46,18 @@ func (et *executionTableImpl) merge(incoming executionTable) (result executionTa
 	result = et
 	ok = true
 
-	et.iterate(func(id int, er executionRecord) (doBreak bool) {
+	for id, er := range et.list {
 		incomingRecord, err := incoming.recordByID(id)
 		if err != nil {
 			ok = false
-			doBreak = true
-			return
+			break
 		}
 
 		if _, isMerged := er.merge(incomingRecord); !isMerged {
 			ok = false
-			doBreak = true
-			return
+			break
 		}
-		return
-	})
+	}
 	return
 }
 

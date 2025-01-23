@@ -201,7 +201,8 @@ func (executor *executorImpl) completeExecutionOfUDPEsAndNUDPEs() (err error) {
 	var currentNudpeRecord globalNudpeRecord
 	var currentNudpeContextSolutionsMaps []contextSolutionsMap
 
-	executor.resultingExecutionTable.iterate(func(id int, er executionRecord) (doBreak bool) {
+	actualList := executor.resultingExecutionTable.actualList()
+	for _, er := range actualList {
 		if er.belongsToNudpe() {
 			if er.nudpeRecord() != currentNudpeRecord {
 				if currentNudpeRecord != nil {
@@ -224,8 +225,7 @@ func (executor *executorImpl) completeExecutionOfUDPEsAndNUDPEs() (err error) {
 		if er.belongsToNudpe() {
 			currentNudpeContextSolutionsMaps = append(currentNudpeContextSolutionsMaps, er.contextSolutions())
 		}
-		return
-	})
+	}
 
 	if currentNudpeRecord != nil {
 		currentNudpeRecord.setContextSolutions(transitiveClosure(currentNudpeContextSolutionsMaps))

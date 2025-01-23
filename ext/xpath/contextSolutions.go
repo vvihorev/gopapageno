@@ -36,13 +36,13 @@ func (ctxSolMap *contextSolutionsMapImpl) hasSolutionsFor(ctx NonTerminal) bool 
 func (ctxSolMap *contextSolutionsMapImpl) solutionsFor(ctx NonTerminal, maps ...contextSolutionsMap) (solutions []NonTerminal) {
 	solutions = ctxSolMap.m[ctx]
 
-	for currentMapIdx := 0; currentMapIdx < len(maps); currentMapIdx++ {
+	for i := 0; i < len(maps); i++ {
 		tmpNodesToVisit := []NonTerminal{}
 
 		for len(solutions) > 0 {
 			currentNode := solutions[0]
 			solutions = solutions[1:]
-			tmpNodesToVisit = append(tmpNodesToVisit, maps[currentMapIdx].solutionsFor(currentNode)...)
+			tmpNodesToVisit = append(tmpNodesToVisit, maps[i].solutionsFor(currentNode)...)
 		}
 		solutions = tmpNodesToVisit
 	}
@@ -101,13 +101,13 @@ func solutionsFor(context NonTerminal, maps ...contextSolutionsMap) (solutions [
 	}
 	solutions = maps[0].solutionsFor(context)
 
-	for currentMapIdx := 1; currentMapIdx < len(maps); currentMapIdx++ {
+	for i := 1; i < len(maps); i++ {
 		tmpNodesToVisit := []NonTerminal{}
 
 		for len(solutions) > 0 {
 			currentNode := solutions[0]
 			solutions = solutions[1:]
-			tmpNodesToVisit = append(tmpNodesToVisit, maps[currentMapIdx].solutionsFor(currentNode)...)
+			tmpNodesToVisit = append(tmpNodesToVisit, maps[i].solutionsFor(currentNode)...)
 		}
 		solutions = tmpNodesToVisit
 	}

@@ -21,7 +21,7 @@ VALUE ([^"\\]|\\.)*
     semanticValue.Attributes = attributesList
 
 	token.Type = OPENTAG
-	token.Value = *semanticValue
+	token.Value = semanticValue
 }
 <{IDENTIFIER}({SPACE}+{IDENTIFIER}="{VALUE}")*/>
 {
@@ -33,7 +33,7 @@ VALUE ([^"\\]|\\.)*
     semanticValue.Attributes = attributesList
 
     token.Type = OPENCLOSETAG
-    token.Value = *semanticValue
+    token.Value = semanticValue
 }
 </{IDENTIFIER}>
 {
@@ -44,7 +44,7 @@ VALUE ([^"\\]|\\.)*
     semanticValue.SemanticValue.EndPos = end
 
     token.Type = CLOSETAG
-    token.Value = *semanticValue
+    token.Value = semanticValue
 }
 ({SPACE}|{NEWLINE})+
 {
@@ -63,7 +63,7 @@ VALUE ([^"\\]|\\.)*
 	semanticValue := xpath.NewTextSemanticValue(text, start, end)
 
 	token.Type = TEXT
-	token.Value = *semanticValue
+	token.Value = semanticValue
 }
 
 %%
