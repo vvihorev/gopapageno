@@ -5,10 +5,13 @@ generate:
 	go build cmd/xpath/main.go
 
 run:
-	./main -f data/30MB.xml -q A2 -cpuprof cpurprof.prof -memprof memprof.prof
+	./main -f data/1MB.xml -q A2 -cpuprof cpurprof.prof -memprof memprof.prof
+
+bench:
+	go test -bench=. -benchmem -cpuprofile cpu.prof -memprofile mem.prof cmd/xpath/main_test.go 
 
 profile:
-	go tool pprof --nodefraction=0.1  cpurprof.prof
+	go tool pprof --nodefraction=0.1  cpu.prof
 
 mem-profile:
-	go tool pprof --nodefraction=0.1  memprof.prof
+	go tool pprof --nodefraction=0.1  mem.prof

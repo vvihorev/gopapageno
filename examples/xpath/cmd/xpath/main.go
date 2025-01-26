@@ -1,4 +1,4 @@
-//go:generate gopapageno -l ../../xml.l -g ../../xml.g -o ../../../xpath -types-only
+//go:generate gopapageno -l ../../xpath.l -g ../../xpath.g -o ../../../xpath -types-only aopp
 package main
 
 import (
@@ -11,9 +11,17 @@ import (
 	"log"
 	"os"
 	"time"
+	"math"
+	"runtime/debug"
 )
 
 func main() {
+	// NOTE(vvihorev): 1.52s on 30MB if ran without GC, 2.6s with GC
+	if (true) {
+		debug.SetGCPercent(-1)
+		debug.SetMemoryLimit(math.MaxInt64)
+	}
+
 	start := time.Now()
 
 	if err := run(); err != nil {

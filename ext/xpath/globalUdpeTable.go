@@ -95,6 +95,9 @@ func (globalUdpeRecord *globalUdpeRecordImpl) nudpeRecord() globalNudpeRecord {
 	return globalUdpeRecord.gNudpeRecord
 }
 
+// TODO(vvihorev): does the XPath evaluator work with a single topmost NUDPE,
+// or the general case is that a NUDPE can have other NUDPEs in predicates?
+// Do we really need to point all UDPEs back to the single NUDPE?
 func (globalUdpeRecord *globalUdpeRecordImpl) setNudpeRecord(nudpeRecord globalNudpeRecord) {
 	globalUdpeRecord.gNudpeRecord = nudpeRecord
 }

@@ -50,11 +50,13 @@ func (r *Reduction) avoidMemoryLeaksAtTheEndOfHandling() {
 }
 
 func (r *Reduction) iterateOverAllGlobalUdpeRecordsAndExecuteMainPhases() {
+	// TODO(vvihorev): rename actualList to something adequate everywhere.
 	actualList := udpeGlobalTable.actualList()
+	tableRecords := r.updatingExecutionTable.actualList()
+
 	for id, gr := range actualList {
 		r.globalUdpeRecordBeingConsidered = gr
 
-		tableRecords := r.updatingExecutionTable.actualList()
 		if id < 0 || id >= len(tableRecords) {
 			panic(fmt.Sprintf("cannot retrieve execution record for udpe with id: %d", id))
 		}

@@ -16,6 +16,10 @@ type executionTable interface {
 	size() int
 }
 
+// TODO(vvihorev): maybe store the reference to global NUDPE in the table, instead
+// of duplicating it to all records in the table.
+// TODO(vvihorev): if we only access records through the table, records dont need
+// to teep a pointer to their table.
 type executionTableImpl struct {
 	list []executionRecord
 }
@@ -164,7 +168,8 @@ func (er *executionRecordImpl) belongsToNudpe() bool {
 // to update accordingly
 func (er *executionRecordImpl) updateAllExecutionThreads(reduced NonTerminal) {
 	var next *list.Element
-	for e := er.etList.actualList().Front(); e != nil; e = next {
+	actualList := er.etList.actualList()
+	for e := actualList.Front(); e != nil; e = next {
 		next = e.Next()
 		et, ok := e.Value.(executionThread)
 		if !ok {
@@ -241,14 +246,21 @@ func (er *executionRecordImpl) saveReducedNTAsContextOrSolutionlIntoCompletedExe
 // produceContextSolutions produce new context solutions from completed execution threads and removes
 // completed execution threads
 func (er *executionRecordImpl) produceContextSolutionsOutOfCompletedNonSpeculativeExecutionThreads() {
-	er.etList.iterate(func(et executionThread) (doBreak bool) {
+	var next *list.Element
+	actualList := er.etList.actualList()
+	for e := actualList.Front(); e != nil; e = next {
+		next = e.Next()
+		et, ok := e.Value.(executionThread)
+		if !ok {
+			panic(`execution thread list iterate: can NOT access to the next execution thread`)
+		}
+
 		if et.isCompleted() && !et.isSpeculative() {
 			logger.Printf("adding context-solution: (%v , %v)", et.context(), et.solution())
 			er.ctxSols.addContextSolution(et.context(), et.solution())
 			er.etList.removeExecutionThread(et, false)
 		}
-		return
-	})
+	}
 }
 
 func (er *executionRecordImpl) merge(incoming executionRecord) (result executionRecord, ok bool) {

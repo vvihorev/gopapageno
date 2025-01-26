@@ -1,8 +1,8 @@
 version: '3'
 
 vars:
-  EXAMPLE: adder
-  STRAT: opp
+  EXAMPLE: xpath
+  STRAT: .
   FNAME: 'default'
   COUNT: 10
 
