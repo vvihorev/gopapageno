@@ -6,12 +6,12 @@ import (
 
 type Reduction struct {
 	reducedNT, generativeNT, wrappedNT NonTerminal
-	updatingExecutionTable             executionTable
+	updatingExecutionTable             *executionTable
 	globalUdpeRecordBeingConsidered    globalUdpeRecord
 }
 
 func (r *Reduction) Setup(reducedNT, generativeNT, wrappedNT NonTerminal) {
-	var updatingExecutionTable executionTable
+	var updatingExecutionTable *executionTable
 
 	if wrappedNT != nil {
 		updatingExecutionTable = wrappedNT.ExecutionTable()

@@ -20,6 +20,12 @@ import (
 // Remove interace for executionThreadList and use a slice instead of a list
 // BenchmarkRun-8   	      28	  78592613 ns/op	122558957 B/op	  322765 allocs/op
 
+// Use a swapback array instead of a list for speculations
+// BenchmarkRun-8   	      22	  76039987 ns/op	122569769 B/op	  322766 allocs/op
+
+// Remove interfaces from execution tables, use a swapbackArray data structure
+// BenchmarkRun-8   	      30	  75965866 ns/op	120287893 B/op	  262283 allocs/op
+
 func BenchmarkRun(b *testing.B) {
 	bytes, err := os.ReadFile("../../data/1MB.xml")
 	if err != nil {

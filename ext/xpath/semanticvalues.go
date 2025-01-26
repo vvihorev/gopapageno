@@ -5,11 +5,11 @@ import "fmt"
 // NonTerminal represents a unique non terminal inside the syntax tree representing
 // the XML document
 type NonTerminal interface {
-	SetExecutionTable(execTab executionTable) NonTerminal
+	SetExecutionTable(execTab *executionTable) NonTerminal
 	SetNode(n interface{}) NonTerminal
 	Children() []NonTerminal
 	SetDirectChildAndInheritItsChildren(NonTerminal) NonTerminal
-	ExecutionTable() executionTable
+	ExecutionTable() *executionTable
 	Node() interface{}
 	Position() Position
 }
@@ -21,7 +21,7 @@ func NewNonTerminal() NonTerminal {
 type nonTerminalImpl struct {
 	n       interface{}
 	ch      []NonTerminal
-	execTab executionTable
+	execTab *executionTable
 }
 
 func (nt *nonTerminalImpl) String() string {
@@ -31,12 +31,12 @@ func (nt *nonTerminalImpl) String() string {
 	return fmt.Sprintf("E(%p)", nt)
 }
 
-func (nt *nonTerminalImpl) SetExecutionTable(executionTable executionTable) NonTerminal {
+func (nt *nonTerminalImpl) SetExecutionTable(executionTable *executionTable) NonTerminal {
 	nt.execTab = executionTable
 	return nt
 }
 
-func (nt *nonTerminalImpl) ExecutionTable() executionTable {
+func (nt *nonTerminalImpl) ExecutionTable() *executionTable {
 	return nt.execTab
 }
 

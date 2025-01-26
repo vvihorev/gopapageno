@@ -2,29 +2,23 @@ package xpath
 
 type globalTableIterableCallback func(id int, record globalUdpeRecord)
 
-type globalUdpeTable interface {
-	newExecutionTable() executionTable
-	addFpe(fpe fpe) (id int, record globalUdpeRecord)
-	addRpe(rpe rpe) (id int, record globalUdpeRecord)
-	actualList() []globalUdpeRecord
-	mainQueryRecord() globalUdpeRecord
-}
-
-type globalUdpeTableImpl struct {
+type globalUdpeTable struct {
 	list []globalUdpeRecord
 }
 
-func (globalUdpeTable *globalUdpeTableImpl) newExecutionTable() executionTable {
-	et := new(executionTableImpl)
+func (globalUdpeTable *globalUdpeTable) newExecutionTable() *executionTable {
+	et := new(executionTable)
 	globalUdpeTableSize := globalUdpeTable.size()
 	executionRecordsGroup := make([]executionRecord, globalUdpeTableSize)
 	for id := range executionRecordsGroup {
 		globalUdpeRecord := globalUdpeTable.recordByID(id)
-		executionRecordsGroup[id] = &executionRecordImpl{
+		executionRecordsGroup[id] = executionRecord{
 			expType:      globalUdpeRecord.udpeType(),
 			t:            et,
 			ctxSols:      newContextSolutionsMap(),
-			etList:       newExecutionThreadList(),
+			threads:       swapbackArray[executionThread]{
+				array: make([]executionThread, 0),
+			},
 			gNudpeRecord: globalUdpeRecord.nudpeRecord(),
 		}
 	}
@@ -33,32 +27,32 @@ func (globalUdpeTable *globalUdpeTableImpl) newExecutionTable() executionTable {
 	return et
 }
 
-func (globalUdpeTable *globalUdpeTableImpl) actualList() []globalUdpeRecord {
+func (globalUdpeTable *globalUdpeTable) actualList() []globalUdpeRecord {
 	return globalUdpeTable.list
 }
 
-func (globalUdpeTable *globalUdpeTableImpl) size() int {
+func (globalUdpeTable *globalUdpeTable) size() int {
 	return len(globalUdpeTable.list)
 }
 
-func (globalUdpeTable *globalUdpeTableImpl) recordByID(id int) globalUdpeRecord {
+func (globalUdpeTable *globalUdpeTable) recordByID(id int) globalUdpeRecord {
 	return globalUdpeTable.list[id]
 }
 
-func (globalUdpeTable *globalUdpeTableImpl) mainQueryRecord() globalUdpeRecord {
+func (globalUdpeTable *globalUdpeTable) mainQueryRecord() globalUdpeRecord {
 	return globalUdpeTable.list[globalUdpeTable.size()-1]
 }
 
-func (globalUdpeTable *globalUdpeTableImpl) addFpe(fpe fpe) (id int, record globalUdpeRecord) {
+func (globalUdpeTable *globalUdpeTable) addFpe(fpe fpe) (id int, record globalUdpeRecord) {
 	return globalUdpeTable.addUdpe(fpe, FPE)
 }
 
-func (globalUdpeTable *globalUdpeTableImpl) addRpe(rpe rpe) (id int, record globalUdpeRecord) {
+func (globalUdpeTable *globalUdpeTable) addRpe(rpe rpe) (id int, record globalUdpeRecord) {
 	return globalUdpeTable.addUdpe(rpe, RPE)
 }
 
 // addUdpe creates a new record inside the global udpe table
-func (globalUdpeTable *globalUdpeTableImpl) addUdpe(udpe udpe, udpeType udpeType) (id int, record globalUdpeRecord) {
+func (globalUdpeTable *globalUdpeTable) addUdpe(udpe udpe, udpeType udpeType) (id int, record globalUdpeRecord) {
 	r := &globalUdpeRecordImpl{
 		exp:     udpe,
 		expType: udpeType,
