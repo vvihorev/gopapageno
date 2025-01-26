@@ -85,10 +85,10 @@ func (fpeBuilder *fpeBuilderImpl) end() (result udpe) {
 
 // TODO(vvihorev): remove bools from this struct
 type fpeInnerTestImpl struct {
-	isEntry               bool
-	behindDescendantAxis  bool
 	udpeTest              udpeTest
 	precedingFpeInnerTest *fpeInnerTestImpl
+	isEntry               bool
+	behindDescendantAxis  bool
 }
 
 func (fpeInnerTest *fpeInnerTestImpl) matchWithReductionOf(n interface{}) (predicate predicate, next, newTest *fpeInnerTestImpl, hasNewTest, ok bool) {
@@ -135,10 +135,6 @@ func (fpeInnerTest *fpeInnerTestImpl) matchWithReductionOf(n interface{}) (predi
 		predicate = fpeInnerTest.udpeTest.predicate()
 	}
 	return
-}
-
-func (fpeInnerTest *fpeInnerTestImpl) entry() bool {
-	return fpeInnerTest.isEntry
 }
 
 func (fpeInnerTest *fpeInnerTestImpl) String() (result string) {

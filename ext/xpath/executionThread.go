@@ -110,9 +110,7 @@ type executionThreadList interface {
 	addExecutionThread(ctx, sol NonTerminal, pp pathPattern) executionThread
 	removeExecutionThread(et executionThread, removeChildren bool) (ok bool)
 	hasExecutionThreadRunningFor(ctx NonTerminal) bool
-	iterate(callback executionThreadListIterableCallback)
 	actualList() *list.List
-	newIterator() executionThreadListIterator
 	len() int
 	merge(incoming executionThreadList) (result executionThreadList, ok bool)
 }
@@ -166,13 +164,19 @@ func (etList *executionThreadListImpl) removeExecutionThread(et executionThread,
 }
 
 func (etList *executionThreadListImpl) hasExecutionThreadRunningFor(ctx NonTerminal) (found bool) {
-	etList.iterate(func(et executionThread) (doBreak bool) {
+	var next *list.Element
+	for e := etList.list.Front(); e != nil; e = next {
+		next = e.Next()
+		et, ok := e.Value.(executionThread)
+		if !ok {
+			panic(`execution thread list iterate: can NOT access to the next execution thread`)
+		}
+
 		found = et.context() == ctx
 		if found {
-			doBreak = true
+			break
 		}
-		return
-	})
+	}
 	return
 }
 
@@ -197,54 +201,4 @@ func (etList *executionThreadListImpl) merge(incoming executionThreadList) (resu
 		incomingEt.el = el
 	}
 	return
-}
-
-// iterator object
-func (etList *executionThreadListImpl) newIterator() executionThreadListIterator {
-	return &executionThreadListIteratorImpl{
-		nextEl: etList.list.Front(),
-	}
-}
-
-type executionThreadListIterator interface {
-	hasNext() bool
-	next() (et executionThread, hasNext bool)
-}
-
-type executionThreadListIteratorImpl struct {
-	nextEl *list.Element
-}
-
-func (etlIt *executionThreadListIteratorImpl) hasNext() bool {
-	return etlIt.nextEl != nil
-}
-
-func (etlIt *executionThreadListIteratorImpl) next() (et executionThread, hasNext bool) {
-	et, ok := etlIt.nextEl.Value.(executionThread)
-
-	if !ok {
-		panic(`execution thread list iterator error: trying to access a non existing next execution thread`)
-	}
-
-	etlIt.nextEl = etlIt.nextEl.Next()
-	hasNext = etlIt.nextEl != nil
-	return
-}
-
-// iterate function
-type executionThreadListIterableCallback func(et executionThread) (doBreak bool)
-
-func (etList *executionThreadListImpl) iterate(callback executionThreadListIterableCallback) {
-	var next *list.Element
-	for e := etList.list.Front(); e != nil; e = next {
-		next = e.Next()
-		et, ok := e.Value.(executionThread)
-		if !ok {
-			panic(`execution thread list iterate: can NOT access to the next execution thread`)
-		}
-
-		if doBreak := callback(et); doBreak {
-			return
-		}
-	}
 }
