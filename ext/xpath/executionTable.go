@@ -1,7 +1,6 @@
 package xpath
 
 import (
-	"container/list"
 	"fmt"
 )
 
@@ -167,15 +166,7 @@ func (er *executionRecordImpl) belongsToNudpe() bool {
 // updateExecutionThreads takes the node being reduced and asks all the running execution threads
 // to update accordingly
 func (er *executionRecordImpl) updateAllExecutionThreads(reduced NonTerminal) {
-	var next *list.Element
-	actualList := er.etList.actualList()
-	for e := actualList.Front(); e != nil; e = next {
-		next = e.Next()
-		et, ok := e.Value.(executionThread)
-		if !ok {
-			panic(`execution thread list iterate: can NOT access to the next execution thread`)
-		}
-
+	for _, et := range er.etList.list {
 		etPathPattern := et.pathPattern()
 		//The path pattern of the execution thread may be empty if the thread is speculative
 		//and it's not completed because of some unchecked speculation
@@ -208,14 +199,7 @@ func (er *executionRecordImpl) updateAllExecutionThreads(reduced NonTerminal) {
 // execution thread, the speculation is evaluated. If the speculation ends up to be unfounded, the speculative execution thread,
 // and all its Children recursively, are stopped
 func (er *executionRecordImpl) stopUnfoundedSpeculativeExecutionThreads(evaluator evaluator) {
-	var next *list.Element
-	for e := er.etList.actualList().Front(); e != nil; e = next {
-		next = e.Next()
-		et, ok := e.Value.(executionThread)
-		if !ok {
-			panic(`execution thread list iterate: can NOT access to the next execution thread`)
-		}
-
+	for _, et := range er.etList.list {
 		if areSpeculationsFounded := et.checkAndUpdateSpeculations(evaluator); !areSpeculationsFounded {
 			if isExecutionThreadRemoved := er.etList.removeExecutionThread(et, true); !isExecutionThreadRemoved {
 				panic("stopping unfounded speculative execution thred: cannot remove execution thread")
@@ -229,14 +213,7 @@ func (er *executionRecordImpl) stopUnfoundedSpeculativeExecutionThreads(evaluato
 // to produce context-solution items because of running speculations. Even if the execution thread can not produce context-solution
 // items, it has to save the non terminal whose reducetion caused the execution thread to complete
 func (er *executionRecordImpl) saveReducedNTAsContextOrSolutionlIntoCompletedExecutionThreads(contextOrSolution NonTerminal) {
-	var next *list.Element
-	for e := er.etList.actualList().Front(); e != nil; e = next {
-		next = e.Next()
-		et, ok := e.Value.(executionThread)
-		if !ok {
-			panic(`execution thread list iterate: can NOT access to the next execution thread`)
-		}
-
+	for _, et := range er.etList.list {
 		if et.isCompleted() {
 			et.setNTAsContextOrSolutionIfNotAlreadySet(contextOrSolution)
 		}
@@ -246,15 +223,7 @@ func (er *executionRecordImpl) saveReducedNTAsContextOrSolutionlIntoCompletedExe
 // produceContextSolutions produce new context solutions from completed execution threads and removes
 // completed execution threads
 func (er *executionRecordImpl) produceContextSolutionsOutOfCompletedNonSpeculativeExecutionThreads() {
-	var next *list.Element
-	actualList := er.etList.actualList()
-	for e := actualList.Front(); e != nil; e = next {
-		next = e.Next()
-		et, ok := e.Value.(executionThread)
-		if !ok {
-			panic(`execution thread list iterate: can NOT access to the next execution thread`)
-		}
-
+	for _, et := range er.etList.list {
 		if et.isCompleted() && !et.isSpeculative() {
 			logger.Printf("adding context-solution: (%v , %v)", et.context(), et.solution())
 			er.ctxSols.addContextSolution(et.context(), et.solution())
@@ -271,9 +240,7 @@ func (er *executionRecordImpl) merge(incoming executionRecord) (result execution
 		return
 	}
 
-	_, okMergeEtLists := er.etList.merge(incomingImpl.etList)
-	_, okMergeCtxSols := er.ctxSols.merge(incomingImpl.ctxSols)
-
-	ok = okMergeEtLists && okMergeCtxSols
+	er.etList.merge(&incomingImpl.etList)
+	_, ok = er.ctxSols.merge(incomingImpl.ctxSols)
 	return
 }

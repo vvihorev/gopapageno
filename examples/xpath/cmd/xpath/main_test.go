@@ -15,6 +15,11 @@ import (
 
 // Initial Results
 // BenchmarkRun-8   	      18	  72582430 ns/op	123337611 B/op	  360566 allocs/op
+// BenchmarkRun-8   	      27	  82007256 ns/op	123316399 B/op	  360566 allocs/op
+
+// Remove interace for executionThreadList and use a slice instead of a list
+// BenchmarkRun-8   	      28	  78592613 ns/op	122558957 B/op	  322765 allocs/op
+
 func BenchmarkRun(b *testing.B) {
 	bytes, err := os.ReadFile("../../data/1MB.xml")
 	if err != nil {
