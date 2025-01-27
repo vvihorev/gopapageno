@@ -6,7 +6,7 @@ import "fmt"
 // the XML document
 type NonTerminal struct {
 	n       interface{}
-	ch      []NonTerminal
+	ch      []*NonTerminal
 	execTab *executionTable
 }
 
@@ -35,12 +35,12 @@ func (nt *NonTerminal) Node() interface{} {
 	return nt.n
 }
 
-func (nt *NonTerminal) SetDirectChildAndInheritItsChildren(child NonTerminal) *NonTerminal {
+func (nt *NonTerminal) SetDirectChildAndInheritItsChildren(child *NonTerminal) *NonTerminal {
 	nt.ch = append(child.Children(), child)
 	return nt
 }
 
-func (nt *NonTerminal) Children() []NonTerminal {
+func (nt *NonTerminal) Children() []*NonTerminal {
 	return nt.ch
 }
 

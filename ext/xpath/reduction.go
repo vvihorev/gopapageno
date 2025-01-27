@@ -108,7 +108,7 @@ func (r *Reduction) addNewExecutionThreadsToExecutionRecord(executionRecord exec
 		executionRecord.addExecutionThread(r.wrappedNT, nil, entryPoint)
 		childrenOfWrappedNT := r.wrappedNT.Children()
 		for _, child := range childrenOfWrappedNT {
-			executionRecord.addExecutionThread(&child, nil, udpe.entryPoint())
+			executionRecord.addExecutionThread(child, nil, udpe.entryPoint())
 		}
 
 	default:
