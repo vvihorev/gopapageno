@@ -10,11 +10,9 @@ type executionTableIterableCallback func(id int, er executionRecord) (doBreak bo
 // of duplicating it to all records in the table.
 // TODO(vvihorev): if we only access records through the table, records dont need
 // to teep a pointer to their table.
-type executionTable struct {
-	list []executionRecord
-}
+type executionTable []executionRecord
 
-func (et *executionTable) recordByID(id int) (execRecord *executionRecord, err error) {
+func (et executionTable) recordByID(id int) (execRecord *executionRecord, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			execRecord = nil
@@ -22,20 +20,20 @@ func (et *executionTable) recordByID(id int) (execRecord *executionRecord, err e
 			return
 		}
 	}()
-	execRecord = &et.list[id]
+	execRecord = &et[id]
 	return
 }
 
-func (et *executionTable) mainQueryRecord() executionRecord {
-	return et.list[et.size()-1]
+func (et executionTable) mainQueryRecord() executionRecord {
+	return et[len(et)-1]
 }
 
 // merge joins the incoming execution table to the receiving execution table and returns
 // the receiving execution table
-func (et *executionTable) merge(incoming *executionTable) (ok bool) {
+func (et executionTable) merge(incoming *executionTable) (ok bool) {
 	ok = true
 
-	for id, er := range et.list {
+	for id, er := range et {
 		incomingRecord, err := incoming.recordByID(id)
 		if err != nil {
 			ok = false
@@ -45,10 +43,6 @@ func (et *executionTable) merge(incoming *executionTable) (ok bool) {
 		er.merge(incomingRecord)
 	}
 	return
-}
-
-func (et *executionTable) size() int {
-	return len(et.list)
 }
 
 // evaluateID returns the boolean value of an udpe with a certain id w.r.t a specific context.
@@ -85,11 +79,10 @@ func (et *executionTable) evaluateID(udpeID int, context *NonTerminal, evaluatio
 }
 
 type executionRecord struct {
-	expType      udpeType
-	t            *executionTable
-	ctxSols      contextSolutionsMap
 	threads      swapbackArray[executionThread]
+	ctxSols      contextSolutionsMap
 	gNudpeRecord *globalNudpeRecord
+	expType      udpeType
 }
 
 func (er *executionRecord) String() string {

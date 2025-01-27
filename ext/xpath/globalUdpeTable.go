@@ -6,26 +6,20 @@ type globalUdpeTable struct {
 	list []globalUdpeRecord
 }
 
-func (globalUdpeTable *globalUdpeTable) newExecutionTable() *executionTable {
-	et := new(executionTable)
+func (globalUdpeTable *globalUdpeTable) newExecutionTable() executionTable {
 	globalUdpeTableSize := globalUdpeTable.size()
-	executionRecordsGroup := make([]executionRecord, globalUdpeTableSize)
-	for id := range executionRecordsGroup {
-		globalUdpeRecord := globalUdpeTable.recordByID(id)
-		ctxSolsMap := make(contextSolutionsMap)
-		executionRecordsGroup[id] = executionRecord{
-			expType:      globalUdpeRecord.udpeType(),
-			t:            et,
-			ctxSols:      ctxSolsMap,
-			threads:      swapbackArray[executionThread]{
-				array: make([]executionThread, 0),
-			},
-			gNudpeRecord: globalUdpeRecord.nudpeRecord(),
-		}
-	}
-	et.list = executionRecordsGroup
+	records := make([]executionRecord, globalUdpeTableSize)
 
-	return et
+	for id := range records {
+		globalUdpeRecord := globalUdpeTable.recordByID(id)
+		records[id].expType = globalUdpeRecord.udpeType()
+		records[id].ctxSols = make(contextSolutionsMap)
+		records[id].threads = swapbackArray[executionThread]{
+			array: make([]executionThread, 0),
+		}
+		records[id].gNudpeRecord = globalUdpeRecord.nudpeRecord()
+	}
+	return executionTable(records)
 }
 
 func (globalUdpeTable *globalUdpeTable) actualList() []globalUdpeRecord {

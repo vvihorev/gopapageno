@@ -11,10 +11,10 @@ type Reduction struct {
 }
 
 func (r *Reduction) Setup(reducedNT, generativeNT, wrappedNT *NonTerminal) {
-	var updatingExecutionTable *executionTable
+	var updatingExecutionTable executionTable
 
 	if wrappedNT != nil {
-		updatingExecutionTable = wrappedNT.ExecutionTable()
+		updatingExecutionTable = *wrappedNT.executionTable
 	} else {
 		updatingExecutionTable = udpeGlobalTable.newExecutionTable()
 	}
@@ -22,7 +22,7 @@ func (r *Reduction) Setup(reducedNT, generativeNT, wrappedNT *NonTerminal) {
 	r.reducedNT = reducedNT
 	r.generativeNT = generativeNT
 	r.wrappedNT = wrappedNT
-	r.updatingExecutionTable = updatingExecutionTable
+	r.updatingExecutionTable = &updatingExecutionTable
 }
 
 func (r *Reduction) Reset() {
@@ -52,7 +52,8 @@ func (r *Reduction) avoidMemoryLeaksAtTheEndOfHandling() {
 func (r *Reduction) iterateOverAllGlobalUdpeRecordsAndExecuteMainPhases() {
 	// TODO(vvihorev): rename actualList to something adequate everywhere.
 	actualList := udpeGlobalTable.actualList()
-	tableRecords := r.updatingExecutionTable.list
+	// TODO(vvihorev): stop dereferncing slices?
+	tableRecords := *r.updatingExecutionTable
 
 	for id, gr := range actualList {
 		r.globalUdpeRecordBeingConsidered = &gr
@@ -81,7 +82,7 @@ func (r *Reduction) propagateUpdatingExecutionTableToReducedNT() {
 }
 
 func (r *Reduction) mergeUpdatingExecutionTableWithUnchangedExecutionTable() {
-	unchangedExecutionTable := r.generativeNT.ExecutionTable()
+	unchangedExecutionTable := r.generativeNT.executionTable
 	ok := r.updatingExecutionTable.merge(unchangedExecutionTable)
 	if !ok {
 		panic(`Reduction Handle Node error: can NOT merge execution tables`)

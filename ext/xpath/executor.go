@@ -167,7 +167,7 @@ func (executor *executor) executeUDPEsWhileParsing() error {
 	if err != nil {
 		return fmt.Errorf("could not parse: %v", err)
 	}
-	executor.resultingExecutionTable = axiomToken.Value.(*NonTerminal).ExecutionTable()
+	executor.resultingExecutionTable = axiomToken.Value.(*NonTerminal).executionTable
 
 	return err
 }
@@ -181,7 +181,7 @@ func (executor *executor) completeExecutionOfUDPEsAndNUDPEs() (err error) {
 	var currentNudpeRecord *globalNudpeRecord
 	var currentNudpeContextSolutionsMaps []contextSolutionsMap
 
-	for _, er := range executor.resultingExecutionTable.list {
+	for _, er := range *executor.resultingExecutionTable {
 		if er.belongsToNudpe() {
 			if er.nudpeRecord() != currentNudpeRecord {
 				if currentNudpeRecord != nil {

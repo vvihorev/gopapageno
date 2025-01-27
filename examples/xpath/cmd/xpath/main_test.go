@@ -42,6 +42,9 @@ import (
 // cpu: Intel(R) Core(TM) i7-7820HQ CPU @ 2.90GHz
 // BenchmarkRun-8   	      36	  32285544 ns/op	121926649 B/op	  230699 allocs/op
 
+// Remove the executionTable abstraction
+// BenchmarkRun-8   	      30	  35824162 ns/op	122477624 B/op	  253381 allocs/op
+
 func BenchmarkRun(b *testing.B) {
 	bytes, err := os.ReadFile("../../data/1MB.xml")
 	if err != nil {

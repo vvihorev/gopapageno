@@ -14,7 +14,7 @@ const (
 	ancestorOrSelf
 )
 
-type udpeType int
+type udpeType int8
 
 const (
 	FPE udpeType = iota

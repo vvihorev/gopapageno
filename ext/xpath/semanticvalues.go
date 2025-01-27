@@ -5,9 +5,9 @@ import "fmt"
 // NonTerminal represents a unique non terminal inside the syntax tree representing
 // the XML document
 type NonTerminal struct {
-	n       interface{}
-	ch      []*NonTerminal
-	execTab *executionTable
+	node           interface{}
+	children       []*NonTerminal
+	executionTable *executionTable
 }
 
 func (nt *NonTerminal) String() string {
@@ -18,38 +18,34 @@ func (nt *NonTerminal) String() string {
 }
 
 func (nt *NonTerminal) SetExecutionTable(executionTable *executionTable) *NonTerminal {
-	nt.execTab = executionTable
+	nt.executionTable = executionTable
 	return nt
 }
 
-func (nt *NonTerminal) ExecutionTable() *executionTable {
-	return nt.execTab
-}
-
 func (nt *NonTerminal) SetNode(n interface{}) *NonTerminal {
-	nt.n = n
+	nt.node = n
 	return nt
 }
 
 func (nt *NonTerminal) Node() interface{} {
-	return nt.n
+	return nt.node
 }
 
 func (nt *NonTerminal) SetDirectChildAndInheritItsChildren(child *NonTerminal) *NonTerminal {
-	nt.ch = append(child.Children(), child)
+	nt.children = append(child.Children(), child)
 	return nt
 }
 
 func (nt *NonTerminal) Children() []*NonTerminal {
-	return nt.ch
+	return nt.children
 }
 
 func (nt *NonTerminal) Position() Position {
-	if element, isElement := nt.n.(*Element); isElement {
+	if element, isElement := nt.node.(*Element); isElement {
 		return element.position()
 	}
 
-	if text, isText := nt.n.(*Text); isText {
+	if text, isText := nt.node.(*Text); isText {
 		return text.position()
 	}
 
