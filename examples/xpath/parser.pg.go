@@ -3,6 +3,7 @@ package xpath
 
 import (
 	"fmt"
+	"math"
 	"github.com/giornetta/gopapageno"
 	"strings"
 )
@@ -19,14 +20,18 @@ var reductionPool = &sync.Pool{
 }
 
 var parserElementsPools []*gopapageno.Pool[xpath.Element]
+var parserNonTerminalPools []*gopapageno.Pool[xpath.NonTerminal]
 
 // ParserPreallocMem initializes all the memory pools required by the semantic function of the parser.
 func ParserPreallocMem(inputSize int, numThreads int) {
-	poolSizePerThread := 10000
+	tagTypes := float64(2)
+	poolSizePerThread := int(math.Ceil(float64(inputSize) / tagTypes))
 
 	parserElementsPools = make([]*gopapageno.Pool[xpath.Element], numThreads)
+	parserNonTerminalPools = make([]*gopapageno.Pool[xpath.NonTerminal], numThreads)
 	for i := 0; i < numThreads; i++ {
 		parserElementsPools[i] = gopapageno.NewPool[xpath.Element](poolSizePerThread)
+		parserNonTerminalPools[i] = gopapageno.NewPool[xpath.NonTerminal](poolSizePerThread)
 	}
 }
 
@@ -151,13 +156,13 @@ func NewGrammar() *gopapageno.Grammar {
 			ELEM0.LastChild = OPENCLOSETAG2
 
 			{
-				openCloseTag := OPENCLOSETAG2.Value.(xpath.OpenCloseTagSemanticValue)
+				openCloseTag := OPENCLOSETAG2.Value.(xpath.OpenTagSemanticValue)
 
 				element := parserElementsPools[thread].Get()
 				element.SetFromSingleTag(openCloseTag)
 
 				generativeNonTerminal := ELEM1.Value.(xpath.NonTerminal)
-				nt := xpath.NonTerminal{}
+				nt := parserNonTerminalPools[thread].Get()
 				reducedNonTerminal := nt.SetNode(element).SetDirectChildAndInheritItsChildren(generativeNonTerminal)
 
 				reduction := reductionPool.Get().(*xpath.Reduction)
@@ -193,7 +198,7 @@ func NewGrammar() *gopapageno.Grammar {
 
 				generativeNonTerminal := ELEM1.Value.(*xpath.NonTerminal)
 				wrappedNonTerminal := ELEM3.Value.(*xpath.NonTerminal)
-				nt := xpath.NonTerminal{}
+				nt := parserNonTerminalPools[thread].Get()
 				reducedNonTerminal := nt.SetNode(element).SetDirectChildAndInheritItsChildren(*generativeNonTerminal)
 
 				reduction := reductionPool.Get().(*xpath.Reduction)
@@ -228,7 +233,7 @@ func NewGrammar() *gopapageno.Grammar {
 				element.SetFromExtremeTags(*openTag, *closeTag)
 
 				generativeNonTerminal := ELEM1.Value.(xpath.NonTerminal)
-				nt := xpath.NonTerminal{}
+				nt := parserNonTerminalPools[thread].Get()
 				reducedNonTerminal := nt.SetNode(element).SetDirectChildAndInheritItsChildren(generativeNonTerminal)
 
 				reduction := reductionPool.Get().(*xpath.Reduction)
@@ -260,7 +265,7 @@ func NewGrammar() *gopapageno.Grammar {
 
 				generativeNonTerminal := ELEM1.Value.(xpath.NonTerminal)
 
-				nt := xpath.NonTerminal{}
+				nt := parserNonTerminalPools[thread].Get()
 				reducedNonTerminal := nt.SetNode(text).SetDirectChildAndInheritItsChildren(generativeNonTerminal)
 
 				reduction := reductionPool.Get().(*xpath.Reduction)
@@ -282,12 +287,12 @@ func NewGrammar() *gopapageno.Grammar {
 			ELEM0.LastChild = OPENCLOSETAG1
 
 			{
-				openCloseTag := OPENCLOSETAG1.Value.(xpath.OpenCloseTagSemanticValue)
+				openCloseTag := OPENCLOSETAG1.Value.(xpath.OpenTagSemanticValue)
 
 				element := parserElementsPools[thread].Get()
 				element.SetFromSingleTag(openCloseTag)
 
-				nt := xpath.NonTerminal{}
+				nt := parserNonTerminalPools[thread].Get()
 				reducedNonTerminal := nt.SetNode(element)
 
 				reduction := reductionPool.Get().(*xpath.Reduction)
@@ -319,7 +324,7 @@ func NewGrammar() *gopapageno.Grammar {
 				element.SetFromExtremeTags(*openTag, *closeTag)
 
 				wrappedNonTerminal := ELEM2.Value.(*xpath.NonTerminal)
-				nt := xpath.NonTerminal{}
+				nt := parserNonTerminalPools[thread].Get()
 				reducedNonTerminal := nt.SetNode(element)
 
 				reduction := reductionPool.Get().(*xpath.Reduction)
@@ -350,7 +355,7 @@ func NewGrammar() *gopapageno.Grammar {
 				element := parserElementsPools[thread].Get()
 				element.SetFromExtremeTags(openTag, closeTag)
 
-				nt := xpath.NonTerminal{}
+				nt := parserNonTerminalPools[thread].Get()
 				reducedNonTerminal := nt.SetNode(element)
 
 				reduction := reductionPool.Get().(*xpath.Reduction)
@@ -377,7 +382,7 @@ func NewGrammar() *gopapageno.Grammar {
 				text := new(xpath.Text)
 				text.SetFromText(*tsv)
 
-				nt := xpath.NonTerminal{}
+				nt := parserNonTerminalPools[thread].Get()
 				reducedNonTerminal := nt.SetNode(text)
 
 				reduction := reductionPool.Get().(*xpath.Reduction)

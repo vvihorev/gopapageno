@@ -32,6 +32,12 @@ import (
 // Fix: Do not take pointers of contextSolutionsMap
 // BenchmarkRun-8   	      21	  74695023 ns/op	122467561 B/op	  284964 allocs/op
 
+// Use parser pools for NonTerminals in parser
+// BenchmarkRun-8   	      26	  67675224 ns/op	84245962 B/op	  274962 allocs/op
+
+// Setting a preallocation size of the pool relative to input size
+// BenchmarkRun-8   	      24	  74176000 ns/op	123574721 B/op	  230700 allocs/op
+
 func BenchmarkRun(b *testing.B) {
 	bytes, err := os.ReadFile("../../data/1MB.xml")
 	if err != nil {

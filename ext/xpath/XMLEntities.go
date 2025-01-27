@@ -7,26 +7,23 @@ type node interface {
 }
 
 type Attribute struct {
-	key   string
-	value string
+	Key   string
+	Value string
+	Next *Attribute
 }
 
 func (a *Attribute) String() string {
-	return fmt.Sprintf("%v=%v", a.key, a.value)
-}
-
-func NewAttribute(key, value string) *Attribute {
-	return &Attribute{key, value}
+	return fmt.Sprintf("%v=%v", a.Key, a.Value)
 }
 
 type Element struct {
 	name          string
-	attributes    []*Attribute
 	posInDocument *position
+	attribute     *Attribute
 }
 
-func newElement(name string, attributes []*Attribute, posInDocument *position) *Element {
-	return &Element{name, attributes, posInDocument}
+func newElement(name string, attribute *Attribute, posInDocument *position) *Element {
+	return &Element{name, posInDocument, attribute}
 }
 
 func (e *Element) position() *position {
@@ -34,7 +31,7 @@ func (e *Element) position() *position {
 }
 
 func (e *Element) String() string {
-	return fmt.Sprintf("<%v %v></%v>", e.name, e.attributes, e.name)
+	return fmt.Sprintf("<%v %v></%v>", e.name, e.attribute, e.name)
 }
 
 func (e *Element) SetFromExtremeTags(openTag OpenTagSemanticValue, closeTag CloseTagSemanticValue) {
@@ -42,13 +39,13 @@ func (e *Element) SetFromExtremeTags(openTag OpenTagSemanticValue, closeTag Clos
 		panic("Invalid Element construction")
 	}
 	e.name = openTag.Id
-	e.attributes = openTag.Attributes
+	e.attribute = openTag.Attribute
 	e.posInDocument = newPosition(openTag.StartPos, closeTag.EndPos)
 }
 
-func (e *Element) SetFromSingleTag(openCloseTag OpenCloseTagSemanticValue) {
+func (e *Element) SetFromSingleTag(openCloseTag OpenTagSemanticValue) {
 	e.name = openCloseTag.Id
-	e.attributes = openCloseTag.Attributes
+	e.attribute = openCloseTag.Attribute
 	e.posInDocument = newPosition(openCloseTag.StartPos, openCloseTag.EndPos)
 }
 
