@@ -26,19 +26,7 @@ const (
 	NUDPE
 )
 
-type executor interface {
-	setXPathQueryToBeExecuted(xpathquery string)
-	setNumberOfThreadsToBeUsedToParseDocument(numberOfThreads int)
-	setDocumentToBeParsedFilePath(documentFilePath string)
-	initSingletonDataStructures()
-	freeSingletonDataStructures()
-	parseXPathQueryAndPopulateSingletonsDataStructures() (err error)
-	executeUDPEsWhileParsingDocumentFile() (err error)
-	completeExecutionOfUDPEsAndNUDPEs() error
-	retrieveResults() []Position
-}
-
-type executorImpl struct {
+type executor struct {
 	numberOfThreads         int
 	xpathQueryToBeExecuted  string
 	mainQueryType           mainQueryType
@@ -103,7 +91,7 @@ func (executorCommand *executorCommandImpl) InVerboseMode() ExecutorCommand {
 
 // Run takes care of executing the command and to return
 func (executorCommand *executorCommandImpl) Run(runner *gopapageno.Runner) (results []Position, err error) {
-	executor := &executorImpl{
+	executor := &executor{
 		numberOfThreads: defaultExecutorNumberOfThreads,
 		runner:          runner,
 	}
@@ -135,25 +123,25 @@ func (executorCommand *executorCommandImpl) Run(runner *gopapageno.Runner) (resu
 	return
 }
 
-func (executor *executorImpl) initSingletonDataStructures() {
+func (executor *executor) initSingletonDataStructures() {
 	udpeGlobalTable = new(globalUdpeTable)
 	nudpeGlobalTable = new(globalNudpeTable)
 }
 
-func (executor *executorImpl) freeSingletonDataStructures() {
+func (executor *executor) freeSingletonDataStructures() {
 	udpeGlobalTable = nil
 	nudpeGlobalTable = nil
 }
 
-func (executor *executorImpl) setXPathQueryToBeExecuted(xpathQuery string) {
+func (executor *executor) setXPathQueryToBeExecuted(xpathQuery string) {
 	executor.xpathQueryToBeExecuted = xpathQuery
 }
 
-func (executor *executorImpl) setNumberOfThreadsToBeUsedToParseDocument(numberOfThreads int) {
+func (executor *executor) setNumberOfThreadsToBeUsedToParseDocument(numberOfThreads int) {
 	executor.numberOfThreads = numberOfThreads
 }
 
-func (executor *executorImpl) parseXPathQueryAndPopulateSingletonsDataStructures() (err error) {
+func (executor *executor) parseXPathQueryAndPopulateSingletonsDataStructures() (err error) {
 
 	switch executor.xpathQueryToBeExecuted {
 	case "A1":
@@ -182,7 +170,7 @@ func (executor *executorImpl) parseXPathQueryAndPopulateSingletonsDataStructures
 	return nil
 }
 
-func (executor *executorImpl) executeUDPEsWhileParsing() error {
+func (executor *executor) executeUDPEsWhileParsing() error {
 	axiomToken, err := executor.runner.Run(context.Background(), executor.source)
 	if err != nil {
 		return fmt.Errorf("could not parse: %v", err)
@@ -192,7 +180,7 @@ func (executor *executorImpl) executeUDPEsWhileParsing() error {
 	return err
 }
 
-func (executor *executorImpl) completeExecutionOfUDPEsAndNUDPEs() (err error) {
+func (executor *executor) completeExecutionOfUDPEsAndNUDPEs() (err error) {
 
 	if numberOfNUDPEs := nudpeGlobalTable.size(); numberOfNUDPEs == 0 {
 		return
@@ -233,7 +221,7 @@ func (executor *executorImpl) completeExecutionOfUDPEsAndNUDPEs() (err error) {
 	return
 }
 
-func (executor *executorImpl) nudpeBooleanValueEvaluator(udpeID int, context *NonTerminal, evaluationsCount int) customBool {
+func (executor *executor) nudpeBooleanValueEvaluator(udpeID int, context *NonTerminal, evaluationsCount int) customBool {
 	record, err := executor.resultingExecutionTable.recordByID(udpeID)
 
 	if err != nil {
@@ -248,7 +236,7 @@ func (executor *executorImpl) nudpeBooleanValueEvaluator(udpeID int, context *No
 	return toCustomBool(nudpeGlobalRecord.hasSolutionsFor(context))
 }
 
-func (executor *executorImpl) retrieveResults() (results []Position) {
+func (executor *executor) retrieveResults() (results []Position) {
 	var potentiallyDuplicatedResults []Position
 	switch executor.mainQueryType {
 	case UDPE:
@@ -275,7 +263,7 @@ func (executor *executorImpl) retrieveResults() (results []Position) {
 	return
 }
 
-func (executor *executorImpl) A1() {
+func (executor *executor) A1() {
 	executor.mainQueryType = UDPE
 	/* /site/closed_auctions/closed_auction/annotation/description/Text/keyword */
 
@@ -298,7 +286,7 @@ func (executor *executorImpl) A1() {
 	udpeGlobalTable.addFpe(fpeBuilder1.end())
 }
 
-func (executor *executorImpl) A2() {
+func (executor *executor) A2() {
 	executor.mainQueryType = UDPE
 	/* //closed_auction//keyword */
 
@@ -311,7 +299,7 @@ func (executor *executorImpl) A2() {
 	udpeGlobalTable.addFpe(fpeBuilder1.end())
 }
 
-func (executor *executorImpl) A3() {
+func (executor *executor) A3() {
 	executor.mainQueryType = UDPE
 	/* /site/closed_auctions/closed_auction//keyword */
 
@@ -328,7 +316,7 @@ func (executor *executorImpl) A3() {
 	udpeGlobalTable.addFpe(fpeBuilder1.end())
 }
 
-func (executor *executorImpl) A4() {
+func (executor *executor) A4() {
 	executor.mainQueryType = UDPE
 
 	/* p = /closed_auction/annotation/description/Text/keyword */
@@ -369,7 +357,7 @@ func (executor *executorImpl) A4() {
 	udpeGlobalTable.addFpe(fpeBuilder2.end())
 }
 
-func (executor *executorImpl) A5() {
+func (executor *executor) A5() {
 	executor.mainQueryType = UDPE
 
 	/* p = closed_auction//keyword */
@@ -402,7 +390,7 @@ func (executor *executorImpl) A5() {
 	udpeGlobalTable.addFpe(fpeBuilder2.end())
 }
 
-func (executor *executorImpl) A6() {
+func (executor *executor) A6() {
 	executor.mainQueryType = UDPE
 
 	/* /person/profile/gender */
@@ -448,7 +436,7 @@ func (executor *executorImpl) A6() {
 	udpeGlobalTable.addFpe(fpebuilder3.end())
 }
 
-func (executor *executorImpl) A7() {
+func (executor *executor) A7() {
 	executor.mainQueryType = UDPE
 
 	/* /person/phone */
@@ -491,7 +479,7 @@ func (executor *executorImpl) A7() {
 
 }
 
-func (executor *executorImpl) A8() {
+func (executor *executor) A8() {
 	executor.mainQueryType = UDPE
 
 	fpeBuilder1 := newFpeBuilder()
@@ -555,7 +543,7 @@ func (executor *executorImpl) A8() {
 	udpeGlobalTable.addFpe(fpebuilder6.end())
 }
 
-func (executor *executorImpl) B1() {
+func (executor *executor) B1() {
 	executor.mainQueryType = UDPE
 
 	rpeBuilder1 := newRpeBuilder()
@@ -589,7 +577,7 @@ func (executor *executorImpl) B1() {
 	udpeGlobalTable.addFpe(fpebuilder2.end())
 }
 
-func (executor *executorImpl) B2() {
+func (executor *executor) B2() {
 	executor.mainQueryType = NUDPE
 	nudpeRec := nudpeGlobalTable.addNudpeRecord(3)
 
