@@ -33,8 +33,8 @@ func (et *executionThread) isSpeculative() bool {
 	return et.speculations.size != 0
 }
 
-func (et *executionThread) addSpeculation(prd predicate, ctx NonTerminal) speculation {
-	sp := speculation{prd: prd, ctx: ctx}
+func (et *executionThread) addSpeculation(prd *predicate, ctx NonTerminal) speculation {
+	sp := speculation{prd: *prd, ctx: ctx}
 	et.speculations.append(sp)
 	return sp
 }

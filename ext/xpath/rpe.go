@@ -87,7 +87,7 @@ type rpeInnerTestImpl struct {
 	nextRpeInnerTest   *rpeInnerTestImpl
 }
 
-func (rpeInnerTest *rpeInnerTestImpl) matchWithReductionOf(n interface{}) (predicate predicate, next, newTest *rpeInnerTestImpl, hasNewTest, ok bool) {
+func (rpeInnerTest *rpeInnerTestImpl) matchWithReductionOf(n interface{}) (predicate *predicate, next, newTest *rpeInnerTestImpl, hasNewTest, ok bool) {
 	doesUdpeTestMatches := rpeInnerTest.udpeTest.test(n)
 	if rpeInnerTest.isEntry {
 		switch {
@@ -157,7 +157,7 @@ func (rpePP *rpePathPathPatternImpl) isEmpty() bool {
 	return rpePP.currentTest == nil
 }
 
-func (rpePP *rpePathPathPatternImpl) matchWithReductionOf(n interface{}, doUpdate bool) (predicate predicate, newPathPattern pathPattern, ok bool) {
+func (rpePP *rpePathPathPatternImpl) matchWithReductionOf(n interface{}, doUpdate bool) (predicate *predicate, newPathPattern pathPattern, ok bool) {
 	if rpePP.isEmpty() {
 		panic(`rpe path pattern error: trying a match for an empty path pattern`)
 	}

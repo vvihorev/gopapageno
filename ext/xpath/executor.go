@@ -327,7 +327,7 @@ func (executor *executor) A4() {
 
 	fpeID, _ := udpeGlobalTable.addFpe(fpeBuilder1.end())
 
-	p := &predicateImpl{
+	p := &predicate{
 		expressionVector: []operator{atom()},
 		atomsLookup: map[atomID]int{
 			atomID(fpeID): 0,
@@ -361,7 +361,7 @@ func (executor *executor) A5() {
 
 	fpeID, _ := udpeGlobalTable.addFpe(fpeBuilder1.end())
 
-	p := &predicateImpl{
+	p := &predicate{
 		expressionVector: []operator{atom()},
 		atomsLookup: map[atomID]int{
 			atomID(fpeID): 0,
@@ -406,7 +406,7 @@ func (executor *executor) A6() {
 	fpe1ID, _ := udpeGlobalTable.addFpe(fpeBuilder1.end())
 	fpe2ID, _ := udpeGlobalTable.addFpe(fpeBuilder2.end())
 
-	p := &predicateImpl{
+	p := &predicate{
 		expressionVector: []operator{and(), atom(), atom()},
 		atomsLookup: map[atomID]int{
 			atomID(fpe1ID): 1,
@@ -448,7 +448,7 @@ func (executor *executor) A7() {
 	fpe1ID, _ := udpeGlobalTable.addFpe(fpeBuilder1.end())
 	fpe2ID, _ := udpeGlobalTable.addFpe(fpeBuilder2.end())
 
-	p := &predicateImpl{
+	p := &predicate{
 		expressionVector: []operator{or(), atom(), atom()},
 		atomsLookup: map[atomID]int{
 			atomID(fpe1ID): 1,
@@ -510,7 +510,7 @@ func (executor *executor) A8() {
 	fpe4ID, _ := udpeGlobalTable.addFpe(fpeBuilder4.end())
 	fpe5ID, _ := udpeGlobalTable.addFpe(fpeBuilder5.end())
 
-	p := &predicateImpl{
+	p := &predicate{
 		expressionVector: []operator{and(), atom(), and(), nil, nil, or(), or(), nil, nil, nil, nil, atom(), atom(), atom(), atom()},
 		atomsLookup: map[atomID]int{
 			atomID(fpe1ID): 1,
@@ -546,7 +546,7 @@ func (executor *executor) B1() {
 
 	rpe1ID, _ := udpeGlobalTable.addRpe(rpeBuilder1.end())
 
-	p := &predicateImpl{
+	p := &predicate{
 		expressionVector: []operator{atom()},
 		atomsLookup: map[atomID]int{
 			atomID(rpe1ID): 0,

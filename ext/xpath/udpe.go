@@ -48,11 +48,11 @@ func (a axis) String() (s string) {
 
 type udpeTest interface {
 	test(tested interface{}) bool
-	predicate() predicate
+	predicate() *predicate
 }
 
 type pathPattern interface {
-	matchWithReductionOf(n interface{}, doUpdate bool) (predicate predicate, newPathPattern pathPattern, ok bool)
+	matchWithReductionOf(n interface{}, doUpdate bool) (predicate *predicate, newPathPattern pathPattern, ok bool)
 	isEmpty() bool
 	String() string
 }
@@ -73,10 +73,10 @@ type elementTest struct {
 	wildCard bool
 	name     string
 	attr     *Attribute
-	pred     predicate
+	pred     *predicate
 }
 
-func newElementTest(name string, attribute *Attribute, predicate predicate) *elementTest {
+func newElementTest(name string, attribute *Attribute, predicate *predicate) *elementTest {
 	return &elementTest{
 		name:     name,
 		wildCard: name == "*",
@@ -85,7 +85,7 @@ func newElementTest(name string, attribute *Attribute, predicate predicate) *ele
 	}
 }
 
-func (et *elementTest) predicate() predicate {
+func (et *elementTest) predicate() *predicate {
 	if et.pred != nil {
 		return et.pred.copy()
 	}
@@ -137,7 +137,7 @@ func newTextTest(text string) *textTest {
 	return &textTest{text}
 }
 
-func (tt *textTest) predicate() predicate {
+func (tt *textTest) predicate() *predicate {
 	return nil
 }
 

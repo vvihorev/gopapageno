@@ -91,7 +91,7 @@ type fpeInnerTestImpl struct {
 	behindDescendantAxis  bool
 }
 
-func (fpeInnerTest *fpeInnerTestImpl) matchWithReductionOf(n interface{}) (predicate predicate, next, newTest *fpeInnerTestImpl, hasNewTest, ok bool) {
+func (fpeInnerTest *fpeInnerTestImpl) matchWithReductionOf(n interface{}) (predicate *predicate, next, newTest *fpeInnerTestImpl, hasNewTest, ok bool) {
 	doesUdpeTestMatches := fpeInnerTest.udpeTest.test(n)
 	if fpeInnerTest.isEntry {
 		switch {
@@ -156,7 +156,7 @@ func (fpePP *fpePathPatternImpl) isEmpty() bool {
 	return fpePP.currentTest == nil
 }
 
-func (fpePP *fpePathPatternImpl) matchWithReductionOf(n interface{}, doUpdate bool) (predicate predicate, newPathPattern pathPattern, ok bool) {
+func (fpePP *fpePathPatternImpl) matchWithReductionOf(n interface{}, doUpdate bool) (predicate *predicate, newPathPattern pathPattern, ok bool) {
 	if fpePP.isEmpty() {
 		panic(`fpe path pattern error: trying a match for an empty path pattern`)
 	}

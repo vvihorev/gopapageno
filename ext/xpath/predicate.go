@@ -29,23 +29,17 @@ func (cb customBool) String() string {
 
 type atomID int
 
-type predicate interface {
-	earlyEvaluate(atomID atomID, value customBool) customBool
-	atomsIDs() []atomID
-	copy() predicate
-}
-
-type predicateImpl struct {
+type predicate struct {
 	value            customBool
 	expressionVector []operator
 	atomsLookup      map[atomID]int
 }
 
-func newPredicate() predicate {
-	return new(predicateImpl)
+func newPredicate() *predicate {
+	return new(predicate)
 }
 
-func (p *predicateImpl) String() string {
+func (p *predicate) String() string {
 	return fmt.Sprintf("p[%v]", p.atomsIDs())
 }
 
@@ -54,7 +48,7 @@ func (p *predicateImpl) String() string {
 * inside the flat representation of the predicate's binary
 * tree data structure.
  */
-func (p *predicateImpl) parentIndexOf(opIndex int) int {
+func (p *predicate) parentIndexOf(opIndex int) int {
 	if opIndex == 0 {
 		return -1
 	}
@@ -66,7 +60,7 @@ func (p *predicateImpl) parentIndexOf(opIndex int) int {
 * inside the flat representation of the predicate's binary
 * tree data structure.
  */
-func (p *predicateImpl) leftChildIndexOf(opIndex int) int {
+func (p *predicate) leftChildIndexOf(opIndex int) int {
 	return 2*opIndex + 1
 }
 
@@ -75,7 +69,7 @@ func (p *predicateImpl) leftChildIndexOf(opIndex int) int {
 * inside the flat representation of the predicate's binary
 * tree data structure.
  */
-func (p *predicateImpl) rightChildIndexOf(opIndex int) int {
+func (p *predicate) rightChildIndexOf(opIndex int) int {
 	return 2*opIndex + 2
 }
 
@@ -84,7 +78,7 @@ func (p *predicateImpl) rightChildIndexOf(opIndex int) int {
 * The order by which the atomID appear does NOT respect the order by
 * which they were added to the predicate
  */
-func (p *predicateImpl) atomsIDs() []atomID {
+func (p *predicate) atomsIDs() []atomID {
 	keys := make([]atomID, 0, len(p.atomsLookup))
 	for k := range p.atomsLookup {
 		keys = append(keys, k)
@@ -96,7 +90,7 @@ func (p *predicateImpl) atomsIDs() []atomID {
 * This method returns the boolean value of the predicate as soon
 * as it can be computed by means of the value assigned to a specific atom.
  */
-func (p *predicateImpl) earlyEvaluate(atomID atomID, value customBool) customBool {
+func (p *predicate) earlyEvaluate(atomID atomID, value customBool) customBool {
 	currentOpIndex, ok := p.atomsLookup[atomID]
 	if p.value != Undefined || !ok || value == Undefined {
 		return p.value
@@ -138,7 +132,7 @@ func (cb customBool) tobool() (value, ok bool) {
 	return
 }
 
-func (p *predicateImpl) copy() predicate {
+func (p *predicate) copy() *predicate {
 	expressionVectorCopy := make([]operator, len(p.expressionVector))
 	copy(expressionVectorCopy, p.expressionVector)
 
@@ -147,7 +141,7 @@ func (p *predicateImpl) copy() predicate {
 		atomsLookupCopy[k] = v
 	}
 
-	return &predicateImpl{
+	return &predicate{
 		expressionVector: expressionVectorCopy,
 		atomsLookup:      atomsLookupCopy,
 	}
