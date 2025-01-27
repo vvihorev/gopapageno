@@ -87,7 +87,7 @@ func (et *executionTable) evaluateID(udpeID int, context *NonTerminal, evaluatio
 type executionRecord struct {
 	expType      udpeType
 	t            *executionTable
-	ctxSols      *contextSolutionsMap
+	ctxSols      contextSolutionsMap
 	threads      swapbackArray[executionThread]
 	gNudpeRecord *globalNudpeRecord
 }
@@ -133,7 +133,7 @@ func (er *executionRecord) hasSolutionsFor(ctx *NonTerminal) bool {
 	return er.ctxSols.hasSolutionsFor(ctx)
 }
 
-func (er *executionRecord) contextSolutions() *contextSolutionsMap {
+func (er *executionRecord) contextSolutions() contextSolutionsMap {
 	return er.ctxSols
 }
 
@@ -217,7 +217,7 @@ func (er *executionRecord) produceContextSolutionsOutOfCompletedNonSpeculativeEx
 	for _, et := range er.threads.array {
 		if et.pp.isEmpty() && !et.isSpeculative() {
 			logger.Printf("adding context-solution: (%v , %v)", et.ctx, et.sol)
-			er.ctxSols.addContextSolution(et.ctx, *et.sol)
+			er.ctxSols.addContextSolution(et.ctx, et.sol)
 			er.removeExecutionThread(et, false)
 		}
 	}

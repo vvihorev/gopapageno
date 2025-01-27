@@ -16,7 +16,7 @@ func (globalUdpeTable *globalUdpeTable) newExecutionTable() *executionTable {
 		executionRecordsGroup[id] = executionRecord{
 			expType:      globalUdpeRecord.udpeType(),
 			t:            et,
-			ctxSols:      &ctxSolsMap,
+			ctxSols:      ctxSolsMap,
 			threads:      swapbackArray[executionThread]{
 				array: make([]executionThread, 0),
 			},

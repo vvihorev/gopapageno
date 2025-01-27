@@ -16,7 +16,7 @@ func (globalNudpeTable *globalNudpeTable) addNudpeRecord(length int) *globalNudp
 	ctxSols := make(contextSolutionsMap)
 	newNudpeRecord := &globalNudpeRecord{
 		len:     length,
-		ctxSols: &ctxSols,
+		ctxSols: ctxSols,
 	}
 	globalNudpeTable.list = append(globalNudpeTable.list, newNudpeRecord)
 	return newNudpeRecord
@@ -28,15 +28,15 @@ func (globalNudpeTable *globalNudpeTable) size() int {
 }
 
 type globalNudpeRecord struct {
-	ctxSols *contextSolutionsMap
+	ctxSols contextSolutionsMap
 	len     int
 }
 
-func (globalNudpeRecord *globalNudpeRecord) contextSolutions() *contextSolutionsMap {
+func (globalNudpeRecord *globalNudpeRecord) contextSolutions() contextSolutionsMap {
 	return globalNudpeRecord.ctxSols
 }
 
-func (globalNudpeRecord *globalNudpeRecord) setContextSolutions(ctxSols *contextSolutionsMap) {
+func (globalNudpeRecord *globalNudpeRecord) setContextSolutions(ctxSols contextSolutionsMap) {
 	globalNudpeRecord.ctxSols = ctxSols
 }
 

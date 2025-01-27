@@ -11,7 +11,9 @@ bench:
 	go test -bench=. -benchmem -cpuprofile cpu.prof -memprofile mem.prof cmd/xpath/main_test.go 
 
 profile:
-	go tool pprof --nodefraction=0.1  cpu.prof
+	# go tool pprof -http localhost:8000 --nodefraction=0.1  cpu.prof
+	go tool pprof -http localhost:8000 cpu.prof
 
 mem-profile:
-	go tool pprof --nodefraction=0.1  mem.prof
+	# go tool pprof -http localhost:8000 --nodefraction=0.1  mem.prof
+	go tool pprof -http localhost:8000 mem.prof
