@@ -23,7 +23,7 @@ func (sp *speculation) String() string {
 	return fmt.Sprintf("(%v , %v)", sp.ctx, sp.prd)
 }
 
-type evaluator func(id int, context NonTerminal, evaluationsCount int) customBool
+type evaluator func(id int, context *NonTerminal, evaluationsCount int) customBool
 
 func (sp *speculation) evaluate(v evaluator) (result customBool) {
 	defer func() {
@@ -34,7 +34,7 @@ func (sp *speculation) evaluate(v evaluator) (result customBool) {
 	predicateAtomsIDs := sp.prd.atomsIDs()
 	for _, atomID := range predicateAtomsIDs {
 		id := int(atomID)
-		atomValue := v(id, sp.ctx, sp.evaluationsCount)
+		atomValue := v(id, &sp.ctx, sp.evaluationsCount)
 		result = sp.prd.earlyEvaluate(atomID, atomValue)
 		if result != Undefined {
 			return result

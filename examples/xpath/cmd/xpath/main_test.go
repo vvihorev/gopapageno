@@ -26,6 +26,9 @@ import (
 // Remove interfaces from execution tables, use a swapbackArray data structure
 // BenchmarkRun-8   	      30	  75965866 ns/op	120287893 B/op	  262283 allocs/op
 
+// Remove interfaces of NonTerminal, ContextSolutions, and NUDPETable
+// BenchmarkRun-8   	      19	  75595343 ns/op	122624059 B/op	  303864 allocs/op
+
 func BenchmarkRun(b *testing.B) {
 	bytes, err := os.ReadFile("../../data/1MB.xml")
 	if err != nil {

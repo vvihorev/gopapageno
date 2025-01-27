@@ -12,11 +12,12 @@ func (globalUdpeTable *globalUdpeTable) newExecutionTable() *executionTable {
 	executionRecordsGroup := make([]executionRecord, globalUdpeTableSize)
 	for id := range executionRecordsGroup {
 		globalUdpeRecord := globalUdpeTable.recordByID(id)
+		ctxSolsMap := make(contextSolutionsMap)
 		executionRecordsGroup[id] = executionRecord{
 			expType:      globalUdpeRecord.udpeType(),
 			t:            et,
-			ctxSols:      newContextSolutionsMap(),
-			threads:       swapbackArray[executionThread]{
+			ctxSols:      &ctxSolsMap,
+			threads:      swapbackArray[executionThread]{
 				array: make([]executionThread, 0),
 			},
 			gNudpeRecord: globalUdpeRecord.nudpeRecord(),
@@ -53,7 +54,7 @@ func (globalUdpeTable *globalUdpeTable) addRpe(rpe rpe) (id int, record globalUd
 
 // addUdpe creates a new record inside the global udpe table
 func (globalUdpeTable *globalUdpeTable) addUdpe(udpe udpe, udpeType udpeType) (id int, record globalUdpeRecord) {
-	r := &globalUdpeRecordImpl{
+	r := globalUdpeRecord{
 		exp:     udpe,
 		expType: udpeType,
 	}
@@ -61,37 +62,30 @@ func (globalUdpeTable *globalUdpeTable) addUdpe(udpe udpe, udpeType udpeType) (i
 	return len(globalUdpeTable.list) - 1, r
 }
 
-type globalUdpeRecord interface {
-	udpe() udpe
-	udpeType() udpeType
-	nudpeRecord() globalNudpeRecord
-	setNudpeRecord(nudpeRecord globalNudpeRecord)
-}
-
-type globalUdpeRecordImpl struct {
+type globalUdpeRecord struct {
 	exp          udpe
 	expType      udpeType
-	gNudpeRecord globalNudpeRecord
+	gNudpeRecord *globalNudpeRecord
 }
 
-func (globalUdpeRecord *globalUdpeRecordImpl) udpe() udpe {
+func (globalUdpeRecord *globalUdpeRecord) udpe() udpe {
 	return globalUdpeRecord.exp
 
 }
 
 // udpeType returns the type of the underlying UDPE
-func (globalUdpeRecord *globalUdpeRecordImpl) udpeType() udpeType {
+func (globalUdpeRecord *globalUdpeRecord) udpeType() udpeType {
 	return globalUdpeRecord.expType
 }
 
 // nudpeRecord returns the globalNudpeRecord of the NUDPE to which the UDPE belongs
-func (globalUdpeRecord *globalUdpeRecordImpl) nudpeRecord() globalNudpeRecord {
+func (globalUdpeRecord *globalUdpeRecord) nudpeRecord() *globalNudpeRecord {
 	return globalUdpeRecord.gNudpeRecord
 }
 
 // TODO(vvihorev): does the XPath evaluator work with a single topmost NUDPE,
 // or the general case is that a NUDPE can have other NUDPEs in predicates?
 // Do we really need to point all UDPEs back to the single NUDPE?
-func (globalUdpeRecord *globalUdpeRecordImpl) setNudpeRecord(nudpeRecord globalNudpeRecord) {
+func (globalUdpeRecord *globalUdpeRecord) setNudpeRecord(nudpeRecord *globalNudpeRecord) {
 	globalUdpeRecord.gNudpeRecord = nudpeRecord
 }

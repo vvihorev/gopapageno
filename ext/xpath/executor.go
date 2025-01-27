@@ -11,7 +11,7 @@ import (
 const defaultExecutorNumberOfThreads = 1
 
 // Singletons
-var nudpeGlobalTable globalNudpeTable
+var nudpeGlobalTable *globalNudpeTable
 var udpeGlobalTable *globalUdpeTable
 var logger Logger
 
@@ -137,7 +137,7 @@ func (executorCommand *executorCommandImpl) Run(runner *gopapageno.Runner) (resu
 
 func (executor *executorImpl) initSingletonDataStructures() {
 	udpeGlobalTable = new(globalUdpeTable)
-	nudpeGlobalTable = new(globalNudpeTableImpl)
+	nudpeGlobalTable = new(globalNudpeTable)
 }
 
 func (executor *executorImpl) freeSingletonDataStructures() {
@@ -187,7 +187,7 @@ func (executor *executorImpl) executeUDPEsWhileParsing() error {
 	if err != nil {
 		return fmt.Errorf("could not parse: %v", err)
 	}
-	executor.resultingExecutionTable = axiomToken.Value.(NonTerminal).ExecutionTable()
+	executor.resultingExecutionTable = axiomToken.Value.(*NonTerminal).ExecutionTable()
 
 	return err
 }
@@ -198,18 +198,17 @@ func (executor *executorImpl) completeExecutionOfUDPEsAndNUDPEs() (err error) {
 		return
 	}
 
-	var currentNudpeRecord globalNudpeRecord
-	var currentNudpeContextSolutionsMaps []contextSolutionsMap
+	var currentNudpeRecord *globalNudpeRecord
+	var currentNudpeContextSolutionsMaps []*contextSolutionsMap
 
-	actualList := executor.resultingExecutionTable.actualList()
-	for _, er := range actualList {
+	for _, er := range executor.resultingExecutionTable.list {
 		if er.belongsToNudpe() {
 			if er.nudpeRecord() != currentNudpeRecord {
 				if currentNudpeRecord != nil {
 					currentNudpeRecord.setContextSolutions(transitiveClosure(currentNudpeContextSolutionsMaps))
 				}
 				currentNudpeRecord = er.nudpeRecord()
-				currentNudpeContextSolutionsMaps = []contextSolutionsMap{}
+				currentNudpeContextSolutionsMaps = []*contextSolutionsMap{}
 			}
 		} else {
 			if currentNudpeRecord != nil {
@@ -234,7 +233,7 @@ func (executor *executorImpl) completeExecutionOfUDPEsAndNUDPEs() (err error) {
 	return
 }
 
-func (executor *executorImpl) nudpeBooleanValueEvaluator(udpeID int, context NonTerminal, evaluationsCount int) customBool {
+func (executor *executorImpl) nudpeBooleanValueEvaluator(udpeID int, context *NonTerminal, evaluationsCount int) customBool {
 	record, err := executor.resultingExecutionTable.recordByID(udpeID)
 
 	if err != nil {

@@ -4,37 +4,20 @@ import (
 	"errors"
 )
 
-type contextSolutionsMap interface {
-	addContextSolution(ctx NonTerminal, sols ...NonTerminal)
-	transitiveClosure(maps ...contextSolutionsMap) contextSolutionsMap
-	hasSolutionsFor(ctx NonTerminal) bool
-	solutionsFor(ctx NonTerminal, maps ...contextSolutionsMap) []NonTerminal
-	merge(incoming contextSolutionsMap) (result contextSolutionsMap, ok bool)
-	convertToGroupOfSolutionsPositions() []Position
+type contextSolutionsMap map[*NonTerminal][]NonTerminal
+
+func (ctxSolMap *contextSolutionsMap) addContextSolution(ctx *NonTerminal, sols ...NonTerminal) {
+	dest := *ctxSolMap
+	dest[ctx] = append(dest[ctx], sols...)
 }
 
-type implementedMapType map[NonTerminal][]NonTerminal
-
-type contextSolutionsMapImpl struct {
-	m implementedMapType
-}
-
-func newContextSolutionsMap() contextSolutionsMap {
-	return &contextSolutionsMapImpl{
-		m: make(implementedMapType),
-	}
-}
-
-func (ctxSolMap *contextSolutionsMapImpl) addContextSolution(ctx NonTerminal, sols ...NonTerminal) {
-	ctxSolMap.m[ctx] = append(ctxSolMap.m[ctx], sols...)
-}
-
-func (ctxSolMap *contextSolutionsMapImpl) hasSolutionsFor(ctx NonTerminal) bool {
+func (ctxSolMap *contextSolutionsMap) hasSolutionsFor(ctx *NonTerminal) bool {
 	return len(ctxSolMap.solutionsFor(ctx)) > 0
 }
 
-func (ctxSolMap *contextSolutionsMapImpl) solutionsFor(ctx NonTerminal, maps ...contextSolutionsMap) (solutions []NonTerminal) {
-	solutions = ctxSolMap.m[ctx]
+func (ctxSolMap *contextSolutionsMap) solutionsFor(ctx *NonTerminal, maps ...*contextSolutionsMap) (solutions []NonTerminal) {
+	dest := *ctxSolMap
+	solutions = dest[ctx]
 
 	for i := 0; i < len(maps); i++ {
 		tmpNodesToVisit := []NonTerminal{}
@@ -42,25 +25,26 @@ func (ctxSolMap *contextSolutionsMapImpl) solutionsFor(ctx NonTerminal, maps ...
 		for len(solutions) > 0 {
 			currentNode := solutions[0]
 			solutions = solutions[1:]
-			tmpNodesToVisit = append(tmpNodesToVisit, maps[i].solutionsFor(currentNode)...)
+			tmpNodesToVisit = append(tmpNodesToVisit, maps[i].solutionsFor(&currentNode)...)
 		}
 		solutions = tmpNodesToVisit
 	}
 	return
 }
 
-func (ctxSolMap *contextSolutionsMapImpl) transitiveClosure(maps ...contextSolutionsMap) (result contextSolutionsMap) {
-	result = newContextSolutionsMap()
+func (ctxSolMap *contextSolutionsMap) transitiveClosure(maps ...*contextSolutionsMap) (result *contextSolutionsMap) {
+	dest := make(contextSolutionsMap)
 
-	for context := range ctxSolMap.m {
+	for context := range *ctxSolMap {
 		solutionsReachableFromContext := ctxSolMap.solutionsFor(context, maps...)
-		result.addContextSolution(context, solutionsReachableFromContext...)
+		dest.addContextSolution(context, solutionsReachableFromContext...)
 	}
+	result = &dest
 	return
 }
 
-func (ctxSolMap *contextSolutionsMapImpl) convertToGroupOfSolutionsPositions() (positions []Position) {
-	for _, solutions := range ctxSolMap.m {
+func (ctxSolMap *contextSolutionsMap) convertToGroupOfSolutionsPositions() (positions []Position) {
+	for _, solutions := range *ctxSolMap {
 		for _, solution := range solutions {
 			positions = append(positions, solution.Position())
 		}
@@ -68,33 +52,25 @@ func (ctxSolMap *contextSolutionsMapImpl) convertToGroupOfSolutionsPositions() (
 	return
 }
 
-func transitiveClosure(maps []contextSolutionsMap) contextSolutionsMap {
+func transitiveClosure(maps []*contextSolutionsMap) *contextSolutionsMap {
 	start := maps[0]
 	return start.transitiveClosure(maps[1:]...)
 }
 
-func (ctxSolMap *contextSolutionsMapImpl) merge(incoming contextSolutionsMap) (result contextSolutionsMap, ok bool) {
-	result = ctxSolMap
+func (ctxSolMap *contextSolutionsMap) merge(incoming *contextSolutionsMap) {
+	destination := *ctxSolMap
 	if incoming == nil {
 		return
 	}
 
-	incomingImpl, ok := incoming.(*contextSolutionsMapImpl)
-
-	if !ok {
-		return
+	for k, v := range *incoming {
+		destination[k] = append(destination[k], v...)
 	}
-
-	for k, v := range incomingImpl.m {
-		ctxSolMap.m[k] = append(ctxSolMap.m[k], v...)
-	}
-	ok = true
-	return
 }
 
 // solutionsFor returns all the solutions that are reachable from the specified context
 // by traversing all the contextSolutionsMaps which are passed as parameters
-func solutionsFor(context NonTerminal, maps ...contextSolutionsMap) (solutions []NonTerminal, err error) {
+func solutionsFor(context *NonTerminal, maps ...contextSolutionsMap) (solutions []NonTerminal, err error) {
 	if context == nil {
 		err = errors.New("context can NOT be nil")
 		return
@@ -107,7 +83,7 @@ func solutionsFor(context NonTerminal, maps ...contextSolutionsMap) (solutions [
 		for len(solutions) > 0 {
 			currentNode := solutions[0]
 			solutions = solutions[1:]
-			tmpNodesToVisit = append(tmpNodesToVisit, maps[i].solutionsFor(currentNode)...)
+			tmpNodesToVisit = append(tmpNodesToVisit, maps[i].solutionsFor(&currentNode)...)
 		}
 		solutions = tmpNodesToVisit
 	}

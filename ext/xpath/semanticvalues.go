@@ -4,61 +4,47 @@ import "fmt"
 
 // NonTerminal represents a unique non terminal inside the syntax tree representing
 // the XML document
-type NonTerminal interface {
-	SetExecutionTable(execTab *executionTable) NonTerminal
-	SetNode(n interface{}) NonTerminal
-	Children() []NonTerminal
-	SetDirectChildAndInheritItsChildren(NonTerminal) NonTerminal
-	ExecutionTable() *executionTable
-	Node() interface{}
-	Position() Position
-}
-
-func NewNonTerminal() NonTerminal {
-	return &nonTerminalImpl{}
-}
-
-type nonTerminalImpl struct {
+type NonTerminal struct {
 	n       interface{}
 	ch      []NonTerminal
 	execTab *executionTable
 }
 
-func (nt *nonTerminalImpl) String() string {
+func (nt *NonTerminal) String() string {
 	if nt == nil {
 		return "-"
 	}
 	return fmt.Sprintf("E(%p)", nt)
 }
 
-func (nt *nonTerminalImpl) SetExecutionTable(executionTable *executionTable) NonTerminal {
+func (nt *NonTerminal) SetExecutionTable(executionTable *executionTable) *NonTerminal {
 	nt.execTab = executionTable
 	return nt
 }
 
-func (nt *nonTerminalImpl) ExecutionTable() *executionTable {
+func (nt *NonTerminal) ExecutionTable() *executionTable {
 	return nt.execTab
 }
 
-func (nt *nonTerminalImpl) SetNode(n interface{}) NonTerminal {
+func (nt *NonTerminal) SetNode(n interface{}) *NonTerminal {
 	nt.n = n
 	return nt
 }
 
-func (nt *nonTerminalImpl) Node() interface{} {
+func (nt *NonTerminal) Node() interface{} {
 	return nt.n
 }
 
-func (nt *nonTerminalImpl) SetDirectChildAndInheritItsChildren(child NonTerminal) NonTerminal {
+func (nt *NonTerminal) SetDirectChildAndInheritItsChildren(child NonTerminal) *NonTerminal {
 	nt.ch = append(child.Children(), child)
 	return nt
 }
 
-func (nt *nonTerminalImpl) Children() []NonTerminal {
+func (nt *NonTerminal) Children() []NonTerminal {
 	return nt.ch
 }
 
-func (nt *nonTerminalImpl) Position() Position {
+func (nt *NonTerminal) Position() Position {
 	if element, isElement := nt.n.(*Element); isElement {
 		return element.position()
 	}

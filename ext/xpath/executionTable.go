@@ -14,10 +14,6 @@ type executionTable struct {
 	list []executionRecord
 }
 
-func (et *executionTable) actualList() []executionRecord {
-	return et.list
-}
-
 func (et *executionTable) recordByID(id int) (execRecord *executionRecord, err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -36,8 +32,7 @@ func (et *executionTable) mainQueryRecord() executionRecord {
 
 // merge joins the incoming execution table to the receiving execution table and returns
 // the receiving execution table
-func (et *executionTable) merge(incoming *executionTable) (result *executionTable, ok bool) {
-	result = et
+func (et *executionTable) merge(incoming *executionTable) (ok bool) {
 	ok = true
 
 	for id, er := range et.list {
@@ -47,10 +42,7 @@ func (et *executionTable) merge(incoming *executionTable) (result *executionTabl
 			break
 		}
 
-		if _, isMerged := er.merge(incomingRecord); !isMerged {
-			ok = false
-			break
-		}
+		er.merge(incomingRecord)
 	}
 	return
 }
@@ -60,7 +52,7 @@ func (et *executionTable) size() int {
 }
 
 // evaluateID returns the boolean value of an udpe with a certain id w.r.t a specific context.
-func (et *executionTable) evaluateID(udpeID int, context NonTerminal, evaluationsCount int) customBool {
+func (et *executionTable) evaluateID(udpeID int, context *NonTerminal, evaluationsCount int) customBool {
 	record, err := et.recordByID(udpeID)
 	if err != nil {
 		panic(fmt.Sprintf(`udpe boolean evaluation error for id: %v`, err))
@@ -95,16 +87,16 @@ func (et *executionTable) evaluateID(udpeID int, context NonTerminal, evaluation
 type executionRecord struct {
 	expType      udpeType
 	t            *executionTable
-	ctxSols      contextSolutionsMap
+	ctxSols      *contextSolutionsMap
 	threads      swapbackArray[executionThread]
-	gNudpeRecord globalNudpeRecord
+	gNudpeRecord *globalNudpeRecord
 }
 
 func (er *executionRecord) String() string {
 	return fmt.Sprintf("{ %v | %v | %v }", er.expType, er.ctxSols, er.threads)
 }
 
-func (er *executionRecord) addExecutionThread(ctx, sol NonTerminal, pp pathPattern) (et executionThread) {
+func (er *executionRecord) addExecutionThread(ctx, sol *NonTerminal, pp pathPattern) (et executionThread) {
 	et = executionThread{
 		ctx:    ctx,
 		sol:    sol,
@@ -127,7 +119,7 @@ func (er *executionRecord) removeExecutionThread(et executionThread, removeChild
 	er.threads.remove(et)
 }
 
-func (er *executionRecord) hasExecutionThreadRunningFor(ctx NonTerminal) bool {
+func (er *executionRecord) hasExecutionThreadRunningFor(ctx *NonTerminal) bool {
 	for i := 0; i < er.threads.size; i++ {
 		found := er.threads.array[i].ctx == ctx
 		if found {
@@ -137,11 +129,11 @@ func (er *executionRecord) hasExecutionThreadRunningFor(ctx NonTerminal) bool {
 	return false
 }
 
-func (er *executionRecord) hasSolutionsFor(ctx NonTerminal) bool {
+func (er *executionRecord) hasSolutionsFor(ctx *NonTerminal) bool {
 	return er.ctxSols.hasSolutionsFor(ctx)
 }
 
-func (er *executionRecord) contextSolutions() contextSolutionsMap {
+func (er *executionRecord) contextSolutions() *contextSolutionsMap {
 	return er.ctxSols
 }
 
@@ -149,7 +141,7 @@ func (er *executionRecord) udpeType() udpeType {
 	return er.expType
 }
 
-func (er *executionRecord) nudpeRecord() globalNudpeRecord {
+func (er *executionRecord) nudpeRecord() *globalNudpeRecord {
 	return er.gNudpeRecord
 }
 
@@ -159,7 +151,7 @@ func (er *executionRecord) belongsToNudpe() bool {
 
 // updateExecutionThreads takes the node being reduced and asks all the running execution threads
 // to update accordingly
-func (er *executionRecord) updateAllExecutionThreads(reduced NonTerminal) {
+func (er *executionRecord) updateAllExecutionThreads(reduced *NonTerminal) {
 	for _, et := range er.threads.array {
 		etPathPattern := et.pp
 		//The path pattern of the execution thread may be empty if the thread is speculative
@@ -178,7 +170,7 @@ func (er *executionRecord) updateAllExecutionThreads(reduced NonTerminal) {
 				}
 
 				if predicate != nil {
-					sp := etReceivingSpeculation.addSpeculation(predicate, reduced)
+					sp := etReceivingSpeculation.addSpeculation(predicate, *reduced)
 					logger.Printf("adding speculation: %v to execution thread %v", sp, et)
 				}
 			} else {
@@ -204,7 +196,7 @@ func (er *executionRecord) stopUnfoundedSpeculativeExecutionThreads(evaluator ev
 // for all the execution threads that are completed. By the time at which the execution thread is completed, it might not be able
 // to produce context-solution items because of running speculations. Even if the execution thread can not produce context-solution
 // items, it has to save the non terminal whose reducetion caused the execution thread to complete
-func (er *executionRecord) saveReducedNTAsContextOrSolutionlIntoCompletedExecutionThreads(contextOrSolution NonTerminal) {
+func (er *executionRecord) saveReducedNTAsContextOrSolutionlIntoCompletedExecutionThreads(contextOrSolution *NonTerminal) {
 	for _, et := range er.threads.array {
 		if et.pp.isEmpty() {
 			if et.ctx == nil {
@@ -225,20 +217,17 @@ func (er *executionRecord) produceContextSolutionsOutOfCompletedNonSpeculativeEx
 	for _, et := range er.threads.array {
 		if et.pp.isEmpty() && !et.isSpeculative() {
 			logger.Printf("adding context-solution: (%v , %v)", et.ctx, et.sol)
-			er.ctxSols.addContextSolution(et.ctx, et.sol)
+			er.ctxSols.addContextSolution(et.ctx, *et.sol)
 			er.removeExecutionThread(et, false)
 		}
 	}
 }
 
-func (er *executionRecord) merge(incoming *executionRecord) (result executionRecord, ok bool) {
-	result = *er
-
+func (er *executionRecord) merge(incoming *executionRecord) {
 	if incoming != nil {
 		for i := 0; i < incoming.threads.size; i++ {
 			er.threads.append(incoming.threads.array[i])
 		}
 	}
-	_, ok = er.ctxSols.merge(incoming.ctxSols)
-	return
+	er.ctxSols.merge(incoming.ctxSols)
 }

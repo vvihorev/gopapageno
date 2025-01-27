@@ -9,8 +9,8 @@ import (
 // thread to be considered by the running iteration.
 type executionThread struct {
 	offspr []executionThread
-	ctx    NonTerminal
-	sol    NonTerminal
+	ctx    *NonTerminal
+	sol    *NonTerminal
 	pp     pathPattern
 	speculations swapbackArray[speculation]
 
