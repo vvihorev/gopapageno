@@ -38,15 +38,7 @@ type executor struct {
 
 // ExecutorCommand represents a command that can be made by a
 // client to execute a XPath query
-type ExecutorCommand interface {
-	Execute(xpathQuery string) ExecutorCommand
-	Against(source []byte) ExecutorCommand
-	WithNumberOfThreads(numberOfThreads int) ExecutorCommand
-	Run(runner *gopapageno.Runner) (results []Position, err error)
-	InVerboseMode() ExecutorCommand
-}
-
-type executorCommandImpl struct {
+type ExecutorCommand struct {
 	xpathQuery      string
 	source          []byte
 	numberOfThreads int
@@ -54,43 +46,43 @@ type executorCommandImpl struct {
 }
 
 // Execute specify the XPath query to be executed
-func Execute(xpathQuery string) ExecutorCommand {
-	return &executorCommandImpl{
+func Execute(xpathQuery string) *ExecutorCommand {
+	return &ExecutorCommand{
 		xpathQuery: xpathQuery,
 	}
 }
 
-func (executorCommand *executorCommandImpl) Execute(xpathQuery string) ExecutorCommand {
+func (executorCommand *ExecutorCommand) Execute(xpathQuery string) *ExecutorCommand {
 	executorCommand.xpathQuery = xpathQuery
 	return executorCommand
 }
 
-func (executorCommand *executorCommandImpl) Against(source []byte) ExecutorCommand {
+func (executorCommand *ExecutorCommand) Against(source []byte) *ExecutorCommand {
 	executorCommand.source = source
 	return executorCommand
 }
 
 // WithNumberOfThreads specify the number of threads to be used
 // to execute the XPath query
-func WithNumberOfThreads(numberOfThreads int) ExecutorCommand {
-	return &executorCommandImpl{
+func WithNumberOfThreads(numberOfThreads int) *ExecutorCommand {
+	return &ExecutorCommand{
 		numberOfThreads: numberOfThreads,
 	}
 }
 
-func (executorCommand *executorCommandImpl) WithNumberOfThreads(numberOfThreads int) ExecutorCommand {
+func (executorCommand *ExecutorCommand) WithNumberOfThreads(numberOfThreads int) *ExecutorCommand {
 	executorCommand.numberOfThreads = numberOfThreads
 	return executorCommand
 }
 
-func (executorCommand *executorCommandImpl) InVerboseMode() ExecutorCommand {
+func (executorCommand *ExecutorCommand) InVerboseMode() *ExecutorCommand {
 	executorCommand.verbose = true
 	logger = log.New(os.Stderr, "", log.LstdFlags)
 	return executorCommand
 }
 
 // Run takes care of executing the command and to return
-func (executorCommand *executorCommandImpl) Run(runner *gopapageno.Runner) (results []Position, err error) {
+func (executorCommand *ExecutorCommand) Run(runner *gopapageno.Runner) (results []Position, err error) {
 	executor := &executor{
 		numberOfThreads: defaultExecutorNumberOfThreads,
 		runner:          runner,
