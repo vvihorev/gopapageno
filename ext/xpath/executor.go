@@ -183,11 +183,11 @@ func (executor *executor) completeExecutionOfUDPEsAndNUDPEs() (err error) {
 
 	for _, er := range *executor.resultingExecutionTable {
 		if er.belongsToNudpe() {
-			if er.nudpeRecord() != currentNudpeRecord {
+			if er.gNudpeRecord != currentNudpeRecord {
 				if currentNudpeRecord != nil {
 					currentNudpeRecord.setContextSolutions(transitiveClosure(currentNudpeContextSolutionsMaps))
 				}
-				currentNudpeRecord = er.nudpeRecord()
+				currentNudpeRecord = er.gNudpeRecord
 				currentNudpeContextSolutionsMaps = []contextSolutionsMap{}
 			}
 		} else {
@@ -202,7 +202,7 @@ func (executor *executor) completeExecutionOfUDPEsAndNUDPEs() (err error) {
 		er.produceContextSolutionsOutOfCompletedNonSpeculativeExecutionThreads()
 
 		if er.belongsToNudpe() {
-			currentNudpeContextSolutionsMaps = append(currentNudpeContextSolutionsMaps, er.contextSolutions())
+			currentNudpeContextSolutionsMaps = append(currentNudpeContextSolutionsMaps, er.ctxSols)
 		}
 	}
 
@@ -224,7 +224,7 @@ func (executor *executor) nudpeBooleanValueEvaluator(udpeID int, context *NonTer
 		panic("cannot evaluate nudpe boolean value if first udpe does NOT belong to a nudpe")
 	}
 
-	nudpeGlobalRecord := record.nudpeRecord()
+	nudpeGlobalRecord := record.gNudpeRecord
 	return toCustomBool(nudpeGlobalRecord.hasSolutionsFor(context))
 }
 
@@ -233,7 +233,7 @@ func (executor *executor) retrieveResults() (results []Position) {
 	switch executor.mainQueryType {
 	case UDPE:
 		mainQueryUDPERecord := executor.resultingExecutionTable.mainQueryRecord()
-		potentiallyDuplicatedResults = mainQueryUDPERecord.contextSolutions().convertToGroupOfSolutionsPositions()
+		potentiallyDuplicatedResults = mainQueryUDPERecord.ctxSols.convertToGroupOfSolutionsPositions()
 	case NUDPE:
 		mainQueryNUDPERecord := nudpeGlobalTable.mainQueryRecord()
 		potentiallyDuplicatedResults = mainQueryNUDPERecord.contextSolutions().convertToGroupOfSolutionsPositions()

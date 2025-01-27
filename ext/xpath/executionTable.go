@@ -65,7 +65,7 @@ func (et *executionTable) evaluateID(udpeID int, context *NonTerminal, evaluatio
 
 	//FPEs are always bounded w.r.t. a specific context and their boolean value
 	//is always available as soon as the context has been synthesized.
-	if record.udpeType() == FPE {
+	if record.expType == FPE {
 		return False
 	}
 
@@ -124,18 +124,6 @@ func (er *executionRecord) hasExecutionThreadRunningFor(ctx *NonTerminal) bool {
 
 func (er *executionRecord) hasSolutionsFor(ctx *NonTerminal) bool {
 	return er.ctxSols.hasSolutionsFor(ctx)
-}
-
-func (er *executionRecord) contextSolutions() contextSolutionsMap {
-	return er.ctxSols
-}
-
-func (er *executionRecord) udpeType() udpeType {
-	return er.expType
-}
-
-func (er *executionRecord) nudpeRecord() *globalNudpeRecord {
-	return er.gNudpeRecord
 }
 
 func (er *executionRecord) belongsToNudpe() bool {

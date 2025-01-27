@@ -11,7 +11,7 @@ type swapbackArray[V storingIndex] struct {
 }
 
 func (sa *swapbackArray[V]) append(v V) {
-	if sa.size > len(sa.array) {
+	if sa.size >= len(sa.array) {
 		sa.array = append(sa.array, v)
 	}
 	sa.array[sa.size] = v
