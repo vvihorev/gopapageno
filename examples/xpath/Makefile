@@ -16,4 +16,5 @@ profile:
 
 mem-profile:
 	# go tool pprof -http localhost:8000 --nodefraction=0.1  mem.prof
-	go tool pprof -http localhost:8000 mem.prof
+	go tool pprof -http localhost:8000 --nodefraction=0.0  mem.prof
+	# go tool pprof -http localhost:8000 mem.prof

@@ -38,6 +38,10 @@ import (
 // Setting a preallocation size of the pool relative to input size
 // BenchmarkRun-8   	      24	  74176000 ns/op	123574721 B/op	  230700 allocs/op
 
+
+// cpu: Intel(R) Core(TM) i7-7820HQ CPU @ 2.90GHz
+// BenchmarkRun-8   	      36	  32285544 ns/op	121926649 B/op	  230699 allocs/op
+
 func BenchmarkRun(b *testing.B) {
 	bytes, err := os.ReadFile("../../data/1MB.xml")
 	if err != nil {
