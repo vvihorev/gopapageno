@@ -44,11 +44,11 @@ func (globalUdpeTable *globalUdpeTable) mainQueryRecord() globalUdpeRecord {
 	return globalUdpeTable.list[globalUdpeTable.size()-1]
 }
 
-func (globalUdpeTable *globalUdpeTable) addFpe(fpe fpe) (id int, record globalUdpeRecord) {
+func (globalUdpeTable *globalUdpeTable) addFpe(fpe *fpe) (id int, record globalUdpeRecord) {
 	return globalUdpeTable.addUdpe(fpe, FPE)
 }
 
-func (globalUdpeTable *globalUdpeTable) addRpe(rpe rpe) (id int, record globalUdpeRecord) {
+func (globalUdpeTable *globalUdpeTable) addRpe(rpe *rpe) (id int, record globalUdpeRecord) {
 	return globalUdpeTable.addUdpe(rpe, RPE)
 }
 

@@ -5,14 +5,6 @@ import (
 	"strings"
 )
 
-type fpe interface {
-	udpe
-}
-
-type fpeBuilder interface {
-	udpeBuilder
-}
-
 type fpeBuilderState int
 
 const (
@@ -21,20 +13,20 @@ const (
 )
 
 //concrete implementation of a fpe builder
-type fpeBuilderImpl struct {
+type fpeBuilder struct {
 	state                 fpeBuilderState
-	precedentFpeInnerTest *fpeInnerTestImpl
+	precedentFpeInnerTest *fpeInnerTest
 }
 
-func newFpeBuilder() fpeBuilder {
-	return new(fpeBuilderImpl)
+func newFpeBuilder() *fpeBuilder {
+	return new(fpeBuilder)
 }
 
-func (fpeBuilder *fpeBuilderImpl) init() {
+func (fpeBuilder *fpeBuilder) init() {
 	return
 }
 
-func (fpeBuilder *fpeBuilderImpl) addUdpeTest(udpeTest udpeTest) (ok bool) {
+func (fpeBuilder *fpeBuilder) addUdpeTest(udpeTest udpeTest) (ok bool) {
 	if fpeBuilder.state != expectFpeUdpeTest {
 		ok = false
 		return
@@ -44,7 +36,7 @@ func (fpeBuilder *fpeBuilderImpl) addUdpeTest(udpeTest udpeTest) (ok bool) {
 	}()
 
 	ok = true
-	nextFpeInnerTest := &fpeInnerTestImpl{
+	nextFpeInnerTest := &fpeInnerTest{
 		udpeTest:              udpeTest,
 		precedingFpeInnerTest: fpeBuilder.precedentFpeInnerTest,
 	}
@@ -53,7 +45,7 @@ func (fpeBuilder *fpeBuilderImpl) addUdpeTest(udpeTest udpeTest) (ok bool) {
 	return
 }
 
-func (fpeBuilder *fpeBuilderImpl) addAxis(axis axis) (ok bool) {
+func (fpeBuilder *fpeBuilder) addAxis(axis axis) (ok bool) {
 	if fpeBuilder.state != expectFpeAxis {
 		ok = false
 		return
@@ -73,25 +65,24 @@ func (fpeBuilder *fpeBuilderImpl) addAxis(axis axis) (ok bool) {
 	return
 }
 
-func (fpeBuilder *fpeBuilderImpl) end() (result udpe) {
+func (fpeBuilder *fpeBuilder) end() (result *fpe) {
 	if fpeBuilder.precedentFpeInnerTest != nil {
 		fpeBuilder.precedentFpeInnerTest.isEntry = true
-		result = &fpeImpl{
+		result = &fpe{
 			entryTest: fpeBuilder.precedentFpeInnerTest,
 		}
 	}
 	return
 }
 
-// TODO(vvihorev): remove bools from this struct
-type fpeInnerTestImpl struct {
+type fpeInnerTest struct {
 	udpeTest              udpeTest
-	precedingFpeInnerTest *fpeInnerTestImpl
+	precedingFpeInnerTest *fpeInnerTest
 	isEntry               bool
 	behindDescendantAxis  bool
 }
 
-func (fpeInnerTest *fpeInnerTestImpl) matchWithReductionOf(n interface{}) (predicate *predicate, next, newTest *fpeInnerTestImpl, hasNewTest, ok bool) {
+func (fpeInnerTest *fpeInnerTest) matchWithReductionOf(n interface{}) (predicate *predicate, next, newTest *fpeInnerTest, hasNewTest, ok bool) {
 	doesUdpeTestMatches := fpeInnerTest.udpeTest.test(n)
 	if fpeInnerTest.isEntry {
 		switch {
@@ -137,7 +128,7 @@ func (fpeInnerTest *fpeInnerTestImpl) matchWithReductionOf(n interface{}) (predi
 	return
 }
 
-func (fpeInnerTest *fpeInnerTestImpl) String() (result string) {
+func (fpeInnerTest *fpeInnerTest) String() (result string) {
 	result = fmt.Sprintf("%v", fpeInnerTest.udpeTest)
 	if fpeInnerTest.behindDescendantAxis {
 		result += "//"
@@ -148,15 +139,15 @@ func (fpeInnerTest *fpeInnerTestImpl) String() (result string) {
 }
 
 //concrete fpe path pattern implementation
-type fpePathPatternImpl struct {
-	currentTest *fpeInnerTestImpl
+type fpePathPattern struct {
+	currentTest *fpeInnerTest
 }
 
-func (fpePP *fpePathPatternImpl) isEmpty() bool {
+func (fpePP *fpePathPattern) isEmpty() bool {
 	return fpePP.currentTest == nil
 }
 
-func (fpePP *fpePathPatternImpl) matchWithReductionOf(n interface{}, doUpdate bool) (predicate *predicate, newPathPattern pathPattern, ok bool) {
+func (fpePP *fpePathPattern) matchWithReductionOf(n interface{}, doUpdate bool) (predicate *predicate, newPathPattern pathPattern, ok bool) {
 	if fpePP.isEmpty() {
 		panic(`fpe path pattern error: trying a match for an empty path pattern`)
 	}
@@ -172,12 +163,12 @@ func (fpePP *fpePathPatternImpl) matchWithReductionOf(n interface{}, doUpdate bo
 
 	fpePP.currentTest = next
 	if hasNewTest {
-		newPathPattern = &fpePathPatternImpl{newTest}
+		newPathPattern = &fpePathPattern{newTest}
 	}
 	return
 }
 
-func (fpePP *fpePathPatternImpl) String() (result string) {
+func (fpePP *fpePathPattern) String() (result string) {
 	result = fpeStringifyUtil(fpePP.currentTest, fpePathPatternMode)
 
 	if !strings.HasSuffix(result, "//") {
@@ -187,15 +178,16 @@ func (fpePP *fpePathPatternImpl) String() (result string) {
 }
 
 //concrete fpe implementation
-type fpeImpl struct {
-	entryTest *fpeInnerTestImpl
+type fpe struct {
+	udpe
+	entryTest *fpeInnerTest
 }
 
-func (fpe *fpeImpl) entryPoint() pathPattern {
-	return &fpePathPatternImpl{fpe.entryTest}
+func (fpe *fpe) entryPoint() pathPattern {
+	return &fpePathPattern{fpe.entryTest}
 }
 
-func (fpe *fpeImpl) String() string {
+func (fpe *fpe) String() string {
 	return fpeStringifyUtil(fpe.entryTest, fpeMode)
 }
 
@@ -207,7 +199,7 @@ const (
 	fpePathPatternMode
 )
 
-func fpeStringifyUtil(currentTest *fpeInnerTestImpl, mode fpeStringificationMode) (result string) {
+func fpeStringifyUtil(currentTest *fpeInnerTest, mode fpeStringificationMode) (result string) {
 	if currentTest != nil {
 		result = fpeStringifyUtil(currentTest.precedingFpeInnerTest, mode) + fmt.Sprintf("%v", currentTest)
 	} else {

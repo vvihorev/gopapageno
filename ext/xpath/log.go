@@ -4,12 +4,12 @@ type Logger interface {
 	Printf(string, ...interface{})
 }
 
-type nopLoggerImpl struct{}
+type nopLogger struct{}
 
-func newNopLogger() *nopLoggerImpl {
-	return &nopLoggerImpl{}
+func newNopLogger() *nopLogger {
+	return &nopLogger{}
 }
 
-func (*nopLoggerImpl) Printf(format string, v ...interface{}) {
+func (*nopLogger) Printf(format string, v ...interface{}) {
 	//noop
 }

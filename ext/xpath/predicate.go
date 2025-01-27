@@ -154,20 +154,20 @@ type operator interface {
 type opConstructor func() operator
 
 //atom operator concrete implementation
-type atomOperatorImpl struct{}
+type atomOperator struct{}
 
-func (and *atomOperatorImpl) evaluate(operand customBool) customBool {
+func (and *atomOperator) evaluate(operand customBool) customBool {
 	return operand
 }
 
 func atom() operator {
-	return new(atomOperatorImpl)
+	return new(atomOperator)
 }
 
 //not operator concrete implementation
-type notOperatorImpl struct{}
+type notOperator struct {}
 
-func (not *notOperatorImpl) evaluate(operand customBool) customBool {
+func (not *notOperator) evaluate(operand customBool) customBool {
 	switch operand {
 	case True:
 		return False
@@ -179,15 +179,15 @@ func (not *notOperatorImpl) evaluate(operand customBool) customBool {
 }
 
 func not() operator {
-	return new(notOperatorImpl)
+	return new(notOperator)
 }
 
 //or operator concrete implementation
-type orOperatorImpl struct {
+type orOperator struct {
 	previousOperand customBool
 }
 
-func (or *orOperatorImpl) evaluate(operand customBool) customBool {
+func (or *orOperator) evaluate(operand customBool) customBool {
 	if operand == True {
 		return True
 	}
@@ -201,15 +201,15 @@ func (or *orOperatorImpl) evaluate(operand customBool) customBool {
 }
 
 func or() operator {
-	return new(orOperatorImpl)
+	return new(orOperator)
 }
 
 //and operator concrete implementation
-type andOperatorImpl struct {
+type andOperator struct {
 	previousOperand customBool
 }
 
-func (and *andOperatorImpl) evaluate(operand customBool) customBool {
+func (and *andOperator) evaluate(operand customBool) customBool {
 	if operand == False {
 		return False
 	}
@@ -223,5 +223,5 @@ func (and *andOperatorImpl) evaluate(operand customBool) customBool {
 }
 
 func and() operator {
-	return new(andOperatorImpl)
+	return new(andOperator)
 }

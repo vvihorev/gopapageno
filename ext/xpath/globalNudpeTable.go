@@ -48,22 +48,3 @@ func (globalNudpeRecord *globalNudpeRecord) length() int {
 func (globalNudpeRecord *globalNudpeRecord) hasSolutionsFor(ctx *NonTerminal) bool {
 	return globalNudpeRecord.ctxSols.hasSolutionsFor(ctx)
 }
-
-type globalNudpeTableIterator interface {
-	hasNext() bool
-	next() globalNudpeRecord
-}
-
-type globalNudpeTableIteratorImpl struct {
-	table        *globalNudpeTable
-	nextRecordID int
-}
-
-func (iterator *globalNudpeTableIteratorImpl) hasNext() bool {
-	return iterator.nextRecordID < len(iterator.table.list)-1
-}
-
-func (iterator *globalNudpeTableIteratorImpl) next() *globalNudpeRecord {
-	defer func() { iterator.nextRecordID++ }()
-	return iterator.table.list[iterator.nextRecordID]
-}

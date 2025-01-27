@@ -5,14 +5,6 @@ import (
 	"strings"
 )
 
-type rpe interface {
-	udpe
-}
-
-type rpeBuilder interface {
-	udpeBuilder
-}
-
 type rpeBuilderState int
 
 const (
@@ -20,20 +12,20 @@ const (
 	expectRpeUdpeTest
 )
 
-type rpeBuilderImpl struct {
+type rpeBuilder struct {
 	state            rpeBuilderState
-	currentInnerTest *rpeInnerTestImpl
+	currentInnerTest *rpeInnerTest
 }
 
-func newRpeBuilder() rpeBuilder {
-	return new(rpeBuilderImpl)
+func newRpeBuilder() *rpeBuilder {
+	return new(rpeBuilder)
 }
 
-func (rpeBuilder *rpeBuilderImpl) init() {
+func (rpeBuilder *rpeBuilder) init() {
 	return
 }
 
-func (rpeBuilder *rpeBuilderImpl) addUdpeTest(udpeTest udpeTest) (ok bool) {
+func (rpeBuilder *rpeBuilder) addUdpeTest(udpeTest udpeTest) (ok bool) {
 	if rpeBuilder.state != expectRpeUdpeTest {
 		ok = false
 		return
@@ -43,7 +35,7 @@ func (rpeBuilder *rpeBuilderImpl) addUdpeTest(udpeTest udpeTest) (ok bool) {
 	}()
 
 	ok = true
-	nextRpeInnerTest := &rpeInnerTestImpl{
+	nextRpeInnerTest := &rpeInnerTest{
 		udpeTest:         udpeTest,
 		nextRpeInnerTest: rpeBuilder.currentInnerTest,
 	}
@@ -51,7 +43,7 @@ func (rpeBuilder *rpeBuilderImpl) addUdpeTest(udpeTest udpeTest) (ok bool) {
 	return
 }
 
-func (rpeBuilder *rpeBuilderImpl) addAxis(axis axis) (ok bool) {
+func (rpeBuilder *rpeBuilder) addAxis(axis axis) (ok bool) {
 	if rpeBuilder.state != expectRpeAxis {
 		ok = false
 		return
@@ -70,24 +62,24 @@ func (rpeBuilder *rpeBuilderImpl) addAxis(axis axis) (ok bool) {
 	return
 }
 
-func (rpeBuilder *rpeBuilderImpl) end() (result udpe) {
+func (rpeBuilder *rpeBuilder) end() (result *rpe) {
 	if rpeBuilder.currentInnerTest != nil {
 		rpeBuilder.currentInnerTest.isEntry = true
-		result = &rpeImpl{
+		result = &rpe{
 			entryTest: rpeBuilder.currentInnerTest,
 		}
 	}
 	return
 }
 
-type rpeInnerTestImpl struct {
+type rpeInnerTest struct {
 	isEntry            bool
 	behindAncestorAxis bool
 	udpeTest           udpeTest
-	nextRpeInnerTest   *rpeInnerTestImpl
+	nextRpeInnerTest   *rpeInnerTest
 }
 
-func (rpeInnerTest *rpeInnerTestImpl) matchWithReductionOf(n interface{}) (predicate *predicate, next, newTest *rpeInnerTestImpl, hasNewTest, ok bool) {
+func (rpeInnerTest *rpeInnerTest) matchWithReductionOf(n interface{}) (predicate *predicate, next, newTest *rpeInnerTest, hasNewTest, ok bool) {
 	doesUdpeTestMatches := rpeInnerTest.udpeTest.test(n)
 	if rpeInnerTest.isEntry {
 		switch {
@@ -134,11 +126,11 @@ func (rpeInnerTest *rpeInnerTestImpl) matchWithReductionOf(n interface{}) (predi
 	return
 }
 
-func (rpeInnerTest *rpeInnerTestImpl) entry() bool {
+func (rpeInnerTest *rpeInnerTest) entry() bool {
 	return rpeInnerTest.isEntry
 }
 
-func (rpeInnerTest *rpeInnerTestImpl) String() (result string) {
+func (rpeInnerTest *rpeInnerTest) String() (result string) {
 	if rpeInnerTest.behindAncestorAxis {
 		result = `\\`
 	} else if !rpeInnerTest.isEntry {
@@ -149,15 +141,15 @@ func (rpeInnerTest *rpeInnerTestImpl) String() (result string) {
 }
 
 //concrete rpe path pattern implementation
-type rpePathPathPatternImpl struct {
-	currentTest *rpeInnerTestImpl
+type rpePathPathPattern struct {
+	currentTest *rpeInnerTest
 }
 
-func (rpePP *rpePathPathPatternImpl) isEmpty() bool {
+func (rpePP *rpePathPathPattern) isEmpty() bool {
 	return rpePP.currentTest == nil
 }
 
-func (rpePP *rpePathPathPatternImpl) matchWithReductionOf(n interface{}, doUpdate bool) (predicate *predicate, newPathPattern pathPattern, ok bool) {
+func (rpePP *rpePathPathPattern) matchWithReductionOf(n interface{}, doUpdate bool) (predicate *predicate, newPathPattern pathPattern, ok bool) {
 	if rpePP.isEmpty() {
 		panic(`rpe path pattern error: trying a match for an empty path pattern`)
 	}
@@ -173,12 +165,12 @@ func (rpePP *rpePathPathPatternImpl) matchWithReductionOf(n interface{}, doUpdat
 
 	rpePP.currentTest = next
 	if hasNewTest {
-		newPathPattern = &rpePathPathPatternImpl{newTest}
+		newPathPattern = &rpePathPathPattern{newTest}
 	}
 	return
 }
 
-func (rpePP *rpePathPathPatternImpl) String() (result string) {
+func (rpePP *rpePathPathPattern) String() (result string) {
 	result = rpeStringifyUtil(rpePP.currentTest, rpePathPatternMode)
 
 	if !strings.HasPrefix(result, `\\`) {
@@ -188,15 +180,15 @@ func (rpePP *rpePathPathPatternImpl) String() (result string) {
 }
 
 //concrete rpe implementation
-type rpeImpl struct {
-	entryTest *rpeInnerTestImpl
+type rpe struct {
+	entryTest *rpeInnerTest
 }
 
-func (rpe *rpeImpl) entryPoint() pathPattern {
-	return &rpePathPathPatternImpl{rpe.entryTest}
+func (rpe *rpe) entryPoint() pathPattern {
+	return &rpePathPathPattern{rpe.entryTest}
 }
 
-func (rpe *rpeImpl) String() string {
+func (rpe *rpe) String() string {
 	return rpeStringifyUtil(rpe.entryTest, rpeMode)
 }
 
@@ -208,7 +200,7 @@ const (
 	rpePathPatternMode
 )
 
-func rpeStringifyUtil(currentTest *rpeInnerTestImpl, mode rpeStringificationMode) (result string) {
+func rpeStringifyUtil(currentTest *rpeInnerTest, mode rpeStringificationMode) (result string) {
 	for ct := currentTest; ct != nil; ct = ct.nextRpeInnerTest {
 		result += ct.String()
 	}
