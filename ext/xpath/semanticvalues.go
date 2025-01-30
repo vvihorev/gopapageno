@@ -20,11 +20,6 @@ func (nt *NonTerminal) String() string {
 	return fmt.Sprintf("E(%p)", nt.node)
 }
 
-func (nt *NonTerminal) SetExecutionTable(executionTable *executionTable) *NonTerminal {
-	nt.executionTable = executionTable
-	return nt
-}
-
 func (nt *NonTerminal) SetNode(n interface{}) *NonTerminal {
 	nt.node = n
 	return nt

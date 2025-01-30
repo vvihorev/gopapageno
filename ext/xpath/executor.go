@@ -222,7 +222,7 @@ func (executor *executor) completeExecutionOfUDPEsAndNUDPEs() (err error) {
 	var currentNudpeContextSolutionsMaps []contextSolutionsMap
 
 	for _, er := range *executor.resultingExecutionTable {
-		if er.belongsToNudpe() {
+		if er.gNudpeRecord != nil {
 			if er.gNudpeRecord != currentNudpeRecord {
 				if currentNudpeRecord != nil {
 					currentNudpeRecord.setContextSolutions(transitiveClosure(currentNudpeContextSolutionsMaps))
@@ -252,7 +252,7 @@ func (executor *executor) completeExecutionOfUDPEsAndNUDPEs() (err error) {
 			}
 		}
 
-		if er.belongsToNudpe() {
+		if er.gNudpeRecord != nil {
 			currentNudpeContextSolutionsMaps = append(currentNudpeContextSolutionsMaps, er.ctxSols)
 		}
 	}
@@ -271,7 +271,7 @@ func (executor *executor) nudpeBooleanValueEvaluator(udpeID int, context *NonTer
 		panic(fmt.Sprintf(`cannot retrieve udpe record from resulting execution table: %v`, err))
 	}
 
-	if !record.belongsToNudpe() {
+	if record.gNudpeRecord == nil {
 		panic("cannot evaluate nudpe boolean value if first udpe does NOT belong to a nudpe")
 	}
 

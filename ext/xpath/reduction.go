@@ -85,39 +85,32 @@ func (r *Reduction) Setup(reducedNT, generativeNT, wrappedNT *NonTerminal) {
 			}
 		}
 
-		// stopUnfoundedSpeculativeExecutionThreads iterates over all the running execution threads and, for each speculative
-		// execution thread, the speculation is evaluated. If the speculation ends up to be unfounded, the speculative execution thread,
-		// and all its Children recursively, are stopped
+		// Phase 3 - Stop speculative threads, store context-solution pairs for compeleted threads
 		{
 			for i := 0; i < er.threads.size; i++ {
+				// If a thread speculation is unfounded, stop the speculative execution thread, and all its Children recursively
 				if areSpeculationsFounded := er.threads.array[i].checkAndUpdateSpeculations(r.updatingExecutionTable.evaluateID); !areSpeculationsFounded {
 					er.removeExecutionThread(er.threads.array[i], true)
 				}
 			}
-		}
 
-		// saveReducedNTAsContextOrSolutionlIntoCompletedExecutionThreads saves the input NonTerminal as either context or solution
-		// for all the execution threads that are completed. By the time at which the execution thread is completed, it might not be able
-		// to produce context-solution items because of running speculations. Even if the execution thread can not produce context-solution
-		// items, it has to save the non terminal whose reducetion caused the execution thread to complete
-		{
 			for i := 0; i < er.threads.size; i++ {
+				// for all completed threads save the input NonTerminal as either context or solution.
+				// By the time at which the execution thread is completed, it might not be able
+				// to produce context-solution items because of running speculations.
+				// Even if the execution thread can not produce context-solution items, it has to save the non
+				// terminal whose reducetion caused the execution thread to complete
 				if er.threads.array[i].pp.isEmpty() {
 					if er.threads.array[i].ctx == nil {
 						er.threads.array[i].ctx = r.reducedNT
-						break
-					}
-
-					if er.threads.array[i].sol == nil {
+					} else if er.threads.array[i].sol == nil {
 						er.threads.array[i].sol = r.reducedNT
 					}
 				}
 			}
-		}
 
-		// produce context solutions out of completed non speculative execution threads
-		{
 			for i := 0; i < er.threads.size; i++ {
+				// produce context solutions out of completed non speculative execution threads
 				if er.threads.array[i].pp.isEmpty() && !er.threads.array[i].isSpeculative() {
 					er.ctxSols.addContextSolution(er.threads.array[i].ctx, er.threads.array[i].sol)
 					er.removeExecutionThread(er.threads.array[i], false)
@@ -135,6 +128,6 @@ func (r *Reduction) Setup(reducedNT, generativeNT, wrappedNT *NonTerminal) {
 		}
 	}
 	// propagate updating execution table to reduced NT
-	r.reducedNT.SetExecutionTable(&r.updatingExecutionTable)
+	r.reducedNT.executionTable = &r.updatingExecutionTable
 }
 

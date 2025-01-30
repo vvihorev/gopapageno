@@ -57,11 +57,11 @@ func (et *executionTable) evaluateID(udpeID int, context *NonTerminal, evaluatio
 	//Do not consider the effective boolean value of all those UDPEs which are
 	//the initial UDPE of some NUDPE.
 	//The boolean value of a NUDPE is computed at the end of the entire parsing of the document.
-	if record.belongsToNudpe() {
+	if record.gNudpeRecord != nil {
 		return Undefined
 	}
 
-	if record.hasSolutionsFor(context) {
+	if record.ctxSols.hasSolutionsFor(context) {
 		return True
 	}
 
@@ -101,7 +101,6 @@ func (er *executionRecord) addExecutionThread(ctx, sol *NonTerminal, pp pathPatt
 		},
 	}
 	er.threads.append(et)
-	// logger.Printf("adding execution thread: %v", et.String())
 	return
 }
 
@@ -122,12 +121,4 @@ func (er *executionRecord) hasExecutionThreadRunningFor(ctx *NonTerminal) bool {
 		}
 	}
 	return false
-}
-
-func (er *executionRecord) hasSolutionsFor(ctx *NonTerminal) bool {
-	return er.ctxSols.hasSolutionsFor(ctx)
-}
-
-func (er *executionRecord) belongsToNudpe() bool {
-	return er.gNudpeRecord != nil
 }
