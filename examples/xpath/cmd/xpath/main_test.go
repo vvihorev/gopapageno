@@ -128,20 +128,20 @@ func TestSingleRPEQueryExecution(t *testing.T) {
 	if len(res) != 1 {
 		t.Fatalf("No match found for query, results: %v", res)
 	}
-	if string(source[res[0].Start():res[0].End()+1]) != "<body></body>" {
+	if string(source[res[0].Start():res[0].End()+1]) != "<body><div></div><div></div></body>" {
 		t.Fatalf("%v", string(source[res[0].Start():res[0].End()]))
 	}
 }
 
 func TestMultipleStepRPEQueryExecution(t *testing.T) {
-	source := []byte("<html><body><div></div><div></div></body></html>")
+	source := []byte("<html><body><div></div><div><p></p></div></body></html>")
 	r := gopapageno.NewRunner(
 		xpath.NewLexer(),
 		xpath.NewGrammar(),
 		gopapageno.WithConcurrency(1),
 	)
 
-	cmd := x.Execute("/html/body").Against(source).WithNumberOfThreads(1).InVerboseMode()
+	cmd := x.Execute("\\\\div\\body").Against(source).WithNumberOfThreads(1).InVerboseMode()
 	res, err := cmd.Run(r)
 
 	if err != nil {
@@ -150,7 +150,7 @@ func TestMultipleStepRPEQueryExecution(t *testing.T) {
 	if len(res) != 1 {
 		t.Fatalf("No match found for query, results: %v", res)
 	}
-	if string(source[res[0].Start():res[0].End()+1]) != "<body></body>" {
+	if string(source[res[0].Start():res[0].End()+1]) != "<body><div></div><div><p></p></div></body>" {
 		t.Fatalf("%v", string(source[res[0].Start():res[0].End()]))
 	}
 }
