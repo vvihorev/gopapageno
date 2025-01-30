@@ -2,21 +2,12 @@ package xpath
 
 import (
 	"fmt"
-	"strings"
 )
 
 type executionTableIterableCallback func(id int, er executionRecord) (doBreak bool)
 
+// TODO(vvihorev): don't pass the pointer to the table (slice)
 type executionTable []executionRecord
-
-// NOTE(vvihorev): Use for debugging only
-func (et *executionTable) String() string {
-	records := make([]string, 0)
-	for _, er := range *et {
-		records = append(records, er.String())
-	}
-	return strings.Join(records, ",\n")
-}
 
 func (et executionTable) recordByID(id int) (execRecord *executionRecord, err error) {
 	defer func() {
@@ -46,7 +37,12 @@ func (et executionTable) merge(incoming *executionTable) (ok bool) {
 			break
 		}
 
-		er.merge(incomingRecord)
+		if incoming != nil {
+			for i := 0; i < incomingRecord.threads.size; i++ {
+				er.threads.append(incomingRecord.threads.array[i])
+			}
+		}
+		er.ctxSols.merge(incomingRecord.ctxSols)
 	}
 	return
 }
@@ -134,87 +130,4 @@ func (er *executionRecord) hasSolutionsFor(ctx *NonTerminal) bool {
 
 func (er *executionRecord) belongsToNudpe() bool {
 	return er.gNudpeRecord != nil
-}
-
-// updateExecutionThreads takes the node being reduced and asks all the running execution threads
-// to update accordingly
-func (er *executionRecord) updateAllExecutionThreads(reduced *NonTerminal) {
-	for i := 0; i < er.threads.size; i++ {
-		etPathPattern := er.threads.array[i].pp
-		//The path pattern of the execution thread may be empty if the thread is speculative
-		//and it's not completed because of some unchecked speculation
-		if !etPathPattern.isEmpty() {
-			// etReprBeforeUpdate := fmt.Sprintf("%v", er.threads.array[i].String())
-			predicate, newPathPattern, ok := etPathPattern.matchWithReductionOf(reduced.Node(), true)
-			if ok {
-				// etReprAfterUpdate := fmt.Sprintf("%v", er.threads.array[i].String())
-				// logger.Printf("updated execution thread: %s -> %s", etReprBeforeUpdate, etReprAfterUpdate)
-
-				var etReceivingSpeculation = er.threads.array[i]
-				if newPathPattern != nil {
-					etReceivingSpeculation = er.addExecutionThread(er.threads.array[i].ctx, er.threads.array[i].sol, newPathPattern)
-					er.threads.array[i].addChild(etReceivingSpeculation)
-				}
-
-				if predicate != nil {
-					_ = etReceivingSpeculation.addSpeculation(predicate, *reduced)
-					// logger.Printf("adding speculation: %v to execution thread %v", sp, er.threads.array[i])
-				}
-			} else {
-				// logger.Printf("removing execution thread beacuse path pattern does NOT match: %s", etReprBeforeUpdate)
-				er.removeExecutionThread(er.threads.array[i], false)
-			}
-		}
-	}
-}
-
-// stopUnfoundedSpeculativeExecutionThreads iterates over all the running execution threads and, for each speculative
-// execution thread, the speculation is evaluated. If the speculation ends up to be unfounded, the speculative execution thread,
-// and all its Children recursively, are stopped
-func (er *executionRecord) stopUnfoundedSpeculativeExecutionThreads(evaluator evaluator) {
-	for i := 0; i < er.threads.size; i++ {
-		if areSpeculationsFounded := er.threads.array[i].checkAndUpdateSpeculations(evaluator); !areSpeculationsFounded {
-			er.removeExecutionThread(er.threads.array[i], true)
-		}
-	}
-}
-
-// saveReducedNTAsContextOrSolutionlIntoCompletedExecutionThreads saves the input NonTerminal as either context or solution
-// for all the execution threads that are completed. By the time at which the execution thread is completed, it might not be able
-// to produce context-solution items because of running speculations. Even if the execution thread can not produce context-solution
-// items, it has to save the non terminal whose reducetion caused the execution thread to complete
-func (er *executionRecord) saveReducedNTAsContextOrSolutionlIntoCompletedExecutionThreads(contextOrSolution *NonTerminal) {
-	for i := 0; i < er.threads.size; i++ {
-		if er.threads.array[i].pp.isEmpty() {
-			if er.threads.array[i].ctx == nil {
-				er.threads.array[i].ctx = contextOrSolution
-				return
-			}
-
-			if er.threads.array[i].sol == nil {
-				er.threads.array[i].sol = contextOrSolution
-			}
-		}
-	}
-}
-
-// produceContextSolutions produce new context solutions from completed execution threads and removes
-// completed execution threads
-func (er *executionRecord) produceContextSolutionsOutOfCompletedNonSpeculativeExecutionThreads() {
-	for i := 0; i < er.threads.size; i++ {
-		if er.threads.array[i].pp.isEmpty() && !er.threads.array[i].isSpeculative() {
-			// logger.Printf("adding context-solution: (%v , %v)", er.threads.array[i].ctx, er.threads.array[i].sol)
-			er.ctxSols.addContextSolution(er.threads.array[i].ctx, er.threads.array[i].sol)
-			er.removeExecutionThread(er.threads.array[i], false)
-		}
-	}
-}
-
-func (er *executionRecord) merge(incoming *executionRecord) {
-	if incoming != nil {
-		for i := 0; i < incoming.threads.size; i++ {
-			er.threads.append(incoming.threads.array[i])
-		}
-	}
-	er.ctxSols.merge(incoming.ctxSols)
 }

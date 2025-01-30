@@ -167,7 +167,6 @@ func NewGrammar() *gopapageno.Grammar {
 
 				reduction := reductionPool.Get().(*xpath.Reduction)
 				reduction.Setup(reducedNonTerminal, generativeNonTerminal, nil)
-				reduction.Handle()
 				reductionPool.Put(reduction)
 
 				ELEM0.Value = reducedNonTerminal
@@ -203,7 +202,6 @@ func NewGrammar() *gopapageno.Grammar {
 
 				reduction := reductionPool.Get().(*xpath.Reduction)
 				reduction.Setup(reducedNonTerminal, generativeNonTerminal, wrappedNonTerminal)
-				reduction.Handle()
 				reductionPool.Put(reduction)
 
 				ELEM0.Value = reducedNonTerminal
@@ -238,7 +236,6 @@ func NewGrammar() *gopapageno.Grammar {
 
 				reduction := reductionPool.Get().(*xpath.Reduction)
 				reduction.Setup(reducedNonTerminal, generativeNonTerminal, nil)
-				reduction.Handle()
 				reductionPool.Put(reduction)
 
 				ELEM0.Value = reducedNonTerminal
@@ -270,7 +267,6 @@ func NewGrammar() *gopapageno.Grammar {
 
 				reduction := reductionPool.Get().(*xpath.Reduction)
 				reduction.Setup(reducedNonTerminal, generativeNonTerminal, nil)
-				reduction.Handle()
 				reductionPool.Put(reduction)
 
 				ELEM0.Value = reducedNonTerminal
@@ -297,7 +293,6 @@ func NewGrammar() *gopapageno.Grammar {
 
 				reduction := reductionPool.Get().(*xpath.Reduction)
 				reduction.Setup(reducedNonTerminal, nil, nil)
-				reduction.Handle()
 				reductionPool.Put(reduction)
 
 				ELEM0.Value = reducedNonTerminal
@@ -329,7 +324,6 @@ func NewGrammar() *gopapageno.Grammar {
 
 				reduction := reductionPool.Get().(*xpath.Reduction)
 				reduction.Setup(reducedNonTerminal, nil, wrappedNonTerminal)
-				reduction.Handle()
 				reductionPool.Put(reduction)
 
 				ELEM0.Value = reducedNonTerminal
@@ -360,7 +354,6 @@ func NewGrammar() *gopapageno.Grammar {
 
 				reduction := reductionPool.Get().(*xpath.Reduction)
 				reduction.Setup(reducedNonTerminal, nil, nil)
-				reduction.Handle()
 				reductionPool.Put(reduction)
 
 				ELEM0.Value = reducedNonTerminal
@@ -387,7 +380,6 @@ func NewGrammar() *gopapageno.Grammar {
 
 				reduction := reductionPool.Get().(*xpath.Reduction)
 				reduction.Setup(reducedNonTerminal, nil, nil)
-				reduction.Handle()
 				reductionPool.Put(reduction)
 
 				ELEM0.Value = reducedNonTerminal

@@ -238,8 +238,19 @@ func (executor *executor) completeExecutionOfUDPEsAndNUDPEs() (err error) {
 			}
 		}
 
-		er.stopUnfoundedSpeculativeExecutionThreads(executor.nudpeBooleanValueEvaluator)
-		er.produceContextSolutionsOutOfCompletedNonSpeculativeExecutionThreads()
+		// stop unfounded speculative execution threads
+		// produce context solutions out of completed non speculative execution threads
+		{
+			for i := 0; i < er.threads.size; i++ {
+				if areSpeculationsFounded := er.threads.array[i].checkAndUpdateSpeculations(executor.nudpeBooleanValueEvaluator); !areSpeculationsFounded {
+					er.removeExecutionThread(er.threads.array[i], true)
+				}
+				if er.threads.array[i].pp.isEmpty() && !er.threads.array[i].isSpeculative() {
+					er.ctxSols.addContextSolution(er.threads.array[i].ctx, er.threads.array[i].sol)
+					er.removeExecutionThread(er.threads.array[i], false)
+				}
+			}
+		}
 
 		if er.belongsToNudpe() {
 			currentNudpeContextSolutionsMaps = append(currentNudpeContextSolutionsMaps, er.ctxSols)
