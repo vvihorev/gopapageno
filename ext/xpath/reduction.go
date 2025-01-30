@@ -6,12 +6,11 @@ import (
 
 type Reduction struct {
 	reducedNT, generativeNT, wrappedNT *NonTerminal
-	updatingExecutionTable             *executionTable
+	updatingExecutionTable             executionTable
 	globalUdpeRecordBeingConsidered    *globalUdpeRecord
 }
 
 func (r *Reduction) Setup(reducedNT, generativeNT, wrappedNT *NonTerminal) {
-	logger.Printf("Reduction.Setup: %v <= %v <> %v </>", reducedNT.String(), generativeNT.String(), wrappedNT.String())
 	var updatingExecutionTable executionTable
 
 	if wrappedNT != nil {
@@ -23,34 +22,27 @@ func (r *Reduction) Setup(reducedNT, generativeNT, wrappedNT *NonTerminal) {
 	r.reducedNT = reducedNT
 	r.generativeNT = generativeNT
 	r.wrappedNT = wrappedNT
-	r.updatingExecutionTable = &updatingExecutionTable
+	r.updatingExecutionTable = updatingExecutionTable
 }
 
 func (r *Reduction) Handle() {
+	logger.Printf("REDUCTION: %v <- %v <> %v </>", r.reducedNT, r.generativeNT, r.wrappedNT)
 	r.iterateOverAllGlobalUdpeRecordsAndExecuteMainPhases()
 	r.prepareUpdatingExecutionTableToBePropagatedToReducedNT()
+	logger.Printf("%v", r.updatingExecutionTable.String())
 	r.propagateUpdatingExecutionTableToReducedNT()
 }
 
 func (r *Reduction) iterateOverAllGlobalUdpeRecordsAndExecuteMainPhases() {
-	// TODO(vvihorev): stop dereferncing slices?
-	tableRecords := *r.updatingExecutionTable
-
 	for id, gr := range udpeGlobalTable.list {
 		r.globalUdpeRecordBeingConsidered = &gr
 
-		if id < 0 || id >= len(tableRecords) {
-			panic(fmt.Sprintf("cannot retrieve execution record for udpe with id: %d", id))
-		}
-		updatingExecutionRecord := tableRecords[id]
-		logger.Printf("Considering UDPE: %v", gr.exp.entryPoint())
+		r.addNewExecutionThreadsToExecutionRecord(&r.updatingExecutionTable[id])
 
-		r.addNewExecutionThreadsToExecutionRecord(&updatingExecutionRecord)
-
-		updatingExecutionRecord.updateAllExecutionThreads(r.reducedNT)
-		updatingExecutionRecord.stopUnfoundedSpeculativeExecutionThreads(r.updatingExecutionTable.evaluateID)
-		updatingExecutionRecord.saveReducedNTAsContextOrSolutionlIntoCompletedExecutionThreads(r.reducedNT)
-		updatingExecutionRecord.produceContextSolutionsOutOfCompletedNonSpeculativeExecutionThreads()
+		r.updatingExecutionTable[id].updateAllExecutionThreads(r.reducedNT)
+		r.updatingExecutionTable[id].stopUnfoundedSpeculativeExecutionThreads(r.updatingExecutionTable.evaluateID)
+		r.updatingExecutionTable[id].saveReducedNTAsContextOrSolutionlIntoCompletedExecutionThreads(r.reducedNT)
+		r.updatingExecutionTable[id].produceContextSolutionsOutOfCompletedNonSpeculativeExecutionThreads()
 	}
 }
 
@@ -61,7 +53,7 @@ func (r *Reduction) prepareUpdatingExecutionTableToBePropagatedToReducedNT() {
 }
 
 func (r *Reduction) propagateUpdatingExecutionTableToReducedNT() {
-	r.reducedNT.SetExecutionTable(r.updatingExecutionTable)
+	r.reducedNT.SetExecutionTable(&r.updatingExecutionTable)
 }
 
 func (r *Reduction) mergeUpdatingExecutionTableWithUnchangedExecutionTable() {
@@ -84,12 +76,13 @@ func (r *Reduction) addNewExecutionThreadsToExecutionRecord(executionRecord *exe
 
 	switch udpeType := r.globalUdpeRecordBeingConsidered.udpeType(); udpeType {
 	case FPE:
+		// When a node matches an FPE entry point, the thread has found a solution
 		executionRecord.addExecutionThread(nil, r.reducedNT, entryPoint)
 	case RPE:
 		if r.wrappedNT == nil {
 			return
 		}
-		// TODO(vvihorev): what and why?
+		// When a node matches an RPE entry point, the thread has found a context
 		executionRecord.addExecutionThread(r.wrappedNT, nil, entryPoint)
 		childrenOfWrappedNT := r.wrappedNT.Children()
 		for _, child := range childrenOfWrappedNT {

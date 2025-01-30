@@ -51,7 +51,6 @@ func BenchmarkRun(b *testing.B) {
 	if err != nil {
 		return
 	}
-
 	r := gopapageno.NewRunner(
 		xpath.NewLexer(),
 		xpath.NewGrammar(),
@@ -67,9 +66,8 @@ func BenchmarkRun(b *testing.B) {
 	}
 }
 
-func TestSingleQueryExecution(t *testing.T) {
+func TestSingleFPEQueryExecution(t *testing.T) {
 	source := []byte("<html><body></body></html>")
-
 	r := gopapageno.NewRunner(
 		xpath.NewLexer(),
 		xpath.NewGrammar(),
@@ -78,6 +76,7 @@ func TestSingleQueryExecution(t *testing.T) {
 
 	cmd := x.Execute("/body").Against(source).WithNumberOfThreads(1).InVerboseMode()
 	res, err := cmd.Run(r)
+
 	if err != nil {
 		log.Fatal(fmt.Sprintf("%e", err))
 	}
@@ -89,7 +88,7 @@ func TestSingleQueryExecution(t *testing.T) {
 	}
 }
 
-func TestMultipleStepQueryExecution(t *testing.T) {
+func TestMultipleStepFPEQueryExecution(t *testing.T) {
 	source := []byte("<html><body></body></html>")
 
 	r := gopapageno.NewRunner(
@@ -100,6 +99,51 @@ func TestMultipleStepQueryExecution(t *testing.T) {
 
 	cmd := x.Execute("/html/body").Against(source).WithNumberOfThreads(1).InVerboseMode()
 	res, err := cmd.Run(r)
+
+	if err != nil {
+		log.Fatal(fmt.Sprintf("%e", err))
+	}
+	if len(res) != 1 {
+		t.Fatalf("No match found for query, results: %v", res)
+	}
+	if string(source[res[0].Start():res[0].End()+1]) != "<body></body>" {
+		t.Fatalf("%v", string(source[res[0].Start():res[0].End()]))
+	}
+}
+
+func TestSingleRPEQueryExecution(t *testing.T) {
+	source := []byte("<html><body><div></div><div></div></body></html>")
+	r := gopapageno.NewRunner(
+		xpath.NewLexer(),
+		xpath.NewGrammar(),
+		gopapageno.WithConcurrency(1),
+	)
+
+	cmd := x.Execute("\\body").Against(source).WithNumberOfThreads(1).InVerboseMode()
+	res, err := cmd.Run(r)
+
+	if err != nil {
+		log.Fatal(fmt.Sprintf("%e", err))
+	}
+	if len(res) != 1 {
+		t.Fatalf("No match found for query, results: %v", res)
+	}
+	if string(source[res[0].Start():res[0].End()+1]) != "<body></body>" {
+		t.Fatalf("%v", string(source[res[0].Start():res[0].End()]))
+	}
+}
+
+func TestMultipleStepRPEQueryExecution(t *testing.T) {
+	source := []byte("<html><body><div></div><div></div></body></html>")
+	r := gopapageno.NewRunner(
+		xpath.NewLexer(),
+		xpath.NewGrammar(),
+		gopapageno.WithConcurrency(1),
+	)
+
+	cmd := x.Execute("/html/body").Against(source).WithNumberOfThreads(1).InVerboseMode()
+	res, err := cmd.Run(r)
+
 	if err != nil {
 		log.Fatal(fmt.Sprintf("%e", err))
 	}

@@ -14,7 +14,10 @@ func (nt *NonTerminal) String() string {
 	if nt == nil {
 		return "-"
 	}
-	return fmt.Sprintf("E(%p)", nt)
+	if v, ok := nt.node.(*Element); ok {
+		return fmt.Sprintf("E(%s)", v.name)
+	}
+	return fmt.Sprintf("E(%p)", nt.node)
 }
 
 func (nt *NonTerminal) SetExecutionTable(executionTable *executionTable) *NonTerminal {

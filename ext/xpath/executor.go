@@ -79,6 +79,7 @@ func (executorCommand *ExecutorCommand) Run(runner *gopapageno.Runner) (results 
 	executor.source = executorCommand.source
 
 	executor.parseQuery(executorCommand.xpathQuery)
+	logger.Printf("Executing Query: %v", executorCommand.xpathQuery)
 
 	err = executor.executeUDPEsWhileParsing()
 	if err != nil {
