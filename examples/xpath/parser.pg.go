@@ -349,11 +349,11 @@ func NewGrammar() *gopapageno.Grammar {
 			ELEM0.LastChild = CLOSETAG2
 
 			{
-				openTag := OPENTAG1.Value.(xpath.OpenTagSemanticValue)
-				closeTag := CLOSETAG2.Value.(xpath.CloseTagSemanticValue)
+				openTag := OPENTAG1.Value.(*xpath.OpenTagSemanticValue)
+				closeTag := CLOSETAG2.Value.(*xpath.CloseTagSemanticValue)
 
 				element := parserElementsPools[thread].Get()
-				element.SetFromExtremeTags(openTag, closeTag)
+				element.SetFromExtremeTags(*openTag, *closeTag)
 
 				nt := parserNonTerminalPools[thread].Get()
 				reducedNonTerminal := nt.SetNode(element)

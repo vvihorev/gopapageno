@@ -22,10 +22,6 @@ func (globalUdpeTable *globalUdpeTable) newExecutionTable() executionTable {
 	return executionTable(records)
 }
 
-func (globalUdpeTable *globalUdpeTable) actualList() []globalUdpeRecord {
-	return globalUdpeTable.list
-}
-
 func (globalUdpeTable *globalUdpeTable) size() int {
 	return len(globalUdpeTable.list)
 }
@@ -77,9 +73,6 @@ func (globalUdpeRecord *globalUdpeRecord) nudpeRecord() *globalNudpeRecord {
 	return globalUdpeRecord.gNudpeRecord
 }
 
-// TODO(vvihorev): does the XPath evaluator work with a single topmost NUDPE,
-// or the general case is that a NUDPE can have other NUDPEs in predicates?
-// Do we really need to point all UDPEs back to the single NUDPE?
 func (globalUdpeRecord *globalUdpeRecord) setNudpeRecord(nudpeRecord *globalNudpeRecord) {
 	globalUdpeRecord.gNudpeRecord = nudpeRecord
 }

@@ -11,6 +11,7 @@ import (
 	x "github.com/giornetta/gopapageno/ext/xpath"
 )
 
+
 // cpu: AMD Ryzen 7 3750H with Radeon Vega Mobile Gfx  
 
 // Initial Results
@@ -57,13 +58,55 @@ func BenchmarkRun(b *testing.B) {
 		gopapageno.WithConcurrency(1),
 	)
 
-	// ctx := context.Background()
 	for i := 0; i < b.N; i++ {
-		cmd := x.Execute("A2").Against(bytes).WithNumberOfThreads(1)
+		cmd := x.Execute("//PS_PARTKEY/PS_SUPPKEY").Against(bytes).WithNumberOfThreads(1)
 		_, err := cmd.Run(r)
 		if err != nil {
 			log.Fatal(fmt.Sprintf("%e", err))
 		}
 	}
-	// fmt.Println(results)
+}
+
+func TestSingleQueryExecution(t *testing.T) {
+	source := []byte("<html><body></body></html>")
+
+	r := gopapageno.NewRunner(
+		xpath.NewLexer(),
+		xpath.NewGrammar(),
+		gopapageno.WithConcurrency(1),
+	)
+
+	cmd := x.Execute("/body").Against(source).WithNumberOfThreads(1).InVerboseMode()
+	res, err := cmd.Run(r)
+	if err != nil {
+		log.Fatal(fmt.Sprintf("%e", err))
+	}
+	if len(res) != 1 {
+		t.Fatalf("No match found for query, results: %v", res)
+	}
+	if string(source[res[0].Start():res[0].End()+1]) != "<body></body>" {
+		t.Fatalf("%v", string(source[res[0].Start():res[0].End()]))
+	}
+}
+
+func TestMultipleStepQueryExecution(t *testing.T) {
+	source := []byte("<html><body></body></html>")
+
+	r := gopapageno.NewRunner(
+		xpath.NewLexer(),
+		xpath.NewGrammar(),
+		gopapageno.WithConcurrency(1),
+	)
+
+	cmd := x.Execute("/html/body").Against(source).WithNumberOfThreads(1).InVerboseMode()
+	res, err := cmd.Run(r)
+	if err != nil {
+		log.Fatal(fmt.Sprintf("%e", err))
+	}
+	if len(res) != 1 {
+		t.Fatalf("No match found for query, results: %v", res)
+	}
+	if string(source[res[0].Start():res[0].End()+1]) != "<body></body>" {
+		t.Fatalf("%v", string(source[res[0].Start():res[0].End()]))
+	}
 }

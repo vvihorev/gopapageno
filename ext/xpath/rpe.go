@@ -14,69 +14,59 @@ const (
 
 type rpeBuilder struct {
 	state            rpeBuilderState
-	currentInnerTest *rpeInnerTest
+	head *rpeInnerTest
+	nextTestIsBehindAncestorAxis bool
 }
 
-func newRpeBuilder() *rpeBuilder {
-	return new(rpeBuilder)
-}
-
-func (rpeBuilder *rpeBuilder) init() {
-	return
-}
-
-func (rpeBuilder *rpeBuilder) addUdpeTest(udpeTest udpeTest) (ok bool) {
+func (rpeBuilder *rpeBuilder) addUdpeTest(udpeTest udpeTest) {
 	if rpeBuilder.state != expectRpeUdpeTest {
-		ok = false
-		return
+		panic("expected to find a UDPE Test in the query")
 	}
-	defer func() {
-		rpeBuilder.state = expectRpeAxis
-	}()
+	rpeBuilder.state = expectRpeAxis
 
-	ok = true
-	nextRpeInnerTest := &rpeInnerTest{
+	test := &rpeInnerTest{
 		udpeTest:         udpeTest,
-		nextRpeInnerTest: rpeBuilder.currentInnerTest,
+		behindAncestorAxis: rpeBuilder.nextTestIsBehindAncestorAxis,
 	}
-	rpeBuilder.currentInnerTest = nextRpeInnerTest
-	return
+	rpeBuilder.nextTestIsBehindAncestorAxis = false
+
+	if rpeBuilder.head == nil {
+		rpeBuilder.head = test
+		return
+	} 
+	n := rpeBuilder.head
+	for n.next != nil {
+		n = n.next 
+	}
+	n.next = test
 }
 
-func (rpeBuilder *rpeBuilder) addAxis(axis axis) (ok bool) {
+func (rpeBuilder *rpeBuilder) addAxis(axis axis) {
 	if rpeBuilder.state != expectRpeAxis {
-		ok = false
-		return
+		panic("expected to find an Axis in the query")
 	}
-	defer func() {
-		rpeBuilder.state = expectRpeUdpeTest
-	}()
+	rpeBuilder.state = expectRpeUdpeTest
 
-	ok = true
-	if rpeBuilder.currentInnerTest == nil {
-		return
+	if rpeBuilder.head != nil && axis == ancestorOrSelf {
+		rpeBuilder.nextTestIsBehindAncestorAxis = true
 	}
-	if axis == ancestorOrSelf {
-		rpeBuilder.currentInnerTest.behindAncestorAxis = true
-	}
-	return
 }
 
-func (rpeBuilder *rpeBuilder) end() (result *rpe) {
-	if rpeBuilder.currentInnerTest != nil {
-		rpeBuilder.currentInnerTest.isEntry = true
-		result = &rpe{
-			entryTest: rpeBuilder.currentInnerTest,
-		}
+func (rpeBuilder *rpeBuilder) end() *rpe {
+	if rpeBuilder.head == nil {
+		panic("attempted to build an empty RPE (no UDPE Tests created)")
 	}
-	return
+	rpeBuilder.head.isEntry = true
+	return &rpe{
+		entryTest: rpeBuilder.head,
+	}
 }
 
 type rpeInnerTest struct {
+	udpeTest           udpeTest
+	next   *rpeInnerTest
 	isEntry            bool
 	behindAncestorAxis bool
-	udpeTest           udpeTest
-	nextRpeInnerTest   *rpeInnerTest
 }
 
 func (rpeInnerTest *rpeInnerTest) matchWithReductionOf(n interface{}) (predicate *predicate, next, newTest *rpeInnerTest, hasNewTest, ok bool) {
@@ -87,21 +77,21 @@ func (rpeInnerTest *rpeInnerTest) matchWithReductionOf(n interface{}) (predicate
 			ok = true
 			next = rpeInnerTest
 			if doesUdpeTestMatches {
-				newTest = rpeInnerTest.nextRpeInnerTest
+				newTest = rpeInnerTest.next
 				hasNewTest = true
 			}
 		case doesUdpeTestMatches:
 			ok = true
-			next = rpeInnerTest.nextRpeInnerTest
+			next = rpeInnerTest.next
 		default:
 			ok = false
 		}
 	} else {
 		switch {
-		case rpeInnerTest.behindAncestorAxis && rpeInnerTest.nextRpeInnerTest != nil && rpeInnerTest.nextRpeInnerTest.behindAncestorAxis:
+		case rpeInnerTest.behindAncestorAxis && rpeInnerTest.next != nil && rpeInnerTest.next.behindAncestorAxis:
 			ok = true
 			if doesUdpeTestMatches {
-				next = rpeInnerTest.nextRpeInnerTest
+				next = rpeInnerTest.next
 			} else {
 				next = rpeInnerTest
 			}
@@ -109,12 +99,12 @@ func (rpeInnerTest *rpeInnerTest) matchWithReductionOf(n interface{}) (predicate
 			ok = true
 			next = rpeInnerTest
 			if doesUdpeTestMatches {
-				newTest = rpeInnerTest.nextRpeInnerTest
+				newTest = rpeInnerTest.next
 				hasNewTest = true
 			}
 		case doesUdpeTestMatches:
 			ok = true
-			next = rpeInnerTest.nextRpeInnerTest
+			next = rpeInnerTest.next
 		default:
 			ok = false
 		}
@@ -141,20 +131,20 @@ func (rpeInnerTest *rpeInnerTest) String() (result string) {
 }
 
 //concrete rpe path pattern implementation
-type rpePathPathPattern struct {
-	currentTest *rpeInnerTest
+type rpePathPattern struct {
+	head *rpeInnerTest
 }
 
-func (rpePP *rpePathPathPattern) isEmpty() bool {
-	return rpePP.currentTest == nil
+func (rpePP *rpePathPattern) isEmpty() bool {
+	return rpePP.head == nil
 }
 
-func (rpePP *rpePathPathPattern) matchWithReductionOf(n interface{}, doUpdate bool) (predicate *predicate, newPathPattern pathPattern, ok bool) {
+func (rpePP *rpePathPattern) matchWithReductionOf(n interface{}, doUpdate bool) (predicate *predicate, newPathPattern pathPattern, ok bool) {
 	if rpePP.isEmpty() {
 		panic(`rpe path pattern error: trying a match for an empty path pattern`)
 	}
 
-	predicate, next, newTest, hasNewTest, ok := rpePP.currentTest.matchWithReductionOf(n)
+	predicate, next, newTest, hasNewTest, ok := rpePP.head.matchWithReductionOf(n)
 	if !ok {
 		return
 	}
@@ -163,15 +153,15 @@ func (rpePP *rpePathPathPattern) matchWithReductionOf(n interface{}, doUpdate bo
 		return
 	}
 
-	rpePP.currentTest = next
+	rpePP.head = next
 	if hasNewTest {
-		newPathPattern = &rpePathPathPattern{newTest}
+		newPathPattern = &rpePathPattern{newTest}
 	}
 	return
 }
 
-func (rpePP *rpePathPathPattern) String() (result string) {
-	result = rpeStringifyUtil(rpePP.currentTest, rpePathPatternMode)
+func (rpePP *rpePathPattern) String() (result string) {
+	result = rpeStringifyUtil(rpePP.head, rpePathPatternMode)
 
 	if !strings.HasPrefix(result, `\\`) {
 		result = strings.TrimPrefix(result, `\`)
@@ -181,11 +171,12 @@ func (rpePP *rpePathPathPattern) String() (result string) {
 
 //concrete rpe implementation
 type rpe struct {
+	udpe
 	entryTest *rpeInnerTest
 }
 
 func (rpe *rpe) entryPoint() pathPattern {
-	return &rpePathPathPattern{rpe.entryTest}
+	return &rpePathPattern{rpe.entryTest}
 }
 
 func (rpe *rpe) String() string {
@@ -201,7 +192,7 @@ const (
 )
 
 func rpeStringifyUtil(currentTest *rpeInnerTest, mode rpeStringificationMode) (result string) {
-	for ct := currentTest; ct != nil; ct = ct.nextRpeInnerTest {
+	for ct := currentTest; ct != nil; ct = ct.next {
 		result += ct.String()
 	}
 	if mode == rpePathPatternMode {

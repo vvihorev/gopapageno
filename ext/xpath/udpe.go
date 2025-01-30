@@ -57,23 +57,20 @@ type pathPattern interface {
 	String() string
 }
 
+// Uniformly Directed Path Expression - part of a query with axis pointing in
+// the same direction.
+//
+// Each UDPE step has a test: a check to be performed whed a step is matched.
 type udpe interface {
 	entryPoint() pathPattern
 	String() string
 }
 
-type udpeBuilder interface {
-	init()
-	addUdpeTest(udpeTest udpeTest) (ok bool)
-	addAxis(axis axis) (ok bool)
-	end() udpe
-}
-
 type elementTest struct {
-	wildCard bool
-	name     string
 	attr     *Attribute
 	pred     *predicate
+	wildCard bool
+	name     string
 }
 
 func newElementTest(name string, attribute *Attribute, predicate *predicate) *elementTest {

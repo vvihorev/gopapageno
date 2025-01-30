@@ -6,10 +6,6 @@ import (
 
 type executionTableIterableCallback func(id int, er executionRecord) (doBreak bool)
 
-// TODO(vvihorev): maybe store the reference to global NUDPE in the table, instead
-// of duplicating it to all records in the table.
-// TODO(vvihorev): if we only access records through the table, records dont need
-// to teep a pointer to their table.
 type executionTable []executionRecord
 
 func (et executionTable) recordByID(id int) (execRecord *executionRecord, err error) {
@@ -99,7 +95,7 @@ func (er *executionRecord) addExecutionThread(ctx, sol *NonTerminal, pp pathPatt
 		},
 	}
 	er.threads.append(et)
-	logger.Printf("adding execution thread: %v", et)
+	logger.Printf("adding execution thread: %v", et.String())
 	return
 }
 
@@ -138,10 +134,10 @@ func (er *executionRecord) updateAllExecutionThreads(reduced *NonTerminal) {
 		//The path pattern of the execution thread may be empty if the thread is speculative
 		//and it's not completed because of some unchecked speculation
 		if !etPathPattern.isEmpty() {
-			etReprBeforeUpdate := fmt.Sprintf("%v", et)
+			etReprBeforeUpdate := fmt.Sprintf("%v", et.String())
 			predicate, newPathPattern, ok := etPathPattern.matchWithReductionOf(reduced.Node(), true)
 			if ok {
-				etReprAfterUpdate := fmt.Sprintf("%v", et)
+				etReprAfterUpdate := fmt.Sprintf("%v", et.String())
 				logger.Printf("updated execution thread: %s -> %s", etReprBeforeUpdate, etReprAfterUpdate)
 
 				var etReceivingSpeculation = et

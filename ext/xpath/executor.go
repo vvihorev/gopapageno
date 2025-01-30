@@ -3,9 +3,10 @@ package xpath
 import (
 	"context"
 	"fmt"
-	"github.com/giornetta/gopapageno"
 	"log"
 	"os"
+
+	"github.com/giornetta/gopapageno"
 )
 
 const defaultExecutorNumberOfThreads = 1
@@ -28,7 +29,6 @@ const (
 
 type executor struct {
 	numberOfThreads         int
-	xpathQueryToBeExecuted  string
 	mainQueryType           mainQueryType
 	resultingExecutionTable *executionTable
 
@@ -52,24 +52,6 @@ func Execute(xpathQuery string) *ExecutorCommand {
 	}
 }
 
-func (executorCommand *ExecutorCommand) Execute(xpathQuery string) *ExecutorCommand {
-	executorCommand.xpathQuery = xpathQuery
-	return executorCommand
-}
-
-func (executorCommand *ExecutorCommand) Against(source []byte) *ExecutorCommand {
-	executorCommand.source = source
-	return executorCommand
-}
-
-// WithNumberOfThreads specify the number of threads to be used
-// to execute the XPath query
-func WithNumberOfThreads(numberOfThreads int) *ExecutorCommand {
-	return &ExecutorCommand{
-		numberOfThreads: numberOfThreads,
-	}
-}
-
 func (executorCommand *ExecutorCommand) WithNumberOfThreads(numberOfThreads int) *ExecutorCommand {
 	executorCommand.numberOfThreads = numberOfThreads
 	return executorCommand
@@ -81,6 +63,11 @@ func (executorCommand *ExecutorCommand) InVerboseMode() *ExecutorCommand {
 	return executorCommand
 }
 
+func (executorCommand *ExecutorCommand) Against(source []byte) *ExecutorCommand {
+	executorCommand.source = source
+	return executorCommand
+}
+
 // Run takes care of executing the command and to return
 func (executorCommand *ExecutorCommand) Run(runner *gopapageno.Runner) (results []Position, err error) {
 	executor := &executor{
@@ -88,23 +75,16 @@ func (executorCommand *ExecutorCommand) Run(runner *gopapageno.Runner) (results 
 		runner:          runner,
 	}
 
-	executor.initSingletonDataStructures()
-	defer executor.freeSingletonDataStructures()
-
-	executor.setXPathQueryToBeExecuted(executorCommand.xpathQuery)
-	executor.setNumberOfThreadsToBeUsedToParseDocument(executorCommand.numberOfThreads)
+	executor.numberOfThreads = executorCommand.numberOfThreads
 	executor.source = executorCommand.source
 
-	err = executor.parseXPathQueryAndPopulateSingletonsDataStructures()
-	if err != nil {
-		return
-	}
+	executor.parseQuery(executorCommand.xpathQuery)
 
 	err = executor.executeUDPEsWhileParsing()
 	if err != nil {
 		return
 	}
-
+	
 	err = executor.completeExecutionOfUDPEsAndNUDPEs()
 	if err != nil {
 		return
@@ -115,51 +95,109 @@ func (executorCommand *ExecutorCommand) Run(runner *gopapageno.Runner) (results 
 	return
 }
 
-func (executor *executor) initSingletonDataStructures() {
+func (executor executor) parseQuery(xpathQuery string) {
 	udpeGlobalTable = new(globalUdpeTable)
 	nudpeGlobalTable = new(globalNudpeTable)
-}
 
-func (executor *executor) freeSingletonDataStructures() {
-	udpeGlobalTable = nil
-	nudpeGlobalTable = nil
-}
-
-func (executor *executor) setXPathQueryToBeExecuted(xpathQuery string) {
-	executor.xpathQueryToBeExecuted = xpathQuery
-}
-
-func (executor *executor) setNumberOfThreadsToBeUsedToParseDocument(numberOfThreads int) {
-	executor.numberOfThreads = numberOfThreads
-}
-
-func (executor *executor) parseXPathQueryAndPopulateSingletonsDataStructures() (err error) {
-
-	switch executor.xpathQueryToBeExecuted {
-	case "A1":
-		executor.A1()
-	case "A2":
-		executor.A2()
-	case "A3":
-		executor.A3()
-	case "A4":
-		executor.A4()
-	case "A5":
-		executor.A5()
-	case "A6":
-		executor.A6()
-	case "A7":
-		executor.A7()
-	case "A8":
-		executor.A8()
-	case "B1":
-		executor.B1()
-	case "B2":
-		executor.B2()
-	default:
-		return fmt.Errorf("unknown query: %s", executor.xpathQueryToBeExecuted)
+	i := 0
+	peek := func() byte {
+		if i+1 >= len(xpathQuery) {
+			return 0
+		}
+		return xpathQuery[i+1]
 	}
-	return nil
+
+	readTag := func() string {
+		start := i
+		for i < len(xpathQuery) && xpathQuery[i] != '[' && xpathQuery[i] != '/' && xpathQuery[i] != '\\' {
+			i++
+		}
+		if i == start+1 {
+			panic("malformed query: expected to find a tag name in Test")
+		}
+		return xpathQuery[start:i]
+	}
+
+	var curFpe *fpeBuilder
+	var curRpe *rpeBuilder
+	hasFpe := false
+	hasRpe := false
+
+	// TODO(vvihorev): support predicates
+	// p := &predicate{
+	// 	expressionVector: []operator{and(), atom(), atom()},
+	// 	atomsLookup: map[atomID]int{
+	// 		atomID(fpe1ID): 1,
+	// 		atomID(fpe2ID): 2,
+	// 	},
+	// }
+	// TODO(vvihorev): support attributes
+	// TODO(vvihorev): support text builtin
+	for i < len(xpathQuery) {
+		c := xpathQuery[i]
+
+		switch c {
+		case '/':
+			hasFpe = true
+			if curFpe == nil {
+				curFpe = &fpeBuilder{}
+			}
+			if curRpe != nil {
+				udpeGlobalTable.addRpe(curRpe.end())
+				curRpe = nil
+			}
+
+			if peek() == '/' {
+				curFpe.addAxis(descendantOrSelf)
+				i += 2
+			} else if peek() == 0 {
+				panic("malformed query: expected to find Test after forward Axis")
+			} else {
+				curFpe.addAxis(child)
+				i += 1
+			}
+
+			curFpe.addUdpeTest(newElementTest(readTag(), nil, nil))
+
+		case '\\':
+			hasRpe = true
+			if curRpe == nil {
+				curRpe = &rpeBuilder{}
+			}
+			if curFpe != nil {
+				udpeGlobalTable.addFpe(curFpe.end())
+				curFpe = nil
+			}
+
+			if peek() == '\\' {
+				curRpe.addAxis(ancestorOrSelf)
+				i += 2
+			} else if peek() == 0 {
+				panic("malformed query: expected to find Test after reverse Axis")
+			} else {
+				curRpe.addAxis(parent)
+				i += 1
+			}
+
+			curRpe.addUdpeTest(newElementTest(readTag(), nil, nil))
+
+		default:
+			panic("malformed query: expected an Axis")
+		}
+	}
+
+	if curFpe != nil {
+		udpeGlobalTable.addFpe(curFpe.end())
+	}
+	if curRpe != nil {
+		udpeGlobalTable.addRpe(curRpe.end())
+	}
+
+	if hasFpe && hasRpe {
+		executor.mainQueryType = NUDPE
+	} else {
+		executor.mainQueryType = UDPE
+	}
 }
 
 func (executor *executor) executeUDPEsWhileParsing() error {
@@ -255,350 +293,3 @@ func (executor *executor) retrieveResults() (results []Position) {
 	return
 }
 
-func (executor *executor) A1() {
-	executor.mainQueryType = UDPE
-	/* /site/closed_auctions/closed_auction/annotation/description/Text/keyword */
-
-	fpeBuilder1 := newFpeBuilder()
-	fpeBuilder1.addAxis(child)
-	fpeBuilder1.addUdpeTest(newElementTest("site", nil, nil))
-	fpeBuilder1.addAxis(child)
-	fpeBuilder1.addUdpeTest(newElementTest("closed_auctions", nil, nil))
-	fpeBuilder1.addAxis(child)
-	fpeBuilder1.addUdpeTest(newElementTest("closed_auction", nil, nil))
-	fpeBuilder1.addAxis(child)
-	fpeBuilder1.addUdpeTest(newElementTest("annotation", nil, nil))
-	fpeBuilder1.addAxis(child)
-	fpeBuilder1.addUdpeTest(newElementTest("description", nil, nil))
-	fpeBuilder1.addAxis(child)
-	fpeBuilder1.addUdpeTest(newElementTest("Text", nil, nil))
-	fpeBuilder1.addAxis(child)
-	fpeBuilder1.addUdpeTest(newElementTest("keyword", nil, nil))
-
-	udpeGlobalTable.addFpe(fpeBuilder1.end())
-}
-
-func (executor *executor) A2() {
-	executor.mainQueryType = UDPE
-	/* //closed_auction//keyword */
-
-	fpeBuilder1 := newFpeBuilder()
-	fpeBuilder1.addAxis(descendantOrSelf)
-	fpeBuilder1.addUdpeTest(newElementTest("closed_auction", nil, nil))
-	fpeBuilder1.addAxis(descendantOrSelf)
-	fpeBuilder1.addUdpeTest(newElementTest("keyword", nil, nil))
-
-	udpeGlobalTable.addFpe(fpeBuilder1.end())
-}
-
-func (executor *executor) A3() {
-	executor.mainQueryType = UDPE
-	/* /site/closed_auctions/closed_auction//keyword */
-
-	fpeBuilder1 := newFpeBuilder()
-	fpeBuilder1.addAxis(child)
-	fpeBuilder1.addUdpeTest(newElementTest("site", nil, nil))
-	fpeBuilder1.addAxis(child)
-	fpeBuilder1.addUdpeTest(newElementTest("closed_auctions", nil, nil))
-	fpeBuilder1.addAxis(child)
-	fpeBuilder1.addUdpeTest(newElementTest("closed_auction", nil, nil))
-	fpeBuilder1.addAxis(descendantOrSelf)
-	fpeBuilder1.addUdpeTest(newElementTest("keyword", nil, nil))
-
-	udpeGlobalTable.addFpe(fpeBuilder1.end())
-}
-
-func (executor *executor) A4() {
-	executor.mainQueryType = UDPE
-
-	/* p = /closed_auction/annotation/description/Text/keyword */
-
-	fpeBuilder1 := newFpeBuilder()
-	fpeBuilder1.addAxis(child)
-	fpeBuilder1.addUdpeTest(newElementTest("closed_auction", nil, nil))
-	fpeBuilder1.addAxis(child)
-	fpeBuilder1.addUdpeTest(newElementTest("annotation", nil, nil))
-	fpeBuilder1.addAxis(child)
-	fpeBuilder1.addUdpeTest(newElementTest("description", nil, nil))
-	fpeBuilder1.addAxis(child)
-	fpeBuilder1.addUdpeTest(newElementTest("Text", nil, nil))
-	fpeBuilder1.addAxis(child)
-	fpeBuilder1.addUdpeTest(newElementTest("keyword", nil, nil))
-
-	fpeID, _ := udpeGlobalTable.addFpe(fpeBuilder1.end())
-
-	p := &predicate{
-		expressionVector: []operator{atom()},
-		atomsLookup: map[atomID]int{
-			atomID(fpeID): 0,
-		},
-	}
-
-	/* /site/closed_auctions/closed_auction[p]/date */
-
-	fpeBuilder2 := newFpeBuilder()
-	fpeBuilder2.addAxis(child)
-	fpeBuilder2.addUdpeTest(newElementTest("site", nil, nil))
-	fpeBuilder2.addAxis(child)
-	fpeBuilder2.addUdpeTest(newElementTest("closed_auctions", nil, nil))
-	fpeBuilder2.addAxis(child)
-	fpeBuilder2.addUdpeTest(newElementTest("closed_auction", nil, p))
-	fpeBuilder2.addAxis(child)
-	fpeBuilder2.addUdpeTest(newElementTest("date", nil, nil))
-
-	udpeGlobalTable.addFpe(fpeBuilder2.end())
-}
-
-func (executor *executor) A5() {
-	executor.mainQueryType = UDPE
-
-	/* p = closed_auction//keyword */
-	fpeBuilder1 := newFpeBuilder()
-	fpeBuilder1.addAxis(child)
-	fpeBuilder1.addUdpeTest(newElementTest("closed_auction", nil, nil))
-	fpeBuilder1.addAxis(descendantOrSelf)
-	fpeBuilder1.addUdpeTest(newElementTest("keyword", nil, nil))
-
-	fpeID, _ := udpeGlobalTable.addFpe(fpeBuilder1.end())
-
-	p := &predicate{
-		expressionVector: []operator{atom()},
-		atomsLookup: map[atomID]int{
-			atomID(fpeID): 0,
-		},
-	}
-
-	/* /site/closed_auctions/closed_auction[p]/date */
-	fpeBuilder2 := newFpeBuilder()
-	fpeBuilder2.addAxis(child)
-	fpeBuilder2.addUdpeTest(newElementTest("site", nil, nil))
-	fpeBuilder2.addAxis(child)
-	fpeBuilder2.addUdpeTest(newElementTest("closed_auctions", nil, nil))
-	fpeBuilder2.addAxis(child)
-	fpeBuilder2.addUdpeTest(newElementTest("closed_auction", nil, p))
-	fpeBuilder2.addAxis(child)
-	fpeBuilder2.addUdpeTest(newElementTest("date", nil, nil))
-
-	udpeGlobalTable.addFpe(fpeBuilder2.end())
-}
-
-func (executor *executor) A6() {
-	executor.mainQueryType = UDPE
-
-	/* /person/profile/gender */
-	fpeBuilder1 := newFpeBuilder()
-	fpeBuilder1.addAxis(child)
-	fpeBuilder1.addUdpeTest(newElementTest("person", nil, nil))
-	fpeBuilder1.addAxis(child)
-	fpeBuilder1.addUdpeTest(newElementTest("profile", nil, nil))
-	fpeBuilder1.addAxis(child)
-	fpeBuilder1.addUdpeTest(newElementTest("gender", nil, nil))
-
-	/* /person/profile/age */
-	fpeBuilder2 := newFpeBuilder()
-	fpeBuilder2.addAxis(child)
-	fpeBuilder2.addUdpeTest(newElementTest("person", nil, nil))
-	fpeBuilder2.addAxis(child)
-	fpeBuilder2.addUdpeTest(newElementTest("profile", nil, nil))
-	fpeBuilder2.addAxis(child)
-	fpeBuilder2.addUdpeTest(newElementTest("age", nil, nil))
-
-	fpe1ID, _ := udpeGlobalTable.addFpe(fpeBuilder1.end())
-	fpe2ID, _ := udpeGlobalTable.addFpe(fpeBuilder2.end())
-
-	p := &predicate{
-		expressionVector: []operator{and(), atom(), atom()},
-		atomsLookup: map[atomID]int{
-			atomID(fpe1ID): 1,
-			atomID(fpe2ID): 2,
-		},
-	}
-
-	/* /site/people/person[p]/name */
-	fpebuilder3 := newFpeBuilder()
-	fpebuilder3.addAxis(child)
-	fpebuilder3.addUdpeTest(newElementTest("site", nil, nil))
-	fpebuilder3.addAxis(child)
-	fpebuilder3.addUdpeTest(newElementTest("people", nil, nil))
-	fpebuilder3.addAxis(child)
-	fpebuilder3.addUdpeTest(newElementTest("person", nil, p))
-	fpebuilder3.addAxis(child)
-	fpebuilder3.addUdpeTest(newElementTest("name", nil, nil))
-
-	udpeGlobalTable.addFpe(fpebuilder3.end())
-}
-
-func (executor *executor) A7() {
-	executor.mainQueryType = UDPE
-
-	/* /person/phone */
-	fpeBuilder1 := newFpeBuilder()
-	fpeBuilder1.addAxis(child)
-	fpeBuilder1.addUdpeTest(newElementTest("person", nil, nil))
-	fpeBuilder1.addAxis(child)
-	fpeBuilder1.addUdpeTest(newElementTest("phone", nil, nil))
-
-	/* /person/homepage */
-	fpeBuilder2 := newFpeBuilder()
-	fpeBuilder2.addAxis(child)
-	fpeBuilder2.addUdpeTest(newElementTest("person", nil, nil))
-	fpeBuilder2.addAxis(child)
-	fpeBuilder2.addUdpeTest(newElementTest("homepage", nil, nil))
-
-	fpe1ID, _ := udpeGlobalTable.addFpe(fpeBuilder1.end())
-	fpe2ID, _ := udpeGlobalTable.addFpe(fpeBuilder2.end())
-
-	p := &predicate{
-		expressionVector: []operator{or(), atom(), atom()},
-		atomsLookup: map[atomID]int{
-			atomID(fpe1ID): 1,
-			atomID(fpe2ID): 2,
-		},
-	}
-
-	/* /site/people/person[p]/name */
-	fpebuilder3 := newFpeBuilder()
-	fpebuilder3.addAxis(child)
-	fpebuilder3.addUdpeTest(newElementTest("site", nil, nil))
-	fpebuilder3.addAxis(child)
-	fpebuilder3.addUdpeTest(newElementTest("people", nil, nil))
-	fpebuilder3.addAxis(child)
-	fpebuilder3.addUdpeTest(newElementTest("person", nil, p))
-	fpebuilder3.addAxis(child)
-	fpebuilder3.addUdpeTest(newElementTest("name", nil, nil))
-
-	udpeGlobalTable.addFpe(fpebuilder3.end())
-
-}
-
-func (executor *executor) A8() {
-	executor.mainQueryType = UDPE
-
-	fpeBuilder1 := newFpeBuilder()
-	fpeBuilder1.addAxis(child)
-	fpeBuilder1.addUdpeTest(newElementTest("person", nil, nil))
-	fpeBuilder1.addAxis(child)
-	fpeBuilder1.addUdpeTest(newElementTest("address", nil, nil))
-
-	fpeBuilder2 := newFpeBuilder()
-	fpeBuilder2.addAxis(child)
-	fpeBuilder2.addUdpeTest(newElementTest("person", nil, nil))
-	fpeBuilder2.addAxis(child)
-	fpeBuilder2.addUdpeTest(newElementTest("phone", nil, nil))
-
-	fpeBuilder3 := newFpeBuilder()
-	fpeBuilder3.addAxis(child)
-	fpeBuilder3.addUdpeTest(newElementTest("person", nil, nil))
-	fpeBuilder3.addAxis(child)
-	fpeBuilder3.addUdpeTest(newElementTest("homepage", nil, nil))
-
-	fpeBuilder4 := newFpeBuilder()
-	fpeBuilder4.addAxis(child)
-	fpeBuilder4.addUdpeTest(newElementTest("person", nil, nil))
-	fpeBuilder4.addAxis(child)
-	fpeBuilder4.addUdpeTest(newElementTest("creditcard", nil, nil))
-
-	fpeBuilder5 := newFpeBuilder()
-	fpeBuilder5.addAxis(child)
-	fpeBuilder5.addUdpeTest(newElementTest("person", nil, nil))
-	fpeBuilder5.addAxis(child)
-	fpeBuilder5.addUdpeTest(newElementTest("profile", nil, nil))
-
-	fpe1ID, _ := udpeGlobalTable.addFpe(fpeBuilder1.end())
-	fpe2ID, _ := udpeGlobalTable.addFpe(fpeBuilder2.end())
-	fpe3ID, _ := udpeGlobalTable.addFpe(fpeBuilder3.end())
-	fpe4ID, _ := udpeGlobalTable.addFpe(fpeBuilder4.end())
-	fpe5ID, _ := udpeGlobalTable.addFpe(fpeBuilder5.end())
-
-	p := &predicate{
-		expressionVector: []operator{and(), atom(), and(), nil, nil, or(), or(), nil, nil, nil, nil, atom(), atom(), atom(), atom()},
-		atomsLookup: map[atomID]int{
-			atomID(fpe1ID): 1,
-			atomID(fpe2ID): 11,
-			atomID(fpe3ID): 12,
-			atomID(fpe4ID): 13,
-			atomID(fpe5ID): 14,
-		},
-	}
-
-	/* /site/people/person[p]/name */
-	fpebuilder6 := newFpeBuilder()
-	fpebuilder6.addAxis(child)
-	fpebuilder6.addUdpeTest(newElementTest("site", nil, nil))
-	fpebuilder6.addAxis(child)
-	fpebuilder6.addUdpeTest(newElementTest("people", nil, nil))
-	fpebuilder6.addAxis(child)
-	fpebuilder6.addUdpeTest(newElementTest("person", nil, p))
-	fpebuilder6.addAxis(child)
-	fpebuilder6.addUdpeTest(newElementTest("name", nil, nil))
-
-	udpeGlobalTable.addFpe(fpebuilder6.end())
-}
-
-func (executor *executor) B1() {
-	executor.mainQueryType = UDPE
-
-	rpeBuilder1 := newRpeBuilder()
-	rpeBuilder1.addAxis(parent)
-	rpeBuilder1.addUdpeTest(newElementTest("namerica", nil, nil))
-	rpeBuilder1.addAxis(parent)
-	rpeBuilder1.addUdpeTest(newElementTest("samerica", nil, nil))
-
-	rpe1ID, _ := udpeGlobalTable.addRpe(rpeBuilder1.end())
-
-	p := &predicate{
-		expressionVector: []operator{atom()},
-		atomsLookup: map[atomID]int{
-			atomID(rpe1ID): 0,
-		},
-	}
-
-	/* /site/regions/namerica/item[p]/name */
-	fpebuilder2 := newFpeBuilder()
-	fpebuilder2.addAxis(child)
-	fpebuilder2.addUdpeTest(newElementTest("site", nil, nil))
-	fpebuilder2.addAxis(child)
-	fpebuilder2.addUdpeTest(newElementTest("regions", nil, nil))
-	fpebuilder2.addAxis(child)
-	fpebuilder2.addUdpeTest(newElementTest("*", nil, nil))
-	fpebuilder2.addAxis(child)
-	fpebuilder2.addUdpeTest(newElementTest("item", nil, p))
-	fpebuilder2.addAxis(child)
-	fpebuilder2.addUdpeTest(newElementTest("name", nil, nil))
-
-	udpeGlobalTable.addFpe(fpebuilder2.end())
-}
-
-func (executor *executor) B2() {
-	executor.mainQueryType = NUDPE
-	nudpeRec := nudpeGlobalTable.addNudpeRecord(3)
-
-	fpeBuilder1 := newFpeBuilder()
-	fpeBuilder1.addAxis(descendantOrSelf)
-	fpeBuilder1.addUdpeTest(newElementTest("keyword", nil, nil))
-
-	rpeBuilder1 := newRpeBuilder()
-	rpeBuilder1.addAxis(ancestorOrSelf)
-	rpeBuilder1.addUdpeTest(newElementTest("listitem", nil, nil))
-
-	fpeBuilder2 := newFpeBuilder()
-	fpeBuilder2.addAxis(child)
-	fpeBuilder2.addUdpeTest(newElementTest("listitem", nil, nil))
-	fpeBuilder2.addAxis(child)
-	fpeBuilder2.addUdpeTest(newElementTest("Text", nil, nil))
-	fpeBuilder2.addAxis(child)
-	fpeBuilder2.addUdpeTest(newElementTest("keyword", nil, nil))
-
-	fpe1 := fpeBuilder1.end()
-	_, rec1 := udpeGlobalTable.addFpe(fpe1)
-	rec1.setNudpeRecord(nudpeRec)
-
-	rpe1 := rpeBuilder1.end()
-	_, rec2 := udpeGlobalTable.addRpe(rpe1)
-	rec2.setNudpeRecord(nudpeRec)
-
-	fpe2 := fpeBuilder2.end()
-	_, rec3 := udpeGlobalTable.addFpe(fpe2)
-	rec3.setNudpeRecord(nudpeRec)
-
-}
