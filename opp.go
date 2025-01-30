@@ -320,7 +320,6 @@ func (w *oppWorker) parse(ctx context.Context, stack *OPPStack, tokens *LOS[Toke
 		}
 	}
 
-	// TODO(vvihorev): verify this works for N > 1 workers
 	// TODO(vvihorev):Catches an infinite loop on xpath, A1 query, testbug.xml example
 	// reduce the axiom once all the input tokens have been parsed
 	// parserStack := stack.parserStack.LOPS.head

@@ -1,5 +1,6 @@
 package xpath
 
+// TODO(vvihorev): support NUDPEs
 type globalNudpeTable struct {
 	list []*globalNudpeRecord
 }

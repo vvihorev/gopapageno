@@ -26,10 +26,8 @@ func (r *Reduction) Setup(reducedNT, generativeNT, wrappedNT *NonTerminal) {
 }
 
 func (r *Reduction) Handle() {
-	logger.Printf("REDUCTION: %v <- %v <> %v </>", r.reducedNT, r.generativeNT, r.wrappedNT)
 	r.iterateOverAllGlobalUdpeRecordsAndExecuteMainPhases()
 	r.prepareUpdatingExecutionTableToBePropagatedToReducedNT()
-	logger.Printf("%v", r.updatingExecutionTable.String())
 	r.propagateUpdatingExecutionTableToReducedNT()
 }
 

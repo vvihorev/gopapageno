@@ -232,3 +232,4 @@ $RECYCLE.BIN/
 # Ignore tags files for vim/emacs users
 tags
 TAGS
+*.prof

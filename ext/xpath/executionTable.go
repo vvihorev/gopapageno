@@ -105,7 +105,7 @@ func (er *executionRecord) addExecutionThread(ctx, sol *NonTerminal, pp pathPatt
 		},
 	}
 	er.threads.append(et)
-	logger.Printf("adding execution thread: %v", et.String())
+	// logger.Printf("adding execution thread: %v", et.String())
 	return
 }
 
@@ -144,11 +144,11 @@ func (er *executionRecord) updateAllExecutionThreads(reduced *NonTerminal) {
 		//The path pattern of the execution thread may be empty if the thread is speculative
 		//and it's not completed because of some unchecked speculation
 		if !etPathPattern.isEmpty() {
-			etReprBeforeUpdate := fmt.Sprintf("%v", er.threads.array[i].String())
+			// etReprBeforeUpdate := fmt.Sprintf("%v", er.threads.array[i].String())
 			predicate, newPathPattern, ok := etPathPattern.matchWithReductionOf(reduced.Node(), true)
 			if ok {
-				etReprAfterUpdate := fmt.Sprintf("%v", er.threads.array[i].String())
-				logger.Printf("updated execution thread: %s -> %s", etReprBeforeUpdate, etReprAfterUpdate)
+				// etReprAfterUpdate := fmt.Sprintf("%v", er.threads.array[i].String())
+				// logger.Printf("updated execution thread: %s -> %s", etReprBeforeUpdate, etReprAfterUpdate)
 
 				var etReceivingSpeculation = er.threads.array[i]
 				if newPathPattern != nil {
@@ -157,11 +157,11 @@ func (er *executionRecord) updateAllExecutionThreads(reduced *NonTerminal) {
 				}
 
 				if predicate != nil {
-					sp := etReceivingSpeculation.addSpeculation(predicate, *reduced)
-					logger.Printf("adding speculation: %v to execution thread %v", sp, er.threads.array[i])
+					_ = etReceivingSpeculation.addSpeculation(predicate, *reduced)
+					// logger.Printf("adding speculation: %v to execution thread %v", sp, er.threads.array[i])
 				}
 			} else {
-				logger.Printf("removing execution thread beacuse path pattern does NOT match: %s", etReprBeforeUpdate)
+				// logger.Printf("removing execution thread beacuse path pattern does NOT match: %s", etReprBeforeUpdate)
 				er.removeExecutionThread(er.threads.array[i], false)
 			}
 		}
@@ -203,7 +203,7 @@ func (er *executionRecord) saveReducedNTAsContextOrSolutionlIntoCompletedExecuti
 func (er *executionRecord) produceContextSolutionsOutOfCompletedNonSpeculativeExecutionThreads() {
 	for i := 0; i < er.threads.size; i++ {
 		if er.threads.array[i].pp.isEmpty() && !er.threads.array[i].isSpeculative() {
-			logger.Printf("adding context-solution: (%v , %v)", er.threads.array[i].ctx, er.threads.array[i].sol)
+			// logger.Printf("adding context-solution: (%v , %v)", er.threads.array[i].ctx, er.threads.array[i].sol)
 			er.ctxSols.addContextSolution(er.threads.array[i].ctx, er.threads.array[i].sol)
 			er.removeExecutionThread(er.threads.array[i], false)
 		}

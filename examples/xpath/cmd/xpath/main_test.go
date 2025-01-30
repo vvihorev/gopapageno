@@ -39,12 +39,19 @@ import (
 // Setting a preallocation size of the pool relative to input size
 // BenchmarkRun-8   	      24	  74176000 ns/op	123574721 B/op	  230700 allocs/op
 
-
 // cpu: Intel(R) Core(TM) i7-7820HQ CPU @ 2.90GHz
 // BenchmarkRun-8   	      36	  32285544 ns/op	121926649 B/op	  230699 allocs/op
 
 // Remove the executionTable abstraction
 // BenchmarkRun-8   	      30	  35824162 ns/op	122477624 B/op	  253381 allocs/op
+
+// Working query execution after refactoring
+// BenchmarkRun-8   	       8	 127442388 ns/op	124818912 B/op	  310091 allocs/op
+
+// Remove execution thread update logging
+// BenchmarkRun-8   	      10	 118023990 ns/op	122643165 B/op	  219362 allocs/op
+// Benchmark with reduction handling and resutls collection skipped completely, for comparison.
+// BenchmarkRun-8   	      10	 107254672 ns/op	117773687 B/op	   90842 allocs/op
 
 func BenchmarkRun(b *testing.B) {
 	bytes, err := os.ReadFile("../../data/1MB.xml")

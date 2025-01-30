@@ -47,6 +47,7 @@ type ExecutorCommand struct {
 
 // Execute specify the XPath query to be executed
 func Execute(xpathQuery string) *ExecutorCommand {
+	logger = newNopLogger()
 	return &ExecutorCommand{
 		xpathQuery: xpathQuery,
 	}
@@ -79,7 +80,7 @@ func (executorCommand *ExecutorCommand) Run(runner *gopapageno.Runner) (results 
 	executor.source = executorCommand.source
 
 	executor.parseQuery(executorCommand.xpathQuery)
-	logger.Printf("Executing Query: %v", executorCommand.xpathQuery)
+	// logger.Printf("Executing Query: %v", executorCommand.xpathQuery)
 
 	err = executor.executeUDPEsWhileParsing()
 	if err != nil {

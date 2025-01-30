@@ -10,7 +10,7 @@ func TestFpeInnerTest(t *testing.T) {
 	t.Run(`fpeInnerTest.String()`, func(t *testing.T) {
 		t.Run(`fpeInnerTest.behindDescendantAxis==true`, func(t *testing.T) {
 			elementTest := newElementTest("a", nil, nil)
-			fpeInnerTest := &fpeInnerTestImpl{
+			fpeInnerTest := &fpeInnerTest{
 				udpeTest:             elementTest,
 				behindDescendantAxis: true,
 			}
@@ -23,7 +23,7 @@ func TestFpeInnerTest(t *testing.T) {
 
 		t.Run(`fpeInnerTest.behindDescendantAxis==false`, func(t *testing.T) {
 			elementTest := newElementTest("a", nil, nil)
-			fpeInnerTest := &fpeInnerTestImpl{
+			fpeInnerTest := &fpeInnerTest{
 				udpeTest:             elementTest,
 				behindDescendantAxis: false,
 			}
@@ -51,7 +51,7 @@ func TestFpeInnerTest(t *testing.T) {
 
 	t.Run(`fpeInnerTest.matchWithReductionOf(n)`, func(t *testing.T) {
 		t.Run(`fpeInnerTest.matchWithReductionOf(n)=_,_,_,_,false if udpeTest does NOT match`, func(t *testing.T) {
-			fpeInnerTest := &fpeInnerTestImpl{
+			fpeInnerTest := &fpeInnerTest{
 				udpeTest: newElementTest("a", nil, nil),
 			}
 
@@ -61,17 +61,17 @@ func TestFpeInnerTest(t *testing.T) {
 		})
 
 		t.Run(`fpeInnerTest.matchWithReductionOf(n)=_,next,newTest,true if udpeTest does match`, func(t *testing.T) {
-			fpeInnerTest := &fpeInnerTestImpl{
+			fit := &fpeInnerTest{
 				udpeTest: newElementTest("a", nil, nil),
 			}
 
-			if _, _, _, _, ok := fpeInnerTest.matchWithReductionOf(newElement("a", nil, nil)); !ok {
+			if _, _, _, _, ok := fit.matchWithReductionOf(newElement("a", nil, nil)); !ok {
 				t.Error(`fpeInnerTest.matchWithReductionOf(n)=_,_,_,_,false | want _,_,_,_,true`)
 			}
 
 			t.Run(`when behindDescendantAxis==false`, func(t *testing.T) {
-				precedingFpeInnerTest := &fpeInnerTestImpl{}
-				fpeInnerTest := &fpeInnerTestImpl{
+				precedingFpeInnerTest := &fpeInnerTest{}
+				fpeInnerTest := &fpeInnerTest{
 					udpeTest:              newElementTest("a", nil, nil),
 					precedingFpeInnerTest: precedingFpeInnerTest,
 				}
@@ -90,10 +90,10 @@ func TestFpeInnerTest(t *testing.T) {
 
 			t.Run(`when behindDescendantAxis==true`, func(t *testing.T) {
 				t.Run(`when isEntry==false && precedingFpeInnerTest != nil && precedingFpeInnerTest.behindDescendantAxis==true`, func(t *testing.T) {
-					precedingFpeInnerTest := &fpeInnerTestImpl{
+					precedingFpeInnerTest := &fpeInnerTest{
 						behindDescendantAxis: true,
 					}
-					fpeInnerTest := &fpeInnerTestImpl{
+					fpeInnerTest := &fpeInnerTest{
 						isEntry:               false,
 						udpeTest:              newElementTest("a", nil, nil),
 						precedingFpeInnerTest: precedingFpeInnerTest,
@@ -112,10 +112,10 @@ func TestFpeInnerTest(t *testing.T) {
 				})
 
 				t.Run(`otherwise, when isEntry==true`, func(t *testing.T) {
-					precedingFpeInnerTest := &fpeInnerTestImpl{
+					precedingFpeInnerTest := &fpeInnerTest{
 						behindDescendantAxis: true,
 					}
-					fpeInnerTest := &fpeInnerTestImpl{
+					fpeInnerTest := &fpeInnerTest{
 						isEntry:               true,
 						udpeTest:              newElementTest("a", nil, nil),
 						precedingFpeInnerTest: precedingFpeInnerTest,
@@ -139,7 +139,7 @@ func TestFpeInnerTest(t *testing.T) {
 func TestFpeBuilder(t *testing.T) {
 	t.Run(`fpeBuilder.addUdpeTest(t)`, func(t *testing.T) {
 		t.Run(`fpeBuilder.addUdpeTest(t)=false if fpeBuilder expecting an axis`, func(t *testing.T) {
-			fpeBuilder := new(fpeBuilderImpl)
+			fpeBuilder := new(fpeBuilder)
 
 			if fpeBuilder.addUdpeTest(newElementTest("a", nil, nil)) {
 				t.Error(`fpeBuilder.addUdpeTest(t)=true | want false`)
@@ -147,7 +147,7 @@ func TestFpeBuilder(t *testing.T) {
 		})
 
 		t.Run(`fpeBuilder.addUdpeTest(t)=true if fpeBuilder expecting an udpeTest`, func(t *testing.T) {
-			fpeBuilder := new(fpeBuilderImpl)
+			fpeBuilder := new(fpeBuilder)
 			fpeBuilder.state = expectFpeUdpeTest
 
 			udpeTest := newElementTest("a", nil, nil)
@@ -159,7 +159,7 @@ func TestFpeBuilder(t *testing.T) {
 				t.Error(`fpeBuilder.addUdpeTest(t) doesn't update fpeBuilder.state correctly`)
 			}
 
-			expectedNewPrecedentFpeInnerTest := &fpeInnerTestImpl{
+			expectedNewPrecedentFpeInnerTest := &fpeInnerTest{
 				udpeTest:              udpeTest,
 				precedingFpeInnerTest: nil,
 			}
@@ -172,7 +172,7 @@ func TestFpeBuilder(t *testing.T) {
 
 	t.Run(`fpeBuilder.addAxis(a)`, func(t *testing.T) {
 		t.Run(`fpeBuilder.addAxis(a)=false if fpeBuilder expecting an udpeTest`, func(t *testing.T) {
-			fpeBuilder := new(fpeBuilderImpl)
+			fpeBuilder := new(fpeBuilder)
 			fpeBuilder.state = expectFpeUdpeTest
 
 			if fpeBuilder.addAxis(child) {
@@ -183,7 +183,7 @@ func TestFpeBuilder(t *testing.T) {
 		t.Run(`fpeBuilder.addAxis(a)=true if fpeBuilder expecting an axis`, func(t *testing.T) {
 			t.Run(`fpeBuilder.precedentFpeInnerTest=nil`, func(t *testing.T) {
 				t.Run(`a=child`, func(t *testing.T) {
-					fpeBuilder := new(fpeBuilderImpl)
+					fpeBuilder := new(fpeBuilder)
 
 					if !fpeBuilder.addAxis(child) {
 						t.Error(`fpeBuilder.addAxis(child)=false | want true`)
@@ -195,7 +195,7 @@ func TestFpeBuilder(t *testing.T) {
 				})
 
 				t.Run(`a=descendantOrSelf`, func(t *testing.T) {
-					fpeBuilder := new(fpeBuilderImpl)
+					fpeBuilder := new(fpeBuilder)
 
 					if !fpeBuilder.addAxis(descendantOrSelf) {
 						t.Error(`fpeBuilder.addAxis(descendantOrSelf)=false | want true`)
@@ -209,9 +209,9 @@ func TestFpeBuilder(t *testing.T) {
 
 			t.Run(`fpeBuilder.precedentFpeInnerTest !=nil`, func(t *testing.T) {
 				t.Run(`a=child`, func(t *testing.T) {
-					fpeBuilder := new(fpeBuilderImpl)
-					fpeInnerTest := new(fpeInnerTestImpl)
-					fpeBuilder.precedentFpeInnerTest = new(fpeInnerTestImpl)
+					fpeBuilder := new(fpeBuilder)
+					fit := new(fpeInnerTest)
+					fpeBuilder.precedentFpeInnerTest = new(fpeInnerTest)
 
 					if !fpeBuilder.addAxis(child) {
 						t.Error(`fpeBuilder.addAxis(child)=false | want true`)
@@ -221,14 +221,14 @@ func TestFpeBuilder(t *testing.T) {
 						t.Error(`fpeBuilder.addAxis(child) doesn't update fpeBuilder.state correctly`)
 					}
 
-					if !reflect.DeepEqual(*fpeBuilder.precedentFpeInnerTest, *fpeInnerTest) {
+					if !reflect.DeepEqual(*fpeBuilder.precedentFpeInnerTest, *fit) {
 						t.Error(`fpeBuilder.addAxis(child) shouldn't update fpeBuilder.precedentFpeInnerTest`)
 					}
 				})
 
 				t.Run(`a=descendantOrSelf`, func(t *testing.T) {
-					fpeBuilder := new(fpeBuilderImpl)
-					fpeBuilder.precedentFpeInnerTest = new(fpeInnerTestImpl)
+					fpeBuilder := new(fpeBuilder)
+					fpeBuilder.precedentFpeInnerTest = new(fpeInnerTest)
 
 					if !fpeBuilder.addAxis(descendantOrSelf) {
 						t.Error(`fpeBuilder.addAxis(descendantOrSelf)=false | want true`)
@@ -249,7 +249,7 @@ func TestFpeBuilder(t *testing.T) {
 
 	t.Run(`fpeBuilder.end()`, func(t *testing.T) {
 		t.Run(`fpeBuilder.end()=nil if no udpeTest has been added`, func(t *testing.T) {
-			fpeBuilder := newFpeBuilder()
+			fpeBuilder := fpeBuilder{}
 
 			if fpeBuilder.end() != nil {
 				t.Error(`fpeBuilder.end()!=nil | want nil`)
@@ -257,11 +257,11 @@ func TestFpeBuilder(t *testing.T) {
 		})
 
 		t.Run(`fpeBuilder.end() returns a fpe if at least one udpeTest has been added`, func(t *testing.T) {
-			fpeBuilder := newFpeBuilder()
+			fpeBuilder := fpeBuilder{}
 			fpeBuilder.addAxis(child)
 			fpeBuilder.addUdpeTest(newElementTest("a", nil, nil))
 
-			fpe := fpeBuilder.end().(*fpeImpl)
+			fpe := fpeBuilder.end()
 			if fpe == nil {
 				t.Error(`fpeBuilder.end()=nil | want fpe`)
 			}
@@ -274,12 +274,12 @@ func TestFpeBuilder(t *testing.T) {
 }
 func TestFpe(t *testing.T) {
 	t.Run(`fpe.entryPoint()`, func(t *testing.T) {
-		fpeBuilder := newFpeBuilder()
+		fpeBuilder := fpeBuilder{}
 		fpeBuilder.addAxis(child)
 		fpeBuilder.addUdpeTest(newElementTest("a", nil, nil))
-		fpe := fpeBuilder.end().(*fpeImpl)
+		fpe := fpeBuilder.end()
 
-		entryPoint := fpe.entryPoint().(*fpePathPatternImpl)
+		entryPoint := fpe.entryPoint()
 		if entryPoint.currentTest != fpe.entryTest {
 			t.Error(`fpe.entryPoint().currentTest != fpe.entryTest`)
 		}
@@ -288,7 +288,7 @@ func TestFpe(t *testing.T) {
 
 	t.Run(`fpe.String()`, func(t *testing.T) {
 		t.Run(`fpe=a/b`, func(t *testing.T) {
-			fpeBuilder := newFpeBuilder()
+			fpeBuilder := fpeBuilder{}
 			fpeBuilder.addAxis(child)
 			fpeBuilder.addUdpeTest(newElementTest("a", nil, nil))
 			fpeBuilder.addAxis(child)
@@ -301,7 +301,7 @@ func TestFpe(t *testing.T) {
 		})
 
 		t.Run(`fpe=a//b`, func(t *testing.T) {
-			fpeBuilder := newFpeBuilder()
+			fpeBuilder := fpeBuilder{}
 			fpeBuilder.addAxis(child)
 			fpeBuilder.addUdpeTest(newElementTest("a", nil, nil))
 			fpeBuilder.addAxis(descendantOrSelf)
@@ -324,41 +324,41 @@ func TestFpeIntegration(t *testing.T) {
 
 			t.Run(`2. 4. 11.`, func(t *testing.T) {
 				//2.
-				fpeBuilder1 := newFpeBuilder()
+				fpeBuilder1 := fpeBuilder{}
 				fpeBuilder1.addAxis(child)
 				fpeBuilder1.addUdpeTest(newElementTest("a", nil, nil))
 				fpeBuilder1.addAxis(child)
 				fpeBuilder1.addUdpeTest(newElementTest("b", nil, nil))
 
-				fpeBuilder2 := newFpeBuilder()
+				fpeBuilder2 := fpeBuilder{}
 				fpeBuilder2.addAxis(child)
 				fpeBuilder2.addUdpeTest(newElementTest("a", nil, nil))
 				fpeBuilder2.addAxis(child)
 				fpeBuilder2.addUdpeTest(newElementTest("*", nil, nil))
 				//4.
-				fpeBuilder3 := newFpeBuilder()
+				fpeBuilder3 := fpeBuilder{}
 				fpeBuilder3.addAxis(child)
 				fpeBuilder3.addUdpeTest(newElementTest("a", nil, nil))
 				fpeBuilder3.addAxis(descendantOrSelf)
 				fpeBuilder3.addUdpeTest(newElementTest("b", nil, nil))
 
-				fpeBuilder4 := newFpeBuilder()
+				fpeBuilder4 := fpeBuilder{}
 				fpeBuilder4.addAxis(child)
 				fpeBuilder4.addUdpeTest(newElementTest("a", nil, nil))
 				fpeBuilder4.addAxis(descendantOrSelf)
 				fpeBuilder4.addUdpeTest(newElementTest("*", nil, nil))
 				//11.
-				fpeBuilder5 := newFpeBuilder()
+				fpeBuilder5 := fpeBuilder{}
 				fpeBuilder5.addAxis(child)
 				fpeBuilder5.addUdpeTest(newElementTest("a", nil, nil))
 				fpeBuilder5.addAxis(child)
 				fpeBuilder5.addUdpeTest(newElementTest("b", NewAttribute("key", "value"), nil))
 
-				fpeBuilder6 := newFpeBuilder()
+				fpeBuilder6 := fpeBuilder{}
 				fpeBuilder6.addAxis(child)
 				fpeBuilder6.addUdpeTest(newElementTest("a", nil, nil))
 				fpeBuilder6.addAxis(descendantOrSelf)
-				fpeBuilder6.addUdpeTest(newElementTest("b", NewAttribute("key", "value"), nil))
+				fpeBuilder6.addUdpeTest(newElementTest("b", &Attribute{Key: "key", Value: "value"}, nil))
 
 				const expectedPathPatternReprAfterMatch = "ε/a"
 				var tests = []struct {
@@ -414,21 +414,21 @@ func TestFpeIntegration(t *testing.T) {
 			})
 
 			t.Run(`6.`, func(t *testing.T) {
-				fpeBuilder1 := newFpeBuilder()
+				fpeBuilder1 := fpeBuilder{}
 				fpeBuilder1.addAxis(child)
 				fpeBuilder1.addUdpeTest(newElementTest("a", nil, nil))
 				fpeBuilder1.addAxis(child)
 				fpeBuilder1.addUdpeTest(newElementTest("b", nil, nil))
 				fpeBuilder1.addAxis(descendantOrSelf)
 
-				fpeBuilder2 := newFpeBuilder()
+				fpeBuilder2 := fpeBuilder{}
 				fpeBuilder2.addAxis(child)
 				fpeBuilder2.addUdpeTest(newElementTest("a", nil, nil))
 				fpeBuilder2.addAxis(child)
 				fpeBuilder2.addUdpeTest(newElementTest("c", nil, nil))
 				fpeBuilder2.addAxis(descendantOrSelf)
 
-				fpeBuilder3 := newFpeBuilder()
+				fpeBuilder3 := fpeBuilder{}
 				fpeBuilder3.addAxis(child)
 				fpeBuilder3.addUdpeTest(newElementTest("b", nil, nil))
 				fpeBuilder3.addAxis(descendantOrSelf)
@@ -492,25 +492,25 @@ func TestFpeIntegration(t *testing.T) {
 
 			t.Run(`14. 16.`, func(t *testing.T) {
 				//16.
-				fpeBuilder1 := newFpeBuilder()
+				fpeBuilder1 := fpeBuilder{}
 				fpeBuilder1.addAxis(child)
 				fpeBuilder1.addUdpeTest(newElementTest("a", nil, nil))
 				fpeBuilder1.addAxis(child)
 				fpeBuilder1.addUdpeTest(newTextTest("some Text"))
 
-				fpeBuilder2 := newFpeBuilder()
+				fpeBuilder2 := fpeBuilder{}
 				fpeBuilder2.addAxis(child)
 				fpeBuilder2.addUdpeTest(newElementTest("a", nil, nil))
 				fpeBuilder2.addAxis(descendantOrSelf)
 				fpeBuilder2.addUdpeTest(newTextTest("some Text"))
 				//14.
-				fpeBuilder3 := newFpeBuilder()
+				fpeBuilder3 := fpeBuilder{}
 				fpeBuilder3.addAxis(child)
 				fpeBuilder3.addUdpeTest(newElementTest("a", nil, nil))
 				fpeBuilder3.addAxis(child)
 				fpeBuilder3.addUdpeTest(newTextTest(""))
 
-				fpeBuilder4 := newFpeBuilder()
+				fpeBuilder4 := fpeBuilder{}
 				fpeBuilder4.addAxis(child)
 				fpeBuilder4.addUdpeTest(newElementTest("a", nil, nil))
 				fpeBuilder4.addAxis(descendantOrSelf)
@@ -568,7 +568,7 @@ func TestFpeIntegration(t *testing.T) {
 		negativeReduction := newElement("z", nil, nil)
 
 		t.Run(`20.`, func(t *testing.T) {
-			fpeBuilder1 := newFpeBuilder()
+			fpeBuilder1 := fpeBuilder{}
 			fpeBuilder1.addAxis(child)
 			fpeBuilder1.addUdpeTest(newElementTest("a", nil, nil))
 			fpeBuilder1.addAxis(child)
@@ -576,7 +576,7 @@ func TestFpeIntegration(t *testing.T) {
 			fpeBuilder1.addAxis(child)
 			fpeBuilder1.addUdpeTest(newElementTest("c", nil, nil))
 
-			fpeBuilder2 := newFpeBuilder()
+			fpeBuilder2 := fpeBuilder{}
 			fpeBuilder2.addAxis(child)
 			fpeBuilder2.addUdpeTest(newElementTest("a", nil, nil))
 			fpeBuilder2.addAxis(descendantOrSelf)
@@ -638,7 +638,7 @@ func TestFpeIntegration(t *testing.T) {
 
 		t.Run(`23.`, func(t *testing.T) {
 
-			fpeBuilder1 := newFpeBuilder()
+			fpeBuilder1 := fpeBuilder{}
 			fpeBuilder1.addAxis(child)
 			fpeBuilder1.addUdpeTest(newElementTest("a", nil, nil))
 			fpeBuilder1.addAxis(child)
@@ -646,7 +646,7 @@ func TestFpeIntegration(t *testing.T) {
 			fpeBuilder1.addAxis(descendantOrSelf) //<- actual tested match
 			fpeBuilder1.addUdpeTest(newElementTest("c", nil, nil))
 
-			fpeBuilder2 := newFpeBuilder()
+			fpeBuilder2 := fpeBuilder{}
 			fpeBuilder2.addAxis(child)
 			fpeBuilder2.addUdpeTest(newElementTest("b", nil, nil))
 			fpeBuilder2.addAxis(descendantOrSelf) //<- actual tested match
@@ -714,7 +714,7 @@ func TestFpeIntegration(t *testing.T) {
 		t.Run(`26.`, func(t *testing.T) {
 			expectedPathPatternReprAfterMatch := "ε/a//"
 
-			fpeBuilder := newFpeBuilder()
+			fpeBuilder := fpeBuilder{}
 			fpeBuilder.addAxis(child)
 			fpeBuilder.addUdpeTest(newElementTest("a", nil, nil))
 			fpeBuilder.addAxis(descendantOrSelf)
@@ -763,7 +763,7 @@ func TestFpeIntegration(t *testing.T) {
 		})
 
 		t.Run(`29.`, func(t *testing.T) {
-			fpeBuilder1 := newFpeBuilder()
+			fpeBuilder1 := fpeBuilder{}
 			fpeBuilder1.addAxis(child)
 			fpeBuilder1.addUdpeTest(newElementTest("a", nil, nil))
 			fpeBuilder1.addAxis(child)
@@ -771,7 +771,7 @@ func TestFpeIntegration(t *testing.T) {
 			fpeBuilder1.addAxis(child)
 			fpeBuilder1.addUdpeTest(newElementTest("c", nil, nil))
 
-			fpeBuilder2 := newFpeBuilder()
+			fpeBuilder2 := fpeBuilder{}
 			fpeBuilder2.addAxis(child)
 			fpeBuilder2.addUdpeTest(newElementTest("a", nil, nil))
 			fpeBuilder2.addAxis(descendantOrSelf)
