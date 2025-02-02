@@ -19,6 +19,10 @@ func (r *Reduction) Setup(reducedNT, generativeNT, wrappedNT *NonTerminal) {
 		updatingExecutionTable = udpeGlobalTable.newExecutionTable()
 	}
 
+	if DEBUG {
+		logger.Printf("reduction: %v <-- %v <> %v </>", reducedNT.String(), generativeNT.String(), wrappedNT.String())
+	}
+
 	r.reducedNT = reducedNT
 	r.generativeNT = generativeNT
 	r.wrappedNT = wrappedNT
@@ -40,20 +44,20 @@ func (r *Reduction) Setup(reducedNT, generativeNT, wrappedNT *NonTerminal) {
 				switch udpeType := r.globalUdpeRecordBeingConsidered.udpeType(); udpeType {
 				case FPE:
 					// When a node matches an FPE entry point, the thread has found a solution
-					if !DEBUG {
-						executionRecord.addExecutionThread(nil, r.reducedNT, entryPoint)
-					} else {
+					if DEBUG {
 						et := executionRecord.addExecutionThread(nil, r.reducedNT, entryPoint)
 						logger.Printf("adding execution thread: %v", et.String())
+					} else {
+						executionRecord.addExecutionThread(nil, r.reducedNT, entryPoint)
 					}
 				case RPE:
 					if r.wrappedNT != nil {
 						// When a node matches an RPE entry point, the thread has found a context
-						if !DEBUG {
-							executionRecord.addExecutionThread(r.wrappedNT, nil, entryPoint)
-						} else {
+						if DEBUG {
 							et := executionRecord.addExecutionThread(r.wrappedNT, nil, entryPoint)
 							logger.Printf("adding execution thread: %v", et.String())
+						} else {
+							executionRecord.addExecutionThread(r.wrappedNT, nil, entryPoint)
 						}
 						childrenOfWrappedNT := r.wrappedNT.Children()
 						for _, child := range childrenOfWrappedNT {
@@ -136,7 +140,7 @@ func (r *Reduction) Setup(reducedNT, generativeNT, wrappedNT *NonTerminal) {
 				if er.threads.array[i].pp.isEmpty() && !er.threads.array[i].isSpeculative() {
 					er.ctxSols.addContextSolution(er.threads.array[i].ctx, er.threads.array[i].sol)
 					if DEBUG {
-						logger.Printf("adding a context-solution: [ %v, %v ]", er.threads.array[i].ctx.String(), er.threads.array[i].sol.String())
+						logger.Printf("added a context-solution: [ %v, %v ] to record: %v", er.threads.array[i].ctx.String(), er.threads.array[i].sol.String(), er.String())
 					}
 					er.removeExecutionThread(er.threads.array[i], false)
 				}
@@ -146,10 +150,17 @@ func (r *Reduction) Setup(reducedNT, generativeNT, wrappedNT *NonTerminal) {
 
 	if r.generativeNT != nil {
 		// merge updating execution table with unchanged execution table
-		unchangedExecutionTable := r.generativeNT.executionTable
+		unchangedExecutionTable := *r.generativeNT.executionTable
 		ok := r.updatingExecutionTable.merge(unchangedExecutionTable)
 		if !ok {
 			panic(`Reduction Handle Node error: can NOT merge execution tables`)
+		}
+	} else if DEBUG {
+		for _, er := range updatingExecutionTable {
+			logger.Printf("skipping merge %v", er.String())
+			for i := 0; i < er.threads.size; i++ {
+				logger.Printf("own thread: %v", er.threads.array[i].String())
+			}
 		}
 	}
 	// propagate updating execution table to reduced NT

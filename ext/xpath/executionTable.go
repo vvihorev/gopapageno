@@ -27,10 +27,17 @@ func (et executionTable) mainQueryRecord() executionRecord {
 
 // merge joins the incoming execution table to the receiving execution table and returns
 // the receiving execution table
-func (et executionTable) merge(incoming *executionTable) (ok bool) {
+func (et executionTable) merge(incoming executionTable) (ok bool) {
 	ok = true
 
 	for id, er := range et {
+		if DEBUG {
+			logger.Printf("merging record %v", er.String())
+			for i := 0; i < er.threads.size; i++ {
+				logger.Printf("own thread: %v", er.threads.array[i].String())
+			}
+		}
+
 		incomingRecord, err := incoming.recordByID(id)
 		if err != nil {
 			ok = false
@@ -39,6 +46,9 @@ func (et executionTable) merge(incoming *executionTable) (ok bool) {
 
 		if incoming != nil {
 			for i := 0; i < incomingRecord.threads.size; i++ {
+				if DEBUG {
+					logger.Printf("incoming thread: %v", incomingRecord.threads.array[i].String())
+				}
 				er.threads.append(incomingRecord.threads.array[i])
 			}
 		}
@@ -88,14 +98,14 @@ type executionRecord struct {
 }
 
 func (er *executionRecord) String() string {
-	return fmt.Sprintf("{ %v | %v | %v }", er.expType, er.ctxSols, er.threads)
+	return fmt.Sprintf("{ %v | %v | #%d }", er.expType, er.ctxSols, er.threads.size)
 }
 
 func (er *executionRecord) addExecutionThread(ctx, sol *NonTerminal, pp pathPattern) (et executionThread) {
 	et = executionThread{
-		ctx:    ctx,
-		sol:    sol,
-		pp:     pp,
+		ctx: ctx,
+		sol: sol,
+		pp:  pp,
 		speculations: swapbackArray[speculation]{
 			array: make([]speculation, 0),
 		},
