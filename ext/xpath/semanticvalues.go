@@ -15,7 +15,7 @@ func (nt *NonTerminal) String() string {
 		return "-"
 	}
 	if v, ok := nt.node.(*Element); ok {
-		return fmt.Sprintf("E(%s)", v.name)
+		return fmt.Sprintf("E(%s, %p)", v.name, &v)
 	}
 	return fmt.Sprintf("E(%p)", nt.node)
 }

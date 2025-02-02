@@ -10,6 +10,7 @@ type Reduction struct {
 	globalUdpeRecordBeingConsidered    *globalUdpeRecord
 }
 
+// TODO(vvihorev): further simplify the call to reduction
 func (r *Reduction) Setup(reducedNT, generativeNT, wrappedNT *NonTerminal) {
 	var updatingExecutionTable executionTable
 	if wrappedNT != nil {
@@ -39,11 +40,21 @@ func (r *Reduction) Setup(reducedNT, generativeNT, wrappedNT *NonTerminal) {
 				switch udpeType := r.globalUdpeRecordBeingConsidered.udpeType(); udpeType {
 				case FPE:
 					// When a node matches an FPE entry point, the thread has found a solution
-					executionRecord.addExecutionThread(nil, r.reducedNT, entryPoint)
+					if !DEBUG {
+						executionRecord.addExecutionThread(nil, r.reducedNT, entryPoint)
+					} else {
+						et := executionRecord.addExecutionThread(nil, r.reducedNT, entryPoint)
+						logger.Printf("adding execution thread: %v", et.String())
+					}
 				case RPE:
 					if r.wrappedNT != nil {
 						// When a node matches an RPE entry point, the thread has found a context
-						executionRecord.addExecutionThread(r.wrappedNT, nil, entryPoint)
+						if !DEBUG {
+							executionRecord.addExecutionThread(r.wrappedNT, nil, entryPoint)
+						} else {
+							et := executionRecord.addExecutionThread(r.wrappedNT, nil, entryPoint)
+							logger.Printf("adding execution thread: %v", et.String())
+						}
 						childrenOfWrappedNT := r.wrappedNT.Children()
 						for _, child := range childrenOfWrappedNT {
 							executionRecord.addExecutionThread(child, nil, udpe.entryPoint())
@@ -59,6 +70,10 @@ func (r *Reduction) Setup(reducedNT, generativeNT, wrappedNT *NonTerminal) {
 
 		// Phase 2 - Update all execution threads
 		{
+			var predicate *predicate
+			var newPathPattern pathPattern
+			var ok bool
+
 			for i := 0; i < er.threads.size; i++ {
 				etPathPattern := er.threads.array[i].pp
 
@@ -68,7 +83,14 @@ func (r *Reduction) Setup(reducedNT, generativeNT, wrappedNT *NonTerminal) {
 					continue
 				}
 
-				predicate, newPathPattern, ok := etPathPattern.matchWithReductionOf(r.reducedNT.Node(), true)
+				if DEBUG {
+					ppBefore := etPathPattern.String()
+					predicate, newPathPattern, ok = etPathPattern.matchWithReductionOf(r.reducedNT.Node(), true)
+					logger.Printf("updating execution thread: %v -> %v", ppBefore, etPathPattern.String())
+				} else {
+					predicate, newPathPattern, ok = etPathPattern.matchWithReductionOf(r.reducedNT.Node(), true)
+				}
+
 				if ok {
 					var etReceivingSpeculation = er.threads.array[i]
 					if newPathPattern != nil {
@@ -113,6 +135,9 @@ func (r *Reduction) Setup(reducedNT, generativeNT, wrappedNT *NonTerminal) {
 				// produce context solutions out of completed non speculative execution threads
 				if er.threads.array[i].pp.isEmpty() && !er.threads.array[i].isSpeculative() {
 					er.ctxSols.addContextSolution(er.threads.array[i].ctx, er.threads.array[i].sol)
+					if DEBUG {
+						logger.Printf("adding a context-solution: [ %v, %v ]", er.threads.array[i].ctx.String(), er.threads.array[i].sol.String())
+					}
 					er.removeExecutionThread(er.threads.array[i], false)
 				}
 			}
@@ -130,4 +155,3 @@ func (r *Reduction) Setup(reducedNT, generativeNT, wrappedNT *NonTerminal) {
 	// propagate updating execution table to reduced NT
 	r.reducedNT.executionTable = &r.updatingExecutionTable
 }
-

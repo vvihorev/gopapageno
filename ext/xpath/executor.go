@@ -15,6 +15,7 @@ const defaultExecutorNumberOfThreads = 1
 var nudpeGlobalTable *globalNudpeTable
 var udpeGlobalTable *globalUdpeTable
 var logger Logger
+var DEBUG = false
 
 func init() {
 	logger = newNopLogger()
@@ -42,11 +43,11 @@ type ExecutorCommand struct {
 	xpathQuery      string
 	source          []byte
 	numberOfThreads int
-	verbose         bool
 }
 
 // Execute specify the XPath query to be executed
 func Execute(xpathQuery string) *ExecutorCommand {
+	DEBUG = false
 	logger = newNopLogger()
 	return &ExecutorCommand{
 		xpathQuery: xpathQuery,
@@ -59,7 +60,7 @@ func (executorCommand *ExecutorCommand) WithNumberOfThreads(numberOfThreads int)
 }
 
 func (executorCommand *ExecutorCommand) InVerboseMode() *ExecutorCommand {
-	executorCommand.verbose = true
+	DEBUG = true
 	logger = log.New(os.Stderr, "", log.LstdFlags)
 	return executorCommand
 }
@@ -80,13 +81,15 @@ func (executorCommand *ExecutorCommand) Run(runner *gopapageno.Runner) (results 
 	executor.source = executorCommand.source
 
 	executor.parseQuery(executorCommand.xpathQuery)
-	// logger.Printf("Executing Query: %v", executorCommand.xpathQuery)
+	if DEBUG {
+		logger.Printf("Executing Query: %v", executorCommand.xpathQuery)
+	}
 
 	err = executor.executeUDPEsWhileParsing()
 	if err != nil {
 		return
 	}
-	
+
 	err = executor.completeExecutionOfUDPEsAndNUDPEs()
 	if err != nil {
 		return
@@ -97,7 +100,7 @@ func (executorCommand *ExecutorCommand) Run(runner *gopapageno.Runner) (results 
 	return
 }
 
-func (executor executor) parseQuery(xpathQuery string) {
+func (executor *executor) parseQuery(xpathQuery string) {
 	udpeGlobalTable = new(globalUdpeTable)
 	nudpeGlobalTable = new(globalNudpeTable)
 
@@ -114,7 +117,7 @@ func (executor executor) parseQuery(xpathQuery string) {
 		for i < len(xpathQuery) && xpathQuery[i] != '[' && xpathQuery[i] != '/' && xpathQuery[i] != '\\' {
 			i++
 		}
-		if i == start+1 {
+		if i == start {
 			panic("malformed query: expected to find a tag name in Test")
 		}
 		return xpathQuery[start:i]
@@ -124,6 +127,7 @@ func (executor executor) parseQuery(xpathQuery string) {
 	var curRpe *rpeBuilder
 	hasFpe := false
 	hasRpe := false
+	udpeCount := 0
 
 	// TODO(vvihorev): support predicates
 	// p := &predicate{
@@ -135,6 +139,7 @@ func (executor executor) parseQuery(xpathQuery string) {
 	// }
 	// TODO(vvihorev): support attributes
 	// TODO(vvihorev): support text builtin
+	// TODO(vvihorev): support NUDPEs embedded in predicates
 	for i < len(xpathQuery) {
 		c := xpathQuery[i]
 
@@ -146,6 +151,7 @@ func (executor executor) parseQuery(xpathQuery string) {
 			}
 			if curRpe != nil {
 				udpeGlobalTable.addRpe(curRpe.end())
+				udpeCount++
 				curRpe = nil
 			}
 
@@ -168,6 +174,7 @@ func (executor executor) parseQuery(xpathQuery string) {
 			}
 			if curFpe != nil {
 				udpeGlobalTable.addFpe(curFpe.end())
+				udpeCount++
 				curFpe = nil
 			}
 
@@ -190,13 +197,19 @@ func (executor executor) parseQuery(xpathQuery string) {
 
 	if curFpe != nil {
 		udpeGlobalTable.addFpe(curFpe.end())
+		udpeCount++
 	}
 	if curRpe != nil {
 		udpeGlobalTable.addRpe(curRpe.end())
+		udpeCount++
 	}
 
 	if hasFpe && hasRpe {
 		executor.mainQueryType = NUDPE
+		globalNudpe := nudpeGlobalTable.addNudpeRecord(udpeCount)
+		for i := range udpeGlobalTable.size() {
+			udpeGlobalTable.list[i].setNudpeRecord(globalNudpe)
+		}
 	} else {
 		executor.mainQueryType = UDPE
 	}
@@ -305,4 +318,3 @@ func (executor *executor) retrieveResults() (results []Position) {
 
 	return
 }
-

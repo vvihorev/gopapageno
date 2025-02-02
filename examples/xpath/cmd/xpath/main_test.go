@@ -161,3 +161,28 @@ func TestMultipleStepRPEQueryExecution(t *testing.T) {
 		t.Fatalf("%v", string(source[res[0].Start():res[0].End()]))
 	}
 }
+
+func TestNUDPEExpression(t *testing.T) {
+	source := []byte("<html><body><div><p></p></div><div><p></p></div></body></html>")
+	r := gopapageno.NewRunner(
+		xpath.NewLexer(),
+		xpath.NewGrammar(),
+		gopapageno.WithConcurrency(1),
+	)
+
+	cmd := x.Execute("/html//p\\div").Against(source).WithNumberOfThreads(1).InVerboseMode()
+	res, err := cmd.Run(r)
+
+	if err != nil {
+		log.Fatal(fmt.Sprintf("%e", err))
+	}
+	if len(res) != 2 {
+		t.Fatalf("result count does not match: %v", res)
+	}
+	if string(source[res[0].Start():res[0].End()+1]) != "<div><p></p></div>" {
+		t.Fatalf("%v", string(source[res[0].Start():res[0].End()]))
+	}
+	if string(source[res[1].Start():res[1].End()+1]) != "<div><p></p></div>" {
+		t.Fatalf("%v", string(source[res[0].Start():res[0].End()]))
+	}
+}
