@@ -148,3 +148,21 @@ func TestShouldMatchTwoParagraphs(t *testing.T) {
 		[]string{"<p></p>", "<p></p>"},
 	)
 }
+
+func TestMatchAttribute(t *testing.T) {
+	ExpectResults(
+		t,
+		`<body><div class="row"></div><div class="col"></div></body>`,
+		`//div[@class="row"]`,
+		[]string{`<div class="row"></div>`},
+	)
+}
+
+func TestMatchAttributeInRPE(t *testing.T) {
+	ExpectResults(
+		t,
+		`<body><div class="row"></div><div class="col"><p></p></div></body>`,
+		`\\div[@class="col"]`,
+		[]string{`<div class="col"><p></p></div>`},
+	)
+}

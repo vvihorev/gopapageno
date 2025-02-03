@@ -101,6 +101,10 @@ func (executorCommand *ExecutorCommand) Run(runner *gopapageno.Runner) (results 
 }
 
 func (executor *executor) parseQuery(xpathQuery string) {
+	if len(xpathQuery) == 0 {
+		panic("expected a non-empty xpath query")
+	}
+
 	udpeGlobalTable = new(globalUdpeTable)
 	nudpeGlobalTable = new(globalNudpeTable)
 
@@ -123,23 +127,41 @@ func (executor *executor) parseQuery(xpathQuery string) {
 		return xpathQuery[start:i]
 	}
 
+	readAttribute := func() *Attribute {
+		i++  // skip the initial '@' symbol
+		start := i
+		for i < len(xpathQuery) && xpathQuery[i] != ']' && xpathQuery[i] != '=' {
+			i++
+		}
+		if i == len(xpathQuery) {
+			panic("malformed query: expected to find a closing ']' bracket")
+		}
+		name := xpathQuery[start:i]
+		if xpathQuery[i] == '=' {
+			i++
+			start = i
+			for i < len(xpathQuery) && xpathQuery[i] != ']' {
+				i++
+			}
+			if i <= start + 1 {
+				panic("malformed query: expected a value for the attribute")
+			}
+			value := xpathQuery[start+1:i-1]  // omitting the quotes around the attribute value
+			i++
+			return &Attribute{Key: name, Value: value}
+		}
+		i++
+		return &Attribute{Key: name}
+	}
+
+	var tag string
+	var attribute *Attribute
 	var curFpe *fpeBuilder
 	var curRpe *rpeBuilder
 	hasFpe := false
 	hasRpe := false
 	udpeCount := 0
 
-	// TODO(vvihorev): support predicates
-	// p := &predicate{
-	// 	expressionVector: []operator{and(), atom(), atom()},
-	// 	atomsLookup: map[atomID]int{
-	// 		atomID(fpe1ID): 1,
-	// 		atomID(fpe2ID): 2,
-	// 	},
-	// }
-	// TODO(vvihorev): support attributes
-	// TODO(vvihorev): support text builtin
-	// TODO(vvihorev): support NUDPEs embedded in predicates
 	for i < len(xpathQuery) {
 		c := xpathQuery[i]
 
@@ -165,7 +187,30 @@ func (executor *executor) parseQuery(xpathQuery string) {
 				i += 1
 			}
 
-			curFpe.addUdpeTest(newElementTest(readTag(), nil, nil))
+			tag = readTag()
+			// TODO(vvihorev): support text() builtin and predicates, maybe use
+			// gopapageno to generate the query parser?
+			// TODO(vvihorev): support NUDPEs embedded in predicates
+			// TODO(vvihorev): support predicates
+			// p := &predicate{
+			// 	expressionVector: []operator{and(), atom(), atom()},
+			// 	atomsLookup: map[atomID]int{
+			// 		atomID(fpe1ID): 1,
+			// 		atomID(fpe2ID): 2,
+			// 	},
+			// }
+			if i < len(xpathQuery) && xpathQuery[i] == '[' {
+				switch peek() {
+				case '@':
+					i++  // step onto the '@' symbol
+					attribute = readAttribute()
+				default:
+					panic("unexpected expression in predicate")
+				}
+			} else {
+				attribute = nil
+			}
+			curFpe.addUdpeTest(newElementTest(tag, attribute, nil))
 
 		case '\\':
 			hasRpe = true
@@ -188,7 +233,19 @@ func (executor *executor) parseQuery(xpathQuery string) {
 				i += 1
 			}
 
-			curRpe.addUdpeTest(newElementTest(readTag(), nil, nil))
+			tag = readTag()
+			if i < len(xpathQuery) && xpathQuery[i] == '[' {
+				switch peek() {
+				case '@':
+					i++
+					attribute = readAttribute()
+				default:
+					panic("unexpected expression in predicate")
+				}
+			} else {
+				attribute = nil
+			}
+			curRpe.addUdpeTest(newElementTest(tag, attribute, nil))
 
 		default:
 			panic("malformed query: expected an Axis")

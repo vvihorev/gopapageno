@@ -64,6 +64,7 @@ type fpeInnerTest struct {
 }
 
 func (fpeInnerTest *fpeInnerTest) matchWithReductionOf(n interface{}) (predicate *predicate, next, newTest *fpeInnerTest, hasNewTest, ok bool) {
+	// TODO(vvihorev): change order of checks, avoid last minute decision making
 	udpeTestMatches := fpeInnerTest.udpeTest.test(n)
 	if fpeInnerTest.isEntry {
 		switch {
