@@ -7,7 +7,7 @@ import "fmt"
 type NonTerminal struct {
 	node           interface{}
 	children       []*NonTerminal
-	executionTable *executionTable
+	executionTable executionTable
 }
 
 func (nt *NonTerminal) String() string {

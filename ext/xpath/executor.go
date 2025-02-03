@@ -31,7 +31,7 @@ const (
 type executor struct {
 	numberOfThreads         int
 	mainQueryType           mainQueryType
-	resultingExecutionTable *executionTable
+	resultingExecutionTable executionTable
 
 	source []byte
 	runner *gopapageno.Runner
@@ -226,7 +226,6 @@ func (executor *executor) executeUDPEsWhileParsing() error {
 }
 
 func (executor *executor) completeExecutionOfUDPEsAndNUDPEs() (err error) {
-
 	if numberOfNUDPEs := nudpeGlobalTable.size(); numberOfNUDPEs == 0 {
 		return
 	}
@@ -234,7 +233,7 @@ func (executor *executor) completeExecutionOfUDPEsAndNUDPEs() (err error) {
 	var currentNudpeRecord *globalNudpeRecord
 	var currentNudpeContextSolutionsMaps []contextSolutionsMap
 
-	for _, er := range *executor.resultingExecutionTable {
+	for _, er := range executor.resultingExecutionTable.records {
 		if er.gNudpeRecord != nil {
 			if er.gNudpeRecord != currentNudpeRecord {
 				if currentNudpeRecord != nil {
@@ -293,6 +292,15 @@ func (executor *executor) nudpeBooleanValueEvaluator(udpeID int, context *NonTer
 }
 
 func (executor *executor) retrieveResults() (results []Position) {
+	if DEBUG {
+		for _, er := range executor.resultingExecutionTable.records {
+			logger.Printf("results record: %v", er.String())
+			for i := 0; i < er.threads.size; i++ {
+				logger.Printf("  resulting thread: %v", er.threads.array[i].String())
+			}
+		}
+	}
+
 	var potentiallyDuplicatedResults []Position
 	switch executor.mainQueryType {
 	case UDPE:

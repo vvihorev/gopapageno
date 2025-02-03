@@ -56,13 +56,12 @@ func transitiveClosure(maps []contextSolutionsMap) contextSolutionsMap {
 }
 
 func (ctxSolMap contextSolutionsMap) merge(incoming contextSolutionsMap) {
-	destination := ctxSolMap
 	if incoming == nil {
 		return
 	}
 
 	for k, v := range incoming {
-		destination[k] = append(destination[k], v...)
+		ctxSolMap[k] = append(ctxSolMap[k], v...)
 	}
 }
 

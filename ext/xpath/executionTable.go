@@ -6,35 +6,36 @@ import (
 
 type executionTableIterableCallback func(id int, er executionRecord) (doBreak bool)
 
-// TODO(vvihorev): don't pass the pointer to the table (slice)
-type executionTable []executionRecord
+type executionTable struct {
+	records []executionRecord
+}
 
-func (et executionTable) recordByID(id int) (execRecord *executionRecord, err error) {
+func (et *executionTable) recordByID(id int) (execRecord *executionRecord, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			execRecord = nil
-			err = fmt.Errorf("execution table lookup: can NOT get execution record with id %d", id)
+			err = fmt.Errorf("execution tfble lookup: can NOT get execution record with id %d", id)
 			return
 		}
 	}()
-	execRecord = &et[id]
+	execRecord = &et.records[id]
 	return
 }
 
-func (et executionTable) mainQueryRecord() executionRecord {
-	return et[len(et)-1]
+func (et *executionTable) mainQueryRecord() executionRecord {
+	return et.records[len(et.records)-1]
 }
 
 // merge joins the incoming execution table to the receiving execution table and returns
 // the receiving execution table
-func (et executionTable) merge(incoming executionTable) (ok bool) {
+func (et *executionTable) merge(incoming *executionTable) (ok bool) {
 	ok = true
 
-	for id, er := range et {
+	for id := range len(et.records) {
 		if DEBUG {
-			logger.Printf("merging record %v", er.String())
-			for i := 0; i < er.threads.size; i++ {
-				logger.Printf("own thread: %v", er.threads.array[i].String())
+			logger.Printf("merging record %v", et.records[id].String())
+			for i := 0; i < et.records[id].threads.size; i++ {
+				logger.Printf("own thread: %v", et.records[id].threads.array[i].String())
 			}
 		}
 
@@ -49,10 +50,10 @@ func (et executionTable) merge(incoming executionTable) (ok bool) {
 				if DEBUG {
 					logger.Printf("incoming thread: %v", incomingRecord.threads.array[i].String())
 				}
-				er.threads.append(incomingRecord.threads.array[i])
+				et.records[id].threads.append(incomingRecord.threads.array[i])
 			}
 		}
-		er.ctxSols.merge(incomingRecord.ctxSols)
+		et.records[id].ctxSols.merge(incomingRecord.ctxSols)
 	}
 	return
 }

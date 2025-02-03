@@ -134,16 +134,7 @@ func TestMultipleStepRPEQueryExecution(t *testing.T) {
 func TestNUDPEExpression(t *testing.T) {
 	ExpectResults(
 		t,
-		`<html>
-			<body>
-				<div>
-					<p></p>
-				</div>
-				<div>
-					<p></p>
-				</div>
-			</body>
-		</html>`,
+		`<html><body><div><p></p></div><div><p></p></div></body></html>`,
 		"/html//p\\div",
 		[]string{"<div><p></p></div>", "<div><p></p></div>"},
 	)
@@ -152,17 +143,8 @@ func TestNUDPEExpression(t *testing.T) {
 func TestShouldMatchTwoParagraphs(t *testing.T) {
 	ExpectResults(
 		t,
-		`<html>
-			<body>
-				<div>
-					<p></p>
-				</div>
-				<div>
-					<p></p>
-				</div>
-			</body>
-		</html>`,
-		"/html//p",
+		`<body><div><p></p></div><div><p></p></div></body>`,
+		"/body//p",
 		[]string{"<p></p>", "<p></p>"},
 	)
 }

@@ -19,7 +19,7 @@ func (globalUdpeTable *globalUdpeTable) newExecutionTable() executionTable {
 		}
 		records[id].gNudpeRecord = globalUdpeRecord.nudpeRecord()
 	}
-	return executionTable(records)
+	return executionTable{records}
 }
 
 func (globalUdpeTable *globalUdpeTable) size() int {
