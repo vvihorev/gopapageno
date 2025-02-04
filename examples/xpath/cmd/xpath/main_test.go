@@ -52,6 +52,9 @@ import (
 // Benchmark with reduction handling and resutls collection skipped completely, for comparison.
 // BenchmarkRun-8   	      10	 107254672 ns/op	117773687 B/op	   90842 allocs/op
 
+// TODO(vvihorev): benchmark against the original implementation
+// TODO(vvihorev): use an arena allocator to reduce malloc calls and GC at runtime
+
 func BenchmarkRun(b *testing.B) {
 	bytes, err := os.ReadFile("../../data/1MB.xml")
 	if err != nil {
