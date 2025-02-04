@@ -66,8 +66,7 @@ func parseDPE(xpathQuery string, start, end int) mainQueryType {
 
 	readStep := func() (tag string, attribute *Attribute, pred *predicate) {
 		tag = readTag()
-		// TODO(vvihorev): support text() builtin and predicates, maybe use
-		// gopapageno to generate the query parser?
+		// TODO(vvihorev): support text() builtin and predicates, maybe use gopapageno to generate the query parser?
 		// TODO(vvihorev): support NUDPEs embedded in predicates
 		// TODO(vvihorev): support predicates
 		// p := &predicate{

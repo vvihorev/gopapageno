@@ -743,6 +743,8 @@ func (p *grammarDescription) emitTokens(f io.Writer) {
 		if t.Value != nil {
 			if v, ok := any(t.Value).(*ValueType); ok {
 				sb.WriteString(fmt.Sprintf(": %%v", *v))
+			} else {
+				sb.WriteString(fmt.Sprintf("%%v", v))
 			}
 		}
 		
