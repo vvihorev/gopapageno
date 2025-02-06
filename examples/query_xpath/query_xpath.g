@@ -4,11 +4,6 @@
 
 %%
 
-// WARNING: semantic action is deleted: Step [Test]
-// WARNING: semantic action is deleted: OrExpr [AndExpr]
-// WARNING: semantic action is deleted: AndExpr [Factor]
-// WARNING: semantic action is deleted: Factor [Path]
-
 Query : Path {
 	$$.Value = $1.Value
 };
@@ -47,14 +42,14 @@ Step : Test {
 
 Test : IDENT {
 	$$.Value = newElementTest($1.Value.(string), nil, nil)
+} | AT IDENT EQ STRING {
+	$$.Value = newElementTest("*", &Attribute{Key: $2.Value.(string), Value: $3.Value.(string)}, nil)
 } | AT IDENT {
 	$$.Value = newElementTest("*", &Attribute{Key: $2.Value.(string)}, nil)
-} | AT IDENT EQ STRING {
-	$$.Value = newElementTest("*", &Attribute{Key: $2.Value.(string), Value: $4.Value.(string)}, nil)
+} | TEXT EQ STRING {
+	$$.Value = newTextTest($2.Value.(string))
 } | TEXT {
 	$$.Value = newTextTest("")
-} | TEXT EQ STRING {
-	$$.Value = newTextTest($3.Value.(string))
 };
 
 OrExpr : AndExpr {
@@ -69,6 +64,7 @@ AndExpr : Factor {
 	$$.Value = combine(and(), $1.Value.(predicate), $3.Value.(predicate))
 };
 
+// TODO(vvihorev): beware, Factor -> Path semantic action is getting dropped
 Factor : Path {
 	$$.Value = newAtom($1.Value.(peSemValue).end())
 } | NOT Path {

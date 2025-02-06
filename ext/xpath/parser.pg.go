@@ -51,7 +51,7 @@ func (pe peSemValue) end() int {
 }
 
 func appendStep(pe *peSemValue, step udpeTest, axis axis) *peSemValue {
-        if pe == nil {
+	if pe == nil {
 		pe = &peSemValue{}
 		if axis == child || axis == descendantOrSelf {
 			pe.builder = &fpeBuilder{}
@@ -62,7 +62,7 @@ func appendStep(pe *peSemValue, step udpeTest, axis axis) *peSemValue {
 		pe.builder.addAxis(axis)
 		pe.builder.addUdpeTest(step)
 		return pe
-        }
+	}
 
 	switch pe.builder.(type) {
 	case *fpeBuilder:
@@ -87,6 +87,12 @@ func appendStep(pe *peSemValue, step udpeTest, axis axis) *peSemValue {
 	pe.builder.addUdpeTest(step)
 	return pe
 }
+
+// TODO(vvihorev): integrate NUDPE support
+// globalNudpe := nudpeGlobalTable.addNudpeRecord(udpeCount)
+// for i := range udpeGlobalTable.size() {
+// 	udpeGlobalTable.list[i].setNudpeRecord(globalNudpe)
+// }
 
 // var parserElementsPools []*gopapageno.Pool[xpath.Element]
 
@@ -968,7 +974,7 @@ func NewGrammar() *gopapageno.Grammar {
 			Step_Test0.LastChild = STRING4
 
 			{
-				Step_Test0.Value = newElementTest("*", &Attribute{Key: IDENT2.Value.(string), Value: STRING4.Value.(string)}, nil)
+				Step_Test0.Value = newElementTest("*", &Attribute{Key: IDENT2.Value.(string), Value: EQ3.Value.(string)}, nil)
 			}
 			_ = AT1
 			_ = IDENT2
@@ -1254,7 +1260,7 @@ func NewGrammar() *gopapageno.Grammar {
 			Step_Test0.LastChild = STRING3
 
 			{
-				Step_Test0.Value = newTextTest(STRING3.Value.(string))
+				Step_Test0.Value = newTextTest(EQ2.Value.(string))
 			}
 			_ = TEXT1
 			_ = EQ2

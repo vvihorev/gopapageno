@@ -120,7 +120,7 @@ func TestSingleRPEQueryExecution(t *testing.T) {
 	ExpectResults(
 		t,
 		"<html><body><div></div><div></div></body></html>",
-		"\\body",
+		"\\\\body",
 		[]string{"<body><div></div><div></div></body>"},
 	)
 }
@@ -129,7 +129,7 @@ func TestMultipleStepRPEQueryExecution(t *testing.T) {
 	ExpectResults(
 		t,
 		"<html><body><div></div><div><p></p></div></body></html>",
-		"\\\\div\\body",
+		"\\\\\\\\div\\\\body",
 		[]string{"<body><div></div><div><p></p></div></body>"},
 	)
 }
@@ -138,7 +138,7 @@ func TestNUDPEExpression(t *testing.T) {
 	ExpectResults(
 		t,
 		`<html><body><div><p></p></div><div><p></p></div></body></html>`,
-		"/html//p\\div",
+		"/html//p\\\\div",
 		[]string{"<div><p></p></div>", "<div><p></p></div>"},
 	)
 }
@@ -165,7 +165,7 @@ func TestMatchAttributeInRPE(t *testing.T) {
 	ExpectResults(
 		t,
 		`<body><div class="row"></div><div class="col"><p></p></div></body>`,
-		`\\div[@class="col"]`,
+		`\\\\div[@class="col"]`,
 		[]string{`<div class="col"><p></p></div>`},
 	)
 }

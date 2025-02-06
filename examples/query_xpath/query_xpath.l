@@ -67,15 +67,15 @@ NEWLINE [\r\n]
 	token.Value = "@"
 	token.Type = AT
 }
-{TEXT}
-{
-	token.Value = "TEXT()"
-	token.Type = TEXT
-}
 {EQ}
 {
 	token.Value = "="
 	token.Type = EQ
+}
+{TEXT}
+{
+	token.Value = "TEXT()"
+	token.Type = TEXT
 }
 {OR}
 {

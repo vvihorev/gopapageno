@@ -22,6 +22,17 @@ func parse(xpathQuery string) mainQueryType {
 	// NOTE(vvihorev): last path expression remaining has not been added to global tables yet.
 	root.Value.(*peSemValue).end()
 
+	firstUdpeType := udpeGlobalTable.list[0].udpeType() 
+	for i := range udpeGlobalTable.size() {
+		if udpeGlobalTable.list[i].udpeType() != firstUdpeType {
+			// TODO(vvihorev): this might be wrong if NUDPE size is meant as count of UDPEs in topmost NUDPE
+			globalNudpe := nudpeGlobalTable.addNudpeRecord(len(udpeGlobalTable.list))
+			for i := range udpeGlobalTable.size() {
+				udpeGlobalTable.list[i].setNudpeRecord(globalNudpe)
+			}
+			return NUDPE
+		}
+	}
 	return UDPE
 }
 
