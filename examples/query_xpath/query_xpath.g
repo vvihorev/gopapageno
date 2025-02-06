@@ -26,11 +26,19 @@ Path : Path CHILD Step {
 	$$.Value = appendStep(nil, $2.Value.(udpeTest), descendantOrSelf)
 };
 
-Step : Test {
-	$$.Value = $1.Value
-} | Test LBR OrExpr RBR {
+Step : Test {}
+  | Test LBR OrExpr RBR {
 	switch $1.Value.(type) {
 	case *elementTest:
+
+		// handle renaming chain OrExpr -> AndExpr -> Factor -> Step
+		switch $3.Value.(type) {
+		case *elementTest:
+			pe := appendStep(nil, $3.Value.(udpeTest), child)
+			pred := newAtom(pe.end())
+			$3.Value = &pred
+		}
+
 		$1.Value.(*elementTest).pred = $3.Value.(*predicate)
 	case *textTest:
 		$1.Value.(*elementTest).pred = nil
@@ -52,23 +60,25 @@ Test : IDENT {
 	$$.Value = newTextTest("")
 };
 
-OrExpr : AndExpr {
-	$$.Value = $1.Value
-} | AndExpr OR AndExpr {
+OrExpr : AndExpr {}
+  | AndExpr OR AndExpr {
 	$$.Value = combine(or(), $1.Value.(predicate), $3.Value.(predicate))
 };
 
-AndExpr : Factor {
-	$$.Value = $1.Value
-} | Factor AND Factor {
+AndExpr : Factor {}
+  | Factor AND Factor {
 	$$.Value = combine(and(), $1.Value.(predicate), $3.Value.(predicate))
 };
 
-// TODO(vvihorev): beware, Factor -> Path semantic action is getting dropped
+// TODO(vvihorev): beware, Factor -> Path, and Factor -> Step semantic actions are getting dropped
 Factor : Path {
 	$$.Value = newAtom($1.Value.(peSemValue).end())
 } | NOT Path {
 	$$.Value = notNode(newAtom($2.Value.(peSemValue).end()))
+} | Step {}
+  | NOT Step {
+	step := appendStep(nil, $2.Value.(udpeTest), child)
+	$$.Value = notNode(newAtom(step.end()))
 } | LPAR OrExpr RPAR {
 	$$.Value = $2.Value
 } | NOT LPAR OrExpr RPAR {

@@ -111,11 +111,11 @@ func ParserPreallocMem(inputSize int, numThreads int) {
 const (
 	AndExpr_Factor_OrExpr = gopapageno.TokenEmpty + 1 + iota
 	AndExpr_Factor_OrExpr_Path
+	AndExpr_Factor_OrExpr_Step
+	AndExpr_Factor_OrExpr_Step_Test
 	AndExpr_OrExpr
 	OrExpr
 	Query
-	Step
-	Step_Test
 )
 
 // Terminals
@@ -162,16 +162,16 @@ func DumpGraph[ValueType any](root *gopapageno.Token, f *os.File) {
 			p_name, p_color = "AndExpr_Factor_OrExpr", "0.408 0.498 1.000"
 		case AndExpr_Factor_OrExpr_Path:
 			p_name, p_color = "AndExpr_Factor_OrExpr_Path", "0.408 0.498 1.000"
+		case AndExpr_Factor_OrExpr_Step:
+			p_name, p_color = "AndExpr_Factor_OrExpr_Step", "0.408 0.498 1.000"
+		case AndExpr_Factor_OrExpr_Step_Test:
+			p_name, p_color = "AndExpr_Factor_OrExpr_Step_Test", "0.408 0.498 1.000"
 		case AndExpr_OrExpr:
 			p_name, p_color = "AndExpr_OrExpr", "0.408 0.498 1.000"
 		case OrExpr:
 			p_name, p_color = "OrExpr", "0.408 0.498 1.000"
 		case Query:
 			p_name, p_color = "Query", "0.408 0.498 1.000"
-		case Step:
-			p_name, p_color = "Step", "0.408 0.498 1.000"
-		case Step_Test:
-			p_name, p_color = "Step_Test", "0.408 0.498 1.000"
 		case gopapageno.TokenEmpty:
 			p_name, p_color = "__EMPTY__", "0.408 0.498 1.000"
 		case ANCESTOR:
@@ -215,16 +215,16 @@ func DumpGraph[ValueType any](root *gopapageno.Token, f *os.File) {
 			t_name, t_color = "AndExpr_Factor_OrExpr", "0.408 0.498 1.000"
 		case AndExpr_Factor_OrExpr_Path:
 			t_name, t_color = "AndExpr_Factor_OrExpr_Path", "0.408 0.498 1.000"
+		case AndExpr_Factor_OrExpr_Step:
+			t_name, t_color = "AndExpr_Factor_OrExpr_Step", "0.408 0.498 1.000"
+		case AndExpr_Factor_OrExpr_Step_Test:
+			t_name, t_color = "AndExpr_Factor_OrExpr_Step_Test", "0.408 0.498 1.000"
 		case AndExpr_OrExpr:
 			t_name, t_color = "AndExpr_OrExpr", "0.408 0.498 1.000"
 		case OrExpr:
 			t_name, t_color = "OrExpr", "0.408 0.498 1.000"
 		case Query:
 			t_name, t_color = "Query", "0.408 0.498 1.000"
-		case Step:
-			t_name, t_color = "Step", "0.408 0.498 1.000"
-		case Step_Test:
-			t_name, t_color = "Step_Test", "0.408 0.498 1.000"
 		case gopapageno.TokenEmpty:
 			t_name, t_color = "__EMPTY__", "0.408 0.498 1.000"
 		case ANCESTOR:
@@ -299,16 +299,16 @@ func SprintToken[ValueType any](root *gopapageno.Token) string {
 			sb.WriteString("AndExpr_Factor_OrExpr")
 		case AndExpr_Factor_OrExpr_Path:
 			sb.WriteString("AndExpr_Factor_OrExpr_Path")
+		case AndExpr_Factor_OrExpr_Step:
+			sb.WriteString("AndExpr_Factor_OrExpr_Step")
+		case AndExpr_Factor_OrExpr_Step_Test:
+			sb.WriteString("AndExpr_Factor_OrExpr_Step_Test")
 		case AndExpr_OrExpr:
 			sb.WriteString("AndExpr_OrExpr")
 		case OrExpr:
 			sb.WriteString("OrExpr")
 		case Query:
 			sb.WriteString("Query")
-		case Step:
-			sb.WriteString("Step")
-		case Step_Test:
-			sb.WriteString("Step_Test")
 		case gopapageno.TokenEmpty:
 			sb.WriteString("Empty")
 		case ANCESTOR:
@@ -376,67 +376,103 @@ func NewGrammar() *gopapageno.Grammar {
 	rules := []gopapageno.Rule{
 		{AndExpr_OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr, AND, AndExpr_Factor_OrExpr}, gopapageno.RuleSimple},
 		{AndExpr_OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr, AND, AndExpr_Factor_OrExpr_Path}, gopapageno.RuleSimple},
+		{AndExpr_OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr, AND, AndExpr_Factor_OrExpr_Step}, gopapageno.RuleSimple},
+		{AndExpr_OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr, AND, AndExpr_Factor_OrExpr_Step_Test}, gopapageno.RuleSimple},
 		{OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr, OR, AndExpr_Factor_OrExpr}, gopapageno.RuleSimple},
 		{OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr, OR, AndExpr_Factor_OrExpr_Path}, gopapageno.RuleSimple},
+		{OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr, OR, AndExpr_Factor_OrExpr_Step}, gopapageno.RuleSimple},
+		{OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr, OR, AndExpr_Factor_OrExpr_Step_Test}, gopapageno.RuleSimple},
 		{OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr, OR, AndExpr_OrExpr}, gopapageno.RuleSimple},
-		{AndExpr_Factor_OrExpr_Path, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Path, ANCESTOR, Step}, gopapageno.RuleSimple},
-		{AndExpr_Factor_OrExpr_Path, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Path, ANCESTOR, Step_Test}, gopapageno.RuleSimple},
+		{AndExpr_Factor_OrExpr_Path, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Path, ANCESTOR, AndExpr_Factor_OrExpr_Step}, gopapageno.RuleSimple},
+		{AndExpr_Factor_OrExpr_Path, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Path, ANCESTOR, AndExpr_Factor_OrExpr_Step_Test}, gopapageno.RuleSimple},
 		{AndExpr_OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Path, AND, AndExpr_Factor_OrExpr}, gopapageno.RuleSimple},
 		{AndExpr_OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Path, AND, AndExpr_Factor_OrExpr_Path}, gopapageno.RuleSimple},
-		{AndExpr_Factor_OrExpr_Path, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Path, CHILD, Step}, gopapageno.RuleSimple},
-		{AndExpr_Factor_OrExpr_Path, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Path, CHILD, Step_Test}, gopapageno.RuleSimple},
-		{AndExpr_Factor_OrExpr_Path, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Path, DESCENDANT, Step}, gopapageno.RuleSimple},
-		{AndExpr_Factor_OrExpr_Path, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Path, DESCENDANT, Step_Test}, gopapageno.RuleSimple},
+		{AndExpr_OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Path, AND, AndExpr_Factor_OrExpr_Step}, gopapageno.RuleSimple},
+		{AndExpr_OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Path, AND, AndExpr_Factor_OrExpr_Step_Test}, gopapageno.RuleSimple},
+		{AndExpr_Factor_OrExpr_Path, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Path, CHILD, AndExpr_Factor_OrExpr_Step}, gopapageno.RuleSimple},
+		{AndExpr_Factor_OrExpr_Path, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Path, CHILD, AndExpr_Factor_OrExpr_Step_Test}, gopapageno.RuleSimple},
+		{AndExpr_Factor_OrExpr_Path, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Path, DESCENDANT, AndExpr_Factor_OrExpr_Step}, gopapageno.RuleSimple},
+		{AndExpr_Factor_OrExpr_Path, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Path, DESCENDANT, AndExpr_Factor_OrExpr_Step_Test}, gopapageno.RuleSimple},
 		{OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Path, OR, AndExpr_Factor_OrExpr}, gopapageno.RuleSimple},
 		{OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Path, OR, AndExpr_Factor_OrExpr_Path}, gopapageno.RuleSimple},
+		{OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Path, OR, AndExpr_Factor_OrExpr_Step}, gopapageno.RuleSimple},
+		{OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Path, OR, AndExpr_Factor_OrExpr_Step_Test}, gopapageno.RuleSimple},
 		{OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Path, OR, AndExpr_OrExpr}, gopapageno.RuleSimple},
-		{AndExpr_Factor_OrExpr_Path, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Path, PARENT, Step}, gopapageno.RuleSimple},
-		{AndExpr_Factor_OrExpr_Path, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Path, PARENT, Step_Test}, gopapageno.RuleSimple},
+		{AndExpr_Factor_OrExpr_Path, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Path, PARENT, AndExpr_Factor_OrExpr_Step}, gopapageno.RuleSimple},
+		{AndExpr_Factor_OrExpr_Path, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Path, PARENT, AndExpr_Factor_OrExpr_Step_Test}, gopapageno.RuleSimple},
+		{AndExpr_OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Step, AND, AndExpr_Factor_OrExpr}, gopapageno.RuleSimple},
+		{AndExpr_OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Step, AND, AndExpr_Factor_OrExpr_Path}, gopapageno.RuleSimple},
+		{AndExpr_OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Step, AND, AndExpr_Factor_OrExpr_Step}, gopapageno.RuleSimple},
+		{AndExpr_OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Step, AND, AndExpr_Factor_OrExpr_Step_Test}, gopapageno.RuleSimple},
+		{OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Step, OR, AndExpr_Factor_OrExpr}, gopapageno.RuleSimple},
+		{OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Step, OR, AndExpr_Factor_OrExpr_Path}, gopapageno.RuleSimple},
+		{OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Step, OR, AndExpr_Factor_OrExpr_Step}, gopapageno.RuleSimple},
+		{OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Step, OR, AndExpr_Factor_OrExpr_Step_Test}, gopapageno.RuleSimple},
+		{OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Step, OR, AndExpr_OrExpr}, gopapageno.RuleSimple},
+		{AndExpr_OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Step_Test, AND, AndExpr_Factor_OrExpr}, gopapageno.RuleSimple},
+		{AndExpr_OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Step_Test, AND, AndExpr_Factor_OrExpr_Path}, gopapageno.RuleSimple},
+		{AndExpr_OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Step_Test, AND, AndExpr_Factor_OrExpr_Step}, gopapageno.RuleSimple},
+		{AndExpr_OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Step_Test, AND, AndExpr_Factor_OrExpr_Step_Test}, gopapageno.RuleSimple},
+		{AndExpr_Factor_OrExpr_Step, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Step_Test, LBR, AndExpr_Factor_OrExpr, RBR}, gopapageno.RuleSimple},
+		{AndExpr_Factor_OrExpr_Step, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Step_Test, LBR, AndExpr_Factor_OrExpr_Path, RBR}, gopapageno.RuleSimple},
+		{AndExpr_Factor_OrExpr_Step, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Step_Test, LBR, AndExpr_Factor_OrExpr_Step, RBR}, gopapageno.RuleSimple},
+		{AndExpr_Factor_OrExpr_Step, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Step_Test, LBR, AndExpr_Factor_OrExpr_Step_Test, RBR}, gopapageno.RuleSimple},
+		{AndExpr_Factor_OrExpr_Step, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Step_Test, LBR, AndExpr_OrExpr, RBR}, gopapageno.RuleSimple},
+		{AndExpr_Factor_OrExpr_Step, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Step_Test, LBR, OrExpr, RBR}, gopapageno.RuleSimple},
+		{OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Step_Test, OR, AndExpr_Factor_OrExpr}, gopapageno.RuleSimple},
+		{OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Step_Test, OR, AndExpr_Factor_OrExpr_Path}, gopapageno.RuleSimple},
+		{OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Step_Test, OR, AndExpr_Factor_OrExpr_Step}, gopapageno.RuleSimple},
+		{OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Step_Test, OR, AndExpr_Factor_OrExpr_Step_Test}, gopapageno.RuleSimple},
+		{OrExpr, []gopapageno.TokenType{AndExpr_Factor_OrExpr_Step_Test, OR, AndExpr_OrExpr}, gopapageno.RuleSimple},
 		{OrExpr, []gopapageno.TokenType{AndExpr_OrExpr, OR, AndExpr_Factor_OrExpr}, gopapageno.RuleSimple},
 		{OrExpr, []gopapageno.TokenType{AndExpr_OrExpr, OR, AndExpr_Factor_OrExpr_Path}, gopapageno.RuleSimple},
+		{OrExpr, []gopapageno.TokenType{AndExpr_OrExpr, OR, AndExpr_Factor_OrExpr_Step}, gopapageno.RuleSimple},
+		{OrExpr, []gopapageno.TokenType{AndExpr_OrExpr, OR, AndExpr_Factor_OrExpr_Step_Test}, gopapageno.RuleSimple},
 		{OrExpr, []gopapageno.TokenType{AndExpr_OrExpr, OR, AndExpr_OrExpr}, gopapageno.RuleSimple},
-		{Step, []gopapageno.TokenType{Step_Test, LBR, AndExpr_Factor_OrExpr, RBR}, gopapageno.RuleSimple},
-		{Step, []gopapageno.TokenType{Step_Test, LBR, AndExpr_Factor_OrExpr_Path, RBR}, gopapageno.RuleSimple},
-		{Step, []gopapageno.TokenType{Step_Test, LBR, AndExpr_OrExpr, RBR}, gopapageno.RuleSimple},
-		{Step, []gopapageno.TokenType{Step_Test, LBR, OrExpr, RBR}, gopapageno.RuleSimple},
-		{AndExpr_Factor_OrExpr_Path, []gopapageno.TokenType{ANCESTOR, Step}, gopapageno.RuleSimple},
-		{AndExpr_Factor_OrExpr_Path, []gopapageno.TokenType{ANCESTOR, Step_Test}, gopapageno.RuleSimple},
-		{Step_Test, []gopapageno.TokenType{AT, IDENT}, gopapageno.RuleSimple},
-		{Step_Test, []gopapageno.TokenType{AT, IDENT, EQ, STRING}, gopapageno.RuleSimple},
-		{AndExpr_Factor_OrExpr_Path, []gopapageno.TokenType{CHILD, Step}, gopapageno.RuleSimple},
-		{AndExpr_Factor_OrExpr_Path, []gopapageno.TokenType{CHILD, Step_Test}, gopapageno.RuleSimple},
-		{AndExpr_Factor_OrExpr_Path, []gopapageno.TokenType{DESCENDANT, Step}, gopapageno.RuleSimple},
-		{AndExpr_Factor_OrExpr_Path, []gopapageno.TokenType{DESCENDANT, Step_Test}, gopapageno.RuleSimple},
-		{Step_Test, []gopapageno.TokenType{IDENT}, gopapageno.RuleSimple},
+		{AndExpr_Factor_OrExpr_Path, []gopapageno.TokenType{ANCESTOR, AndExpr_Factor_OrExpr_Step}, gopapageno.RuleSimple},
+		{AndExpr_Factor_OrExpr_Path, []gopapageno.TokenType{ANCESTOR, AndExpr_Factor_OrExpr_Step_Test}, gopapageno.RuleSimple},
+		{AndExpr_Factor_OrExpr_Step_Test, []gopapageno.TokenType{AT, IDENT}, gopapageno.RuleSimple},
+		{AndExpr_Factor_OrExpr_Step_Test, []gopapageno.TokenType{AT, IDENT, EQ, STRING}, gopapageno.RuleSimple},
+		{AndExpr_Factor_OrExpr_Path, []gopapageno.TokenType{CHILD, AndExpr_Factor_OrExpr_Step}, gopapageno.RuleSimple},
+		{AndExpr_Factor_OrExpr_Path, []gopapageno.TokenType{CHILD, AndExpr_Factor_OrExpr_Step_Test}, gopapageno.RuleSimple},
+		{AndExpr_Factor_OrExpr_Path, []gopapageno.TokenType{DESCENDANT, AndExpr_Factor_OrExpr_Step}, gopapageno.RuleSimple},
+		{AndExpr_Factor_OrExpr_Path, []gopapageno.TokenType{DESCENDANT, AndExpr_Factor_OrExpr_Step_Test}, gopapageno.RuleSimple},
+		{AndExpr_Factor_OrExpr_Step_Test, []gopapageno.TokenType{IDENT}, gopapageno.RuleSimple},
 		{AndExpr_Factor_OrExpr, []gopapageno.TokenType{LPAR, AndExpr_Factor_OrExpr, RPAR}, gopapageno.RuleSimple},
 		{AndExpr_Factor_OrExpr, []gopapageno.TokenType{LPAR, AndExpr_Factor_OrExpr_Path, RPAR}, gopapageno.RuleSimple},
+		{AndExpr_Factor_OrExpr, []gopapageno.TokenType{LPAR, AndExpr_Factor_OrExpr_Step, RPAR}, gopapageno.RuleSimple},
+		{AndExpr_Factor_OrExpr, []gopapageno.TokenType{LPAR, AndExpr_Factor_OrExpr_Step_Test, RPAR}, gopapageno.RuleSimple},
 		{AndExpr_Factor_OrExpr, []gopapageno.TokenType{LPAR, AndExpr_OrExpr, RPAR}, gopapageno.RuleSimple},
 		{AndExpr_Factor_OrExpr, []gopapageno.TokenType{LPAR, OrExpr, RPAR}, gopapageno.RuleSimple},
 		{AndExpr_Factor_OrExpr, []gopapageno.TokenType{NOT, AndExpr_Factor_OrExpr_Path}, gopapageno.RuleSimple},
+		{AndExpr_Factor_OrExpr, []gopapageno.TokenType{NOT, AndExpr_Factor_OrExpr_Step}, gopapageno.RuleSimple},
+		{AndExpr_Factor_OrExpr, []gopapageno.TokenType{NOT, AndExpr_Factor_OrExpr_Step_Test}, gopapageno.RuleSimple},
 		{AndExpr_Factor_OrExpr, []gopapageno.TokenType{NOT, LPAR, AndExpr_Factor_OrExpr, RPAR}, gopapageno.RuleSimple},
 		{AndExpr_Factor_OrExpr, []gopapageno.TokenType{NOT, LPAR, AndExpr_Factor_OrExpr_Path, RPAR}, gopapageno.RuleSimple},
+		{AndExpr_Factor_OrExpr, []gopapageno.TokenType{NOT, LPAR, AndExpr_Factor_OrExpr_Step, RPAR}, gopapageno.RuleSimple},
+		{AndExpr_Factor_OrExpr, []gopapageno.TokenType{NOT, LPAR, AndExpr_Factor_OrExpr_Step_Test, RPAR}, gopapageno.RuleSimple},
 		{AndExpr_Factor_OrExpr, []gopapageno.TokenType{NOT, LPAR, AndExpr_OrExpr, RPAR}, gopapageno.RuleSimple},
 		{AndExpr_Factor_OrExpr, []gopapageno.TokenType{NOT, LPAR, OrExpr, RPAR}, gopapageno.RuleSimple},
-		{AndExpr_Factor_OrExpr_Path, []gopapageno.TokenType{PARENT, Step}, gopapageno.RuleSimple},
-		{AndExpr_Factor_OrExpr_Path, []gopapageno.TokenType{PARENT, Step_Test}, gopapageno.RuleSimple},
-		{Step_Test, []gopapageno.TokenType{TEXT}, gopapageno.RuleSimple},
-		{Step_Test, []gopapageno.TokenType{TEXT, EQ, STRING}, gopapageno.RuleSimple},
+		{AndExpr_Factor_OrExpr_Path, []gopapageno.TokenType{PARENT, AndExpr_Factor_OrExpr_Step}, gopapageno.RuleSimple},
+		{AndExpr_Factor_OrExpr_Path, []gopapageno.TokenType{PARENT, AndExpr_Factor_OrExpr_Step_Test}, gopapageno.RuleSimple},
+		{AndExpr_Factor_OrExpr_Step_Test, []gopapageno.TokenType{TEXT}, gopapageno.RuleSimple},
+		{AndExpr_Factor_OrExpr_Step_Test, []gopapageno.TokenType{TEXT, EQ, STRING}, gopapageno.RuleSimple},
 	}
-	compressedRules := []uint16{0, 0, 13, 1, 29, 2, 67, 3, 165, 7, 188, 32769, 236, 32771, 249, 32772, 267, 32773, 280, 32775, 293, 32777, 296, 32778, 339, 32780, 392, 32784, 405, 0, 0, 2, 32770, 36, 32779, 49, 0, 0, 2, 1, 43, 2, 46, 3, 0, 0, 3, 1, 0, 0, 0, 3, 1, 58, 2, 61, 3, 64, 4, 2, 0, 4, 3, 0, 4, 4, 0, 0, 0, 6, 32769, 82, 32770, 95, 32772, 108, 32773, 121, 32779, 134, 32780, 152, 0, 0, 2, 6, 89, 7, 92, 2, 5, 0, 2, 6, 0, 0, 0, 2, 1, 102, 2, 105, 3, 7, 0, 3, 8, 0, 0, 0, 2, 6, 115, 7, 118, 2, 9, 0, 2, 10, 0, 0, 0, 2, 6, 128, 7, 131, 2, 11, 0, 2, 12, 0, 0, 0, 3, 1, 143, 2, 146, 3, 149, 4, 13, 0, 4, 14, 0, 4, 15, 0, 0, 0, 2, 6, 159, 7, 162, 2, 16, 0, 2, 17, 0, 0, 0, 1, 32779, 170, 0, 0, 3, 1, 179, 2, 182, 3, 185, 4, 18, 0, 4, 19, 0, 4, 20, 0, 0, 0, 1, 32776, 193, 0, 0, 4, 1, 204, 2, 212, 3, 220, 4, 228, 0, 0, 1, 32781, 209, 6, 21, 0, 0, 0, 1, 32781, 217, 6, 22, 0, 0, 0, 1, 32781, 225, 6, 23, 0, 0, 0, 1, 32781, 233, 6, 24, 0, 0, 0, 2, 6, 243, 7, 246, 2, 25, 0, 2, 26, 0, 0, 0, 1, 32775, 254, 7, 27, 1, 32774, 259, 0, 0, 1, 32783, 264, 7, 28, 0, 0, 0, 2, 6, 274, 7, 277, 2, 29, 0, 2, 30, 0, 0, 0, 2, 6, 287, 7, 290, 2, 31, 0, 2, 32, 0, 7, 33, 0, 0, 0, 4, 1, 307, 2, 315, 3, 323, 4, 331, 0, 0, 1, 32782, 312, 1, 34, 0, 0, 0, 1, 32782, 320, 1, 35, 0, 0, 0, 1, 32782, 328, 1, 36, 0, 0, 0, 1, 32782, 336, 1, 37, 0, 0, 0, 2, 2, 346, 32777, 349, 1, 38, 0, 0, 0, 4, 1, 360, 2, 368, 3, 376, 4, 384, 0, 0, 1, 32782, 365, 1, 39, 0, 0, 0, 1, 32782, 373, 1, 40, 0, 0, 0, 1, 32782, 381, 1, 41, 0, 0, 0, 1, 32782, 389, 1, 42, 0, 0, 0, 2, 6, 399, 7, 402, 2, 43, 0, 2, 44, 0, 7, 45, 1, 32774, 410, 0, 0, 1, 32783, 415, 7, 46, 0	}
+	compressedRules := []uint16{0, 0, 14, 1, 31, 2, 89, 3, 207, 4, 265, 5, 388, 32769, 421, 32771, 434, 32772, 452, 32773, 465, 32775, 478, 32777, 481, 32778, 544, 32780, 627, 32784, 640, 0, 0, 2, 32770, 38, 32779, 61, 0, 0, 4, 1, 49, 2, 52, 3, 55, 4, 58, 5, 0, 0, 5, 1, 0, 5, 2, 0, 5, 3, 0, 0, 0, 5, 1, 74, 2, 77, 3, 80, 4, 83, 5, 86, 6, 4, 0, 6, 5, 0, 6, 6, 0, 6, 7, 0, 6, 8, 0, 0, 0, 6, 32769, 104, 32770, 117, 32772, 140, 32773, 153, 32779, 166, 32780, 194, 0, 0, 2, 3, 111, 4, 114, 2, 9, 0, 2, 10, 0, 0, 0, 4, 1, 128, 2, 131, 3, 134, 4, 137, 5, 11, 0, 5, 12, 0, 5, 13, 0, 5, 14, 0, 0, 0, 2, 3, 147, 4, 150, 2, 15, 0, 2, 16, 0, 0, 0, 2, 3, 160, 4, 163, 2, 17, 0, 2, 18, 0, 0, 0, 5, 1, 179, 2, 182, 3, 185, 4, 188, 5, 191, 6, 19, 0, 6, 20, 0, 6, 21, 0, 6, 22, 0, 6, 23, 0, 0, 0, 2, 3, 201, 4, 204, 2, 24, 0, 2, 25, 0, 0, 0, 2, 32770, 214, 32779, 237, 0, 0, 4, 1, 225, 2, 228, 3, 231, 4, 234, 5, 26, 0, 5, 27, 0, 5, 28, 0, 5, 29, 0, 0, 0, 5, 1, 250, 2, 253, 3, 256, 4, 259, 5, 262, 6, 30, 0, 6, 31, 0, 6, 32, 0, 6, 33, 0, 6, 34, 0, 0, 0, 3, 32770, 274, 32776, 297, 32779, 360, 0, 0, 4, 1, 285, 2, 288, 3, 291, 4, 294, 5, 35, 0, 5, 36, 0, 5, 37, 0, 5, 38, 0, 0, 0, 6, 1, 312, 2, 320, 3, 328, 4, 336, 5, 344, 6, 352, 0, 0, 1, 32781, 317, 3, 39, 0, 0, 0, 1, 32781, 325, 3, 40, 0, 0, 0, 1, 32781, 333, 3, 41, 0, 0, 0, 1, 32781, 341, 3, 42, 0, 0, 0, 1, 32781, 349, 3, 43, 0, 0, 0, 1, 32781, 357, 3, 44, 0, 0, 0, 5, 1, 373, 2, 376, 3, 379, 4, 382, 5, 385, 6, 45, 0, 6, 46, 0, 6, 47, 0, 6, 48, 0, 6, 49, 0, 0, 0, 1, 32779, 393, 0, 0, 5, 1, 406, 2, 409, 3, 412, 4, 415, 5, 418, 6, 50, 0, 6, 51, 0, 6, 52, 0, 6, 53, 0, 6, 54, 0, 0, 0, 2, 3, 428, 4, 431, 2, 55, 0, 2, 56, 0, 0, 0, 1, 32775, 439, 4, 57, 1, 32774, 444, 0, 0, 1, 32783, 449, 4, 58, 0, 0, 0, 2, 3, 459, 4, 462, 2, 59, 0, 2, 60, 0, 0, 0, 2, 3, 472, 4, 475, 2, 61, 0, 2, 62, 0, 4, 63, 0, 0, 0, 6, 1, 496, 2, 504, 3, 512, 4, 520, 5, 528, 6, 536, 0, 0, 1, 32782, 501, 1, 64, 0, 0, 0, 1, 32782, 509, 1, 65, 0, 0, 0, 1, 32782, 517, 1, 66, 0, 0, 0, 1, 32782, 525, 1, 67, 0, 0, 0, 1, 32782, 533, 1, 68, 0, 0, 0, 1, 32782, 541, 1, 69, 0, 0, 0, 4, 2, 555, 3, 558, 4, 561, 32777, 564, 1, 70, 0, 1, 71, 0, 1, 72, 0, 0, 0, 6, 1, 579, 2, 587, 3, 595, 4, 603, 5, 611, 6, 619, 0, 0, 1, 32782, 584, 1, 73, 0, 0, 0, 1, 32782, 592, 1, 74, 0, 0, 0, 1, 32782, 600, 1, 75, 0, 0, 0, 1, 32782, 608, 1, 76, 0, 0, 0, 1, 32782, 616, 1, 77, 0, 0, 0, 1, 32782, 624, 1, 78, 0, 0, 0, 2, 3, 634, 4, 637, 2, 79, 0, 2, 80, 0, 4, 81, 1, 32774, 645, 0, 0, 1, 32783, 650, 4, 82, 0	}
 
 	precMatrix := [][]gopapageno.Precedence{
 		{gopapageno.PrecEquals, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields},
 		{gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecYields, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecEmpty, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecEmpty, gopapageno.PrecYields},
-		{gopapageno.PrecTakes, gopapageno.PrecYields, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecTakes, gopapageno.PrecYields, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecEmpty, gopapageno.PrecEmpty},
+		{gopapageno.PrecTakes, gopapageno.PrecYields, gopapageno.PrecEmpty, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecEmpty, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecTakes, gopapageno.PrecYields, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecEmpty, gopapageno.PrecYields},
 		{gopapageno.PrecTakes, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEquals, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEquals, gopapageno.PrecEmpty},
 		{gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecYields, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecEmpty, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecEmpty, gopapageno.PrecYields},
 		{gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecYields, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecEmpty, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecEmpty, gopapageno.PrecYields},
 		{gopapageno.PrecTakes, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty},
 		{gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecEmpty, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecTakes, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecEquals, gopapageno.PrecEmpty},
-		{gopapageno.PrecTakes, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecEmpty, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecEquals, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty},
-		{gopapageno.PrecTakes, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecEmpty, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecEmpty, gopapageno.PrecEquals, gopapageno.PrecEmpty, gopapageno.PrecEmpty},
-		{gopapageno.PrecTakes, gopapageno.PrecYields, gopapageno.PrecTakes, gopapageno.PrecEmpty, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecTakes, gopapageno.PrecYields, gopapageno.PrecTakes, gopapageno.PrecEquals, gopapageno.PrecEmpty, gopapageno.PrecEmpty},
-		{gopapageno.PrecTakes, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecEmpty, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecEmpty, gopapageno.PrecYields, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecEmpty, gopapageno.PrecEmpty},
+		{gopapageno.PrecTakes, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecEmpty, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecEquals, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecYields},
+		{gopapageno.PrecTakes, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecEmpty, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecEmpty, gopapageno.PrecEquals, gopapageno.PrecEmpty, gopapageno.PrecYields},
+		{gopapageno.PrecTakes, gopapageno.PrecYields, gopapageno.PrecTakes, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecEmpty, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecTakes, gopapageno.PrecYields, gopapageno.PrecTakes, gopapageno.PrecEquals, gopapageno.PrecEmpty, gopapageno.PrecYields},
+		{gopapageno.PrecTakes, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecEmpty, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecEmpty, gopapageno.PrecYields, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecEmpty, gopapageno.PrecYields},
 		{gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecYields, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecEmpty, gopapageno.PrecYields, gopapageno.PrecYields, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecEmpty, gopapageno.PrecYields},
 		{gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecEmpty, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecEmpty, gopapageno.PrecEmpty},
 		{gopapageno.PrecTakes, gopapageno.PrecEmpty, gopapageno.PrecTakes, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecTakes, gopapageno.PrecEmpty, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecEmpty, gopapageno.PrecEmpty},
@@ -444,7 +480,7 @@ func NewGrammar() *gopapageno.Grammar {
 		{gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecEmpty, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecTakes, gopapageno.PrecEmpty, gopapageno.PrecEmpty, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecTakes, gopapageno.PrecEquals, gopapageno.PrecEmpty},
 	}
 	bitPackedMatrix := []uint64{
-		12251244168589170004, 560916877412, 372014444257634816, 9406471509205066922, 1465923139083307680, 5008169912785438032, 12189697498038289665, 9405767830901227560, 3063021872248554122, 4, 
+		12251244168589170004, 629637665892, 372014444257634816, 9406471509205066922, 1538262213470849696, 6165595102986372437, 12189697498042484049, 9405767830901227560, 3063021872248554122, 4, 
 	}
 
 	fn := func(ruleDescription uint16, ruleFlags gopapageno.RuleFlags, lhs *gopapageno.Token, rhs []*gopapageno.Token, thread int){
@@ -484,6 +520,40 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = AND2
 			_ = AndExpr_Factor_OrExpr_Path3
 		case 2:
+			AndExpr_OrExpr0 := lhs
+			AndExpr_Factor_OrExpr1 := rhs[0]
+			AND2 := rhs[1]
+			AndExpr_Factor_OrExpr_Step3 := rhs[2]
+
+			AndExpr_OrExpr0.Child = AndExpr_Factor_OrExpr1
+			AndExpr_Factor_OrExpr1.Next = AND2
+			AND2.Next = AndExpr_Factor_OrExpr_Step3
+			AndExpr_OrExpr0.LastChild = AndExpr_Factor_OrExpr_Step3
+
+			{
+				AndExpr_OrExpr0.Value = combine(and(), AndExpr_Factor_OrExpr1.Value.(predicate), AndExpr_Factor_OrExpr_Step3.Value.(predicate))
+			}
+			_ = AndExpr_Factor_OrExpr1
+			_ = AND2
+			_ = AndExpr_Factor_OrExpr_Step3
+		case 3:
+			AndExpr_OrExpr0 := lhs
+			AndExpr_Factor_OrExpr1 := rhs[0]
+			AND2 := rhs[1]
+			AndExpr_Factor_OrExpr_Step_Test3 := rhs[2]
+
+			AndExpr_OrExpr0.Child = AndExpr_Factor_OrExpr1
+			AndExpr_Factor_OrExpr1.Next = AND2
+			AND2.Next = AndExpr_Factor_OrExpr_Step_Test3
+			AndExpr_OrExpr0.LastChild = AndExpr_Factor_OrExpr_Step_Test3
+
+			{
+				AndExpr_OrExpr0.Value = combine(and(), AndExpr_Factor_OrExpr1.Value.(predicate), AndExpr_Factor_OrExpr_Step_Test3.Value.(predicate))
+			}
+			_ = AndExpr_Factor_OrExpr1
+			_ = AND2
+			_ = AndExpr_Factor_OrExpr_Step_Test3
+		case 4:
 			OrExpr0 := lhs
 			AndExpr_Factor_OrExpr1 := rhs[0]
 			OR2 := rhs[1]
@@ -500,7 +570,7 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = AndExpr_Factor_OrExpr1
 			_ = OR2
 			_ = AndExpr_Factor_OrExpr3
-		case 3:
+		case 5:
 			OrExpr0 := lhs
 			AndExpr_Factor_OrExpr1 := rhs[0]
 			OR2 := rhs[1]
@@ -517,7 +587,41 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = AndExpr_Factor_OrExpr1
 			_ = OR2
 			_ = AndExpr_Factor_OrExpr_Path3
-		case 4:
+		case 6:
+			OrExpr0 := lhs
+			AndExpr_Factor_OrExpr1 := rhs[0]
+			OR2 := rhs[1]
+			AndExpr_Factor_OrExpr_Step3 := rhs[2]
+
+			OrExpr0.Child = AndExpr_Factor_OrExpr1
+			AndExpr_Factor_OrExpr1.Next = OR2
+			OR2.Next = AndExpr_Factor_OrExpr_Step3
+			OrExpr0.LastChild = AndExpr_Factor_OrExpr_Step3
+
+			{
+				OrExpr0.Value = combine(or(), AndExpr_Factor_OrExpr1.Value.(predicate), AndExpr_Factor_OrExpr_Step3.Value.(predicate))
+			}
+			_ = AndExpr_Factor_OrExpr1
+			_ = OR2
+			_ = AndExpr_Factor_OrExpr_Step3
+		case 7:
+			OrExpr0 := lhs
+			AndExpr_Factor_OrExpr1 := rhs[0]
+			OR2 := rhs[1]
+			AndExpr_Factor_OrExpr_Step_Test3 := rhs[2]
+
+			OrExpr0.Child = AndExpr_Factor_OrExpr1
+			AndExpr_Factor_OrExpr1.Next = OR2
+			OR2.Next = AndExpr_Factor_OrExpr_Step_Test3
+			OrExpr0.LastChild = AndExpr_Factor_OrExpr_Step_Test3
+
+			{
+				OrExpr0.Value = combine(or(), AndExpr_Factor_OrExpr1.Value.(predicate), AndExpr_Factor_OrExpr_Step_Test3.Value.(predicate))
+			}
+			_ = AndExpr_Factor_OrExpr1
+			_ = OR2
+			_ = AndExpr_Factor_OrExpr_Step_Test3
+		case 8:
 			OrExpr0 := lhs
 			AndExpr_Factor_OrExpr1 := rhs[0]
 			OR2 := rhs[1]
@@ -534,41 +638,41 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = AndExpr_Factor_OrExpr1
 			_ = OR2
 			_ = AndExpr_OrExpr3
-		case 5:
+		case 9:
 			AndExpr_Factor_OrExpr_Path0 := lhs
 			AndExpr_Factor_OrExpr_Path1 := rhs[0]
 			ANCESTOR2 := rhs[1]
-			Step3 := rhs[2]
+			AndExpr_Factor_OrExpr_Step3 := rhs[2]
 
 			AndExpr_Factor_OrExpr_Path0.Child = AndExpr_Factor_OrExpr_Path1
 			AndExpr_Factor_OrExpr_Path1.Next = ANCESTOR2
-			ANCESTOR2.Next = Step3
-			AndExpr_Factor_OrExpr_Path0.LastChild = Step3
+			ANCESTOR2.Next = AndExpr_Factor_OrExpr_Step3
+			AndExpr_Factor_OrExpr_Path0.LastChild = AndExpr_Factor_OrExpr_Step3
 
 			{
-				AndExpr_Factor_OrExpr_Path0.Value = appendStep(AndExpr_Factor_OrExpr_Path1.Value.(*peSemValue), Step3.Value.(udpeTest), ancestorOrSelf)
+				AndExpr_Factor_OrExpr_Path0.Value = appendStep(AndExpr_Factor_OrExpr_Path1.Value.(*peSemValue), AndExpr_Factor_OrExpr_Step3.Value.(udpeTest), ancestorOrSelf)
 			}
 			_ = AndExpr_Factor_OrExpr_Path1
 			_ = ANCESTOR2
-			_ = Step3
-		case 6:
+			_ = AndExpr_Factor_OrExpr_Step3
+		case 10:
 			AndExpr_Factor_OrExpr_Path0 := lhs
 			AndExpr_Factor_OrExpr_Path1 := rhs[0]
 			ANCESTOR2 := rhs[1]
-			Step_Test3 := rhs[2]
+			AndExpr_Factor_OrExpr_Step_Test3 := rhs[2]
 
 			AndExpr_Factor_OrExpr_Path0.Child = AndExpr_Factor_OrExpr_Path1
 			AndExpr_Factor_OrExpr_Path1.Next = ANCESTOR2
-			ANCESTOR2.Next = Step_Test3
-			AndExpr_Factor_OrExpr_Path0.LastChild = Step_Test3
+			ANCESTOR2.Next = AndExpr_Factor_OrExpr_Step_Test3
+			AndExpr_Factor_OrExpr_Path0.LastChild = AndExpr_Factor_OrExpr_Step_Test3
 
 			{
-				AndExpr_Factor_OrExpr_Path0.Value = appendStep(AndExpr_Factor_OrExpr_Path1.Value.(*peSemValue), Step_Test3.Value.(udpeTest), ancestorOrSelf)
+				AndExpr_Factor_OrExpr_Path0.Value = appendStep(AndExpr_Factor_OrExpr_Path1.Value.(*peSemValue), AndExpr_Factor_OrExpr_Step_Test3.Value.(udpeTest), ancestorOrSelf)
 			}
 			_ = AndExpr_Factor_OrExpr_Path1
 			_ = ANCESTOR2
-			_ = Step_Test3
-		case 7:
+			_ = AndExpr_Factor_OrExpr_Step_Test3
+		case 11:
 			AndExpr_OrExpr0 := lhs
 			AndExpr_Factor_OrExpr_Path1 := rhs[0]
 			AND2 := rhs[1]
@@ -585,7 +689,7 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = AndExpr_Factor_OrExpr_Path1
 			_ = AND2
 			_ = AndExpr_Factor_OrExpr3
-		case 8:
+		case 12:
 			AndExpr_OrExpr0 := lhs
 			AndExpr_Factor_OrExpr_Path1 := rhs[0]
 			AND2 := rhs[1]
@@ -602,75 +706,109 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = AndExpr_Factor_OrExpr_Path1
 			_ = AND2
 			_ = AndExpr_Factor_OrExpr_Path3
-		case 9:
-			AndExpr_Factor_OrExpr_Path0 := lhs
-			AndExpr_Factor_OrExpr_Path1 := rhs[0]
-			CHILD2 := rhs[1]
-			Step3 := rhs[2]
-
-			AndExpr_Factor_OrExpr_Path0.Child = AndExpr_Factor_OrExpr_Path1
-			AndExpr_Factor_OrExpr_Path1.Next = CHILD2
-			CHILD2.Next = Step3
-			AndExpr_Factor_OrExpr_Path0.LastChild = Step3
-
-			{
-				AndExpr_Factor_OrExpr_Path0.Value = appendStep(AndExpr_Factor_OrExpr_Path1.Value.(*peSemValue), Step3.Value.(udpeTest), child)
-			}
-			_ = AndExpr_Factor_OrExpr_Path1
-			_ = CHILD2
-			_ = Step3
-		case 10:
-			AndExpr_Factor_OrExpr_Path0 := lhs
-			AndExpr_Factor_OrExpr_Path1 := rhs[0]
-			CHILD2 := rhs[1]
-			Step_Test3 := rhs[2]
-
-			AndExpr_Factor_OrExpr_Path0.Child = AndExpr_Factor_OrExpr_Path1
-			AndExpr_Factor_OrExpr_Path1.Next = CHILD2
-			CHILD2.Next = Step_Test3
-			AndExpr_Factor_OrExpr_Path0.LastChild = Step_Test3
-
-			{
-				AndExpr_Factor_OrExpr_Path0.Value = appendStep(AndExpr_Factor_OrExpr_Path1.Value.(*peSemValue), Step_Test3.Value.(udpeTest), child)
-			}
-			_ = AndExpr_Factor_OrExpr_Path1
-			_ = CHILD2
-			_ = Step_Test3
-		case 11:
-			AndExpr_Factor_OrExpr_Path0 := lhs
-			AndExpr_Factor_OrExpr_Path1 := rhs[0]
-			DESCENDANT2 := rhs[1]
-			Step3 := rhs[2]
-
-			AndExpr_Factor_OrExpr_Path0.Child = AndExpr_Factor_OrExpr_Path1
-			AndExpr_Factor_OrExpr_Path1.Next = DESCENDANT2
-			DESCENDANT2.Next = Step3
-			AndExpr_Factor_OrExpr_Path0.LastChild = Step3
-
-			{
-				AndExpr_Factor_OrExpr_Path0.Value = appendStep(AndExpr_Factor_OrExpr_Path1.Value.(*peSemValue), Step3.Value.(udpeTest), descendantOrSelf)
-			}
-			_ = AndExpr_Factor_OrExpr_Path1
-			_ = DESCENDANT2
-			_ = Step3
-		case 12:
-			AndExpr_Factor_OrExpr_Path0 := lhs
-			AndExpr_Factor_OrExpr_Path1 := rhs[0]
-			DESCENDANT2 := rhs[1]
-			Step_Test3 := rhs[2]
-
-			AndExpr_Factor_OrExpr_Path0.Child = AndExpr_Factor_OrExpr_Path1
-			AndExpr_Factor_OrExpr_Path1.Next = DESCENDANT2
-			DESCENDANT2.Next = Step_Test3
-			AndExpr_Factor_OrExpr_Path0.LastChild = Step_Test3
-
-			{
-				AndExpr_Factor_OrExpr_Path0.Value = appendStep(AndExpr_Factor_OrExpr_Path1.Value.(*peSemValue), Step_Test3.Value.(udpeTest), descendantOrSelf)
-			}
-			_ = AndExpr_Factor_OrExpr_Path1
-			_ = DESCENDANT2
-			_ = Step_Test3
 		case 13:
+			AndExpr_OrExpr0 := lhs
+			AndExpr_Factor_OrExpr_Path1 := rhs[0]
+			AND2 := rhs[1]
+			AndExpr_Factor_OrExpr_Step3 := rhs[2]
+
+			AndExpr_OrExpr0.Child = AndExpr_Factor_OrExpr_Path1
+			AndExpr_Factor_OrExpr_Path1.Next = AND2
+			AND2.Next = AndExpr_Factor_OrExpr_Step3
+			AndExpr_OrExpr0.LastChild = AndExpr_Factor_OrExpr_Step3
+
+			{
+				AndExpr_OrExpr0.Value = combine(and(), AndExpr_Factor_OrExpr_Path1.Value.(predicate), AndExpr_Factor_OrExpr_Step3.Value.(predicate))
+			}
+			_ = AndExpr_Factor_OrExpr_Path1
+			_ = AND2
+			_ = AndExpr_Factor_OrExpr_Step3
+		case 14:
+			AndExpr_OrExpr0 := lhs
+			AndExpr_Factor_OrExpr_Path1 := rhs[0]
+			AND2 := rhs[1]
+			AndExpr_Factor_OrExpr_Step_Test3 := rhs[2]
+
+			AndExpr_OrExpr0.Child = AndExpr_Factor_OrExpr_Path1
+			AndExpr_Factor_OrExpr_Path1.Next = AND2
+			AND2.Next = AndExpr_Factor_OrExpr_Step_Test3
+			AndExpr_OrExpr0.LastChild = AndExpr_Factor_OrExpr_Step_Test3
+
+			{
+				AndExpr_OrExpr0.Value = combine(and(), AndExpr_Factor_OrExpr_Path1.Value.(predicate), AndExpr_Factor_OrExpr_Step_Test3.Value.(predicate))
+			}
+			_ = AndExpr_Factor_OrExpr_Path1
+			_ = AND2
+			_ = AndExpr_Factor_OrExpr_Step_Test3
+		case 15:
+			AndExpr_Factor_OrExpr_Path0 := lhs
+			AndExpr_Factor_OrExpr_Path1 := rhs[0]
+			CHILD2 := rhs[1]
+			AndExpr_Factor_OrExpr_Step3 := rhs[2]
+
+			AndExpr_Factor_OrExpr_Path0.Child = AndExpr_Factor_OrExpr_Path1
+			AndExpr_Factor_OrExpr_Path1.Next = CHILD2
+			CHILD2.Next = AndExpr_Factor_OrExpr_Step3
+			AndExpr_Factor_OrExpr_Path0.LastChild = AndExpr_Factor_OrExpr_Step3
+
+			{
+				AndExpr_Factor_OrExpr_Path0.Value = appendStep(AndExpr_Factor_OrExpr_Path1.Value.(*peSemValue), AndExpr_Factor_OrExpr_Step3.Value.(udpeTest), child)
+			}
+			_ = AndExpr_Factor_OrExpr_Path1
+			_ = CHILD2
+			_ = AndExpr_Factor_OrExpr_Step3
+		case 16:
+			AndExpr_Factor_OrExpr_Path0 := lhs
+			AndExpr_Factor_OrExpr_Path1 := rhs[0]
+			CHILD2 := rhs[1]
+			AndExpr_Factor_OrExpr_Step_Test3 := rhs[2]
+
+			AndExpr_Factor_OrExpr_Path0.Child = AndExpr_Factor_OrExpr_Path1
+			AndExpr_Factor_OrExpr_Path1.Next = CHILD2
+			CHILD2.Next = AndExpr_Factor_OrExpr_Step_Test3
+			AndExpr_Factor_OrExpr_Path0.LastChild = AndExpr_Factor_OrExpr_Step_Test3
+
+			{
+				AndExpr_Factor_OrExpr_Path0.Value = appendStep(AndExpr_Factor_OrExpr_Path1.Value.(*peSemValue), AndExpr_Factor_OrExpr_Step_Test3.Value.(udpeTest), child)
+			}
+			_ = AndExpr_Factor_OrExpr_Path1
+			_ = CHILD2
+			_ = AndExpr_Factor_OrExpr_Step_Test3
+		case 17:
+			AndExpr_Factor_OrExpr_Path0 := lhs
+			AndExpr_Factor_OrExpr_Path1 := rhs[0]
+			DESCENDANT2 := rhs[1]
+			AndExpr_Factor_OrExpr_Step3 := rhs[2]
+
+			AndExpr_Factor_OrExpr_Path0.Child = AndExpr_Factor_OrExpr_Path1
+			AndExpr_Factor_OrExpr_Path1.Next = DESCENDANT2
+			DESCENDANT2.Next = AndExpr_Factor_OrExpr_Step3
+			AndExpr_Factor_OrExpr_Path0.LastChild = AndExpr_Factor_OrExpr_Step3
+
+			{
+				AndExpr_Factor_OrExpr_Path0.Value = appendStep(AndExpr_Factor_OrExpr_Path1.Value.(*peSemValue), AndExpr_Factor_OrExpr_Step3.Value.(udpeTest), descendantOrSelf)
+			}
+			_ = AndExpr_Factor_OrExpr_Path1
+			_ = DESCENDANT2
+			_ = AndExpr_Factor_OrExpr_Step3
+		case 18:
+			AndExpr_Factor_OrExpr_Path0 := lhs
+			AndExpr_Factor_OrExpr_Path1 := rhs[0]
+			DESCENDANT2 := rhs[1]
+			AndExpr_Factor_OrExpr_Step_Test3 := rhs[2]
+
+			AndExpr_Factor_OrExpr_Path0.Child = AndExpr_Factor_OrExpr_Path1
+			AndExpr_Factor_OrExpr_Path1.Next = DESCENDANT2
+			DESCENDANT2.Next = AndExpr_Factor_OrExpr_Step_Test3
+			AndExpr_Factor_OrExpr_Path0.LastChild = AndExpr_Factor_OrExpr_Step_Test3
+
+			{
+				AndExpr_Factor_OrExpr_Path0.Value = appendStep(AndExpr_Factor_OrExpr_Path1.Value.(*peSemValue), AndExpr_Factor_OrExpr_Step_Test3.Value.(udpeTest), descendantOrSelf)
+			}
+			_ = AndExpr_Factor_OrExpr_Path1
+			_ = DESCENDANT2
+			_ = AndExpr_Factor_OrExpr_Step_Test3
+		case 19:
 			OrExpr0 := lhs
 			AndExpr_Factor_OrExpr_Path1 := rhs[0]
 			OR2 := rhs[1]
@@ -687,7 +825,7 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = AndExpr_Factor_OrExpr_Path1
 			_ = OR2
 			_ = AndExpr_Factor_OrExpr3
-		case 14:
+		case 20:
 			OrExpr0 := lhs
 			AndExpr_Factor_OrExpr_Path1 := rhs[0]
 			OR2 := rhs[1]
@@ -704,7 +842,41 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = AndExpr_Factor_OrExpr_Path1
 			_ = OR2
 			_ = AndExpr_Factor_OrExpr_Path3
-		case 15:
+		case 21:
+			OrExpr0 := lhs
+			AndExpr_Factor_OrExpr_Path1 := rhs[0]
+			OR2 := rhs[1]
+			AndExpr_Factor_OrExpr_Step3 := rhs[2]
+
+			OrExpr0.Child = AndExpr_Factor_OrExpr_Path1
+			AndExpr_Factor_OrExpr_Path1.Next = OR2
+			OR2.Next = AndExpr_Factor_OrExpr_Step3
+			OrExpr0.LastChild = AndExpr_Factor_OrExpr_Step3
+
+			{
+				OrExpr0.Value = combine(or(), AndExpr_Factor_OrExpr_Path1.Value.(predicate), AndExpr_Factor_OrExpr_Step3.Value.(predicate))
+			}
+			_ = AndExpr_Factor_OrExpr_Path1
+			_ = OR2
+			_ = AndExpr_Factor_OrExpr_Step3
+		case 22:
+			OrExpr0 := lhs
+			AndExpr_Factor_OrExpr_Path1 := rhs[0]
+			OR2 := rhs[1]
+			AndExpr_Factor_OrExpr_Step_Test3 := rhs[2]
+
+			OrExpr0.Child = AndExpr_Factor_OrExpr_Path1
+			AndExpr_Factor_OrExpr_Path1.Next = OR2
+			OR2.Next = AndExpr_Factor_OrExpr_Step_Test3
+			OrExpr0.LastChild = AndExpr_Factor_OrExpr_Step_Test3
+
+			{
+				OrExpr0.Value = combine(or(), AndExpr_Factor_OrExpr_Path1.Value.(predicate), AndExpr_Factor_OrExpr_Step_Test3.Value.(predicate))
+			}
+			_ = AndExpr_Factor_OrExpr_Path1
+			_ = OR2
+			_ = AndExpr_Factor_OrExpr_Step_Test3
+		case 23:
 			OrExpr0 := lhs
 			AndExpr_Factor_OrExpr_Path1 := rhs[0]
 			OR2 := rhs[1]
@@ -721,41 +893,569 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = AndExpr_Factor_OrExpr_Path1
 			_ = OR2
 			_ = AndExpr_OrExpr3
-		case 16:
+		case 24:
 			AndExpr_Factor_OrExpr_Path0 := lhs
 			AndExpr_Factor_OrExpr_Path1 := rhs[0]
 			PARENT2 := rhs[1]
-			Step3 := rhs[2]
+			AndExpr_Factor_OrExpr_Step3 := rhs[2]
 
 			AndExpr_Factor_OrExpr_Path0.Child = AndExpr_Factor_OrExpr_Path1
 			AndExpr_Factor_OrExpr_Path1.Next = PARENT2
-			PARENT2.Next = Step3
-			AndExpr_Factor_OrExpr_Path0.LastChild = Step3
+			PARENT2.Next = AndExpr_Factor_OrExpr_Step3
+			AndExpr_Factor_OrExpr_Path0.LastChild = AndExpr_Factor_OrExpr_Step3
 
 			{
-				AndExpr_Factor_OrExpr_Path0.Value = appendStep(AndExpr_Factor_OrExpr_Path1.Value.(*peSemValue), Step3.Value.(udpeTest), parent)
+				AndExpr_Factor_OrExpr_Path0.Value = appendStep(AndExpr_Factor_OrExpr_Path1.Value.(*peSemValue), AndExpr_Factor_OrExpr_Step3.Value.(udpeTest), parent)
 			}
 			_ = AndExpr_Factor_OrExpr_Path1
 			_ = PARENT2
-			_ = Step3
-		case 17:
+			_ = AndExpr_Factor_OrExpr_Step3
+		case 25:
 			AndExpr_Factor_OrExpr_Path0 := lhs
 			AndExpr_Factor_OrExpr_Path1 := rhs[0]
 			PARENT2 := rhs[1]
-			Step_Test3 := rhs[2]
+			AndExpr_Factor_OrExpr_Step_Test3 := rhs[2]
 
 			AndExpr_Factor_OrExpr_Path0.Child = AndExpr_Factor_OrExpr_Path1
 			AndExpr_Factor_OrExpr_Path1.Next = PARENT2
-			PARENT2.Next = Step_Test3
-			AndExpr_Factor_OrExpr_Path0.LastChild = Step_Test3
+			PARENT2.Next = AndExpr_Factor_OrExpr_Step_Test3
+			AndExpr_Factor_OrExpr_Path0.LastChild = AndExpr_Factor_OrExpr_Step_Test3
 
 			{
-				AndExpr_Factor_OrExpr_Path0.Value = appendStep(AndExpr_Factor_OrExpr_Path1.Value.(*peSemValue), Step_Test3.Value.(udpeTest), parent)
+				AndExpr_Factor_OrExpr_Path0.Value = appendStep(AndExpr_Factor_OrExpr_Path1.Value.(*peSemValue), AndExpr_Factor_OrExpr_Step_Test3.Value.(udpeTest), parent)
 			}
 			_ = AndExpr_Factor_OrExpr_Path1
 			_ = PARENT2
-			_ = Step_Test3
-		case 18:
+			_ = AndExpr_Factor_OrExpr_Step_Test3
+		case 26:
+			AndExpr_OrExpr0 := lhs
+			AndExpr_Factor_OrExpr_Step1 := rhs[0]
+			AND2 := rhs[1]
+			AndExpr_Factor_OrExpr3 := rhs[2]
+
+			AndExpr_OrExpr0.Child = AndExpr_Factor_OrExpr_Step1
+			AndExpr_Factor_OrExpr_Step1.Next = AND2
+			AND2.Next = AndExpr_Factor_OrExpr3
+			AndExpr_OrExpr0.LastChild = AndExpr_Factor_OrExpr3
+
+			{
+				AndExpr_OrExpr0.Value = combine(and(), AndExpr_Factor_OrExpr_Step1.Value.(predicate), AndExpr_Factor_OrExpr3.Value.(predicate))
+			}
+			_ = AndExpr_Factor_OrExpr_Step1
+			_ = AND2
+			_ = AndExpr_Factor_OrExpr3
+		case 27:
+			AndExpr_OrExpr0 := lhs
+			AndExpr_Factor_OrExpr_Step1 := rhs[0]
+			AND2 := rhs[1]
+			AndExpr_Factor_OrExpr_Path3 := rhs[2]
+
+			AndExpr_OrExpr0.Child = AndExpr_Factor_OrExpr_Step1
+			AndExpr_Factor_OrExpr_Step1.Next = AND2
+			AND2.Next = AndExpr_Factor_OrExpr_Path3
+			AndExpr_OrExpr0.LastChild = AndExpr_Factor_OrExpr_Path3
+
+			{
+				AndExpr_OrExpr0.Value = combine(and(), AndExpr_Factor_OrExpr_Step1.Value.(predicate), AndExpr_Factor_OrExpr_Path3.Value.(predicate))
+			}
+			_ = AndExpr_Factor_OrExpr_Step1
+			_ = AND2
+			_ = AndExpr_Factor_OrExpr_Path3
+		case 28:
+			AndExpr_OrExpr0 := lhs
+			AndExpr_Factor_OrExpr_Step1 := rhs[0]
+			AND2 := rhs[1]
+			AndExpr_Factor_OrExpr_Step3 := rhs[2]
+
+			AndExpr_OrExpr0.Child = AndExpr_Factor_OrExpr_Step1
+			AndExpr_Factor_OrExpr_Step1.Next = AND2
+			AND2.Next = AndExpr_Factor_OrExpr_Step3
+			AndExpr_OrExpr0.LastChild = AndExpr_Factor_OrExpr_Step3
+
+			{
+				AndExpr_OrExpr0.Value = combine(and(), AndExpr_Factor_OrExpr_Step1.Value.(predicate), AndExpr_Factor_OrExpr_Step3.Value.(predicate))
+			}
+			_ = AndExpr_Factor_OrExpr_Step1
+			_ = AND2
+			_ = AndExpr_Factor_OrExpr_Step3
+		case 29:
+			AndExpr_OrExpr0 := lhs
+			AndExpr_Factor_OrExpr_Step1 := rhs[0]
+			AND2 := rhs[1]
+			AndExpr_Factor_OrExpr_Step_Test3 := rhs[2]
+
+			AndExpr_OrExpr0.Child = AndExpr_Factor_OrExpr_Step1
+			AndExpr_Factor_OrExpr_Step1.Next = AND2
+			AND2.Next = AndExpr_Factor_OrExpr_Step_Test3
+			AndExpr_OrExpr0.LastChild = AndExpr_Factor_OrExpr_Step_Test3
+
+			{
+				AndExpr_OrExpr0.Value = combine(and(), AndExpr_Factor_OrExpr_Step1.Value.(predicate), AndExpr_Factor_OrExpr_Step_Test3.Value.(predicate))
+			}
+			_ = AndExpr_Factor_OrExpr_Step1
+			_ = AND2
+			_ = AndExpr_Factor_OrExpr_Step_Test3
+		case 30:
+			OrExpr0 := lhs
+			AndExpr_Factor_OrExpr_Step1 := rhs[0]
+			OR2 := rhs[1]
+			AndExpr_Factor_OrExpr3 := rhs[2]
+
+			OrExpr0.Child = AndExpr_Factor_OrExpr_Step1
+			AndExpr_Factor_OrExpr_Step1.Next = OR2
+			OR2.Next = AndExpr_Factor_OrExpr3
+			OrExpr0.LastChild = AndExpr_Factor_OrExpr3
+
+			{
+				OrExpr0.Value = combine(or(), AndExpr_Factor_OrExpr_Step1.Value.(predicate), AndExpr_Factor_OrExpr3.Value.(predicate))
+			}
+			_ = AndExpr_Factor_OrExpr_Step1
+			_ = OR2
+			_ = AndExpr_Factor_OrExpr3
+		case 31:
+			OrExpr0 := lhs
+			AndExpr_Factor_OrExpr_Step1 := rhs[0]
+			OR2 := rhs[1]
+			AndExpr_Factor_OrExpr_Path3 := rhs[2]
+
+			OrExpr0.Child = AndExpr_Factor_OrExpr_Step1
+			AndExpr_Factor_OrExpr_Step1.Next = OR2
+			OR2.Next = AndExpr_Factor_OrExpr_Path3
+			OrExpr0.LastChild = AndExpr_Factor_OrExpr_Path3
+
+			{
+				OrExpr0.Value = combine(or(), AndExpr_Factor_OrExpr_Step1.Value.(predicate), AndExpr_Factor_OrExpr_Path3.Value.(predicate))
+			}
+			_ = AndExpr_Factor_OrExpr_Step1
+			_ = OR2
+			_ = AndExpr_Factor_OrExpr_Path3
+		case 32:
+			OrExpr0 := lhs
+			AndExpr_Factor_OrExpr_Step1 := rhs[0]
+			OR2 := rhs[1]
+			AndExpr_Factor_OrExpr_Step3 := rhs[2]
+
+			OrExpr0.Child = AndExpr_Factor_OrExpr_Step1
+			AndExpr_Factor_OrExpr_Step1.Next = OR2
+			OR2.Next = AndExpr_Factor_OrExpr_Step3
+			OrExpr0.LastChild = AndExpr_Factor_OrExpr_Step3
+
+			{
+				OrExpr0.Value = combine(or(), AndExpr_Factor_OrExpr_Step1.Value.(predicate), AndExpr_Factor_OrExpr_Step3.Value.(predicate))
+			}
+			_ = AndExpr_Factor_OrExpr_Step1
+			_ = OR2
+			_ = AndExpr_Factor_OrExpr_Step3
+		case 33:
+			OrExpr0 := lhs
+			AndExpr_Factor_OrExpr_Step1 := rhs[0]
+			OR2 := rhs[1]
+			AndExpr_Factor_OrExpr_Step_Test3 := rhs[2]
+
+			OrExpr0.Child = AndExpr_Factor_OrExpr_Step1
+			AndExpr_Factor_OrExpr_Step1.Next = OR2
+			OR2.Next = AndExpr_Factor_OrExpr_Step_Test3
+			OrExpr0.LastChild = AndExpr_Factor_OrExpr_Step_Test3
+
+			{
+				OrExpr0.Value = combine(or(), AndExpr_Factor_OrExpr_Step1.Value.(predicate), AndExpr_Factor_OrExpr_Step_Test3.Value.(predicate))
+			}
+			_ = AndExpr_Factor_OrExpr_Step1
+			_ = OR2
+			_ = AndExpr_Factor_OrExpr_Step_Test3
+		case 34:
+			OrExpr0 := lhs
+			AndExpr_Factor_OrExpr_Step1 := rhs[0]
+			OR2 := rhs[1]
+			AndExpr_OrExpr3 := rhs[2]
+
+			OrExpr0.Child = AndExpr_Factor_OrExpr_Step1
+			AndExpr_Factor_OrExpr_Step1.Next = OR2
+			OR2.Next = AndExpr_OrExpr3
+			OrExpr0.LastChild = AndExpr_OrExpr3
+
+			{
+				OrExpr0.Value = combine(or(), AndExpr_Factor_OrExpr_Step1.Value.(predicate), AndExpr_OrExpr3.Value.(predicate))
+			}
+			_ = AndExpr_Factor_OrExpr_Step1
+			_ = OR2
+			_ = AndExpr_OrExpr3
+		case 35:
+			AndExpr_OrExpr0 := lhs
+			AndExpr_Factor_OrExpr_Step_Test1 := rhs[0]
+			AND2 := rhs[1]
+			AndExpr_Factor_OrExpr3 := rhs[2]
+
+			AndExpr_OrExpr0.Child = AndExpr_Factor_OrExpr_Step_Test1
+			AndExpr_Factor_OrExpr_Step_Test1.Next = AND2
+			AND2.Next = AndExpr_Factor_OrExpr3
+			AndExpr_OrExpr0.LastChild = AndExpr_Factor_OrExpr3
+
+			{
+				AndExpr_OrExpr0.Value = combine(and(), AndExpr_Factor_OrExpr_Step_Test1.Value.(predicate), AndExpr_Factor_OrExpr3.Value.(predicate))
+			}
+			_ = AndExpr_Factor_OrExpr_Step_Test1
+			_ = AND2
+			_ = AndExpr_Factor_OrExpr3
+		case 36:
+			AndExpr_OrExpr0 := lhs
+			AndExpr_Factor_OrExpr_Step_Test1 := rhs[0]
+			AND2 := rhs[1]
+			AndExpr_Factor_OrExpr_Path3 := rhs[2]
+
+			AndExpr_OrExpr0.Child = AndExpr_Factor_OrExpr_Step_Test1
+			AndExpr_Factor_OrExpr_Step_Test1.Next = AND2
+			AND2.Next = AndExpr_Factor_OrExpr_Path3
+			AndExpr_OrExpr0.LastChild = AndExpr_Factor_OrExpr_Path3
+
+			{
+				AndExpr_OrExpr0.Value = combine(and(), AndExpr_Factor_OrExpr_Step_Test1.Value.(predicate), AndExpr_Factor_OrExpr_Path3.Value.(predicate))
+			}
+			_ = AndExpr_Factor_OrExpr_Step_Test1
+			_ = AND2
+			_ = AndExpr_Factor_OrExpr_Path3
+		case 37:
+			AndExpr_OrExpr0 := lhs
+			AndExpr_Factor_OrExpr_Step_Test1 := rhs[0]
+			AND2 := rhs[1]
+			AndExpr_Factor_OrExpr_Step3 := rhs[2]
+
+			AndExpr_OrExpr0.Child = AndExpr_Factor_OrExpr_Step_Test1
+			AndExpr_Factor_OrExpr_Step_Test1.Next = AND2
+			AND2.Next = AndExpr_Factor_OrExpr_Step3
+			AndExpr_OrExpr0.LastChild = AndExpr_Factor_OrExpr_Step3
+
+			{
+				AndExpr_OrExpr0.Value = combine(and(), AndExpr_Factor_OrExpr_Step_Test1.Value.(predicate), AndExpr_Factor_OrExpr_Step3.Value.(predicate))
+			}
+			_ = AndExpr_Factor_OrExpr_Step_Test1
+			_ = AND2
+			_ = AndExpr_Factor_OrExpr_Step3
+		case 38:
+			AndExpr_OrExpr0 := lhs
+			AndExpr_Factor_OrExpr_Step_Test1 := rhs[0]
+			AND2 := rhs[1]
+			AndExpr_Factor_OrExpr_Step_Test3 := rhs[2]
+
+			AndExpr_OrExpr0.Child = AndExpr_Factor_OrExpr_Step_Test1
+			AndExpr_Factor_OrExpr_Step_Test1.Next = AND2
+			AND2.Next = AndExpr_Factor_OrExpr_Step_Test3
+			AndExpr_OrExpr0.LastChild = AndExpr_Factor_OrExpr_Step_Test3
+
+			{
+				AndExpr_OrExpr0.Value = combine(and(), AndExpr_Factor_OrExpr_Step_Test1.Value.(predicate), AndExpr_Factor_OrExpr_Step_Test3.Value.(predicate))
+			}
+			_ = AndExpr_Factor_OrExpr_Step_Test1
+			_ = AND2
+			_ = AndExpr_Factor_OrExpr_Step_Test3
+		case 39:
+			AndExpr_Factor_OrExpr_Step0 := lhs
+			AndExpr_Factor_OrExpr_Step_Test1 := rhs[0]
+			LBR2 := rhs[1]
+			AndExpr_Factor_OrExpr3 := rhs[2]
+			RBR4 := rhs[3]
+
+			AndExpr_Factor_OrExpr_Step0.Child = AndExpr_Factor_OrExpr_Step_Test1
+			AndExpr_Factor_OrExpr_Step_Test1.Next = LBR2
+			LBR2.Next = AndExpr_Factor_OrExpr3
+			AndExpr_Factor_OrExpr3.Next = RBR4
+			AndExpr_Factor_OrExpr_Step0.LastChild = RBR4
+
+			{
+				switch AndExpr_Factor_OrExpr_Step_Test1.Value.(type) {
+				case *elementTest:
+			
+					// handle renaming chain OrExpr -> AndExpr -> Factor -> Step
+					switch AndExpr_Factor_OrExpr3.Value.(type) {
+					case *elementTest:
+						pe := appendStep(nil, AndExpr_Factor_OrExpr3.Value.(udpeTest), child)
+						pred := newAtom(pe.end())
+						AndExpr_Factor_OrExpr3.Value = &pred
+					}
+			
+					AndExpr_Factor_OrExpr_Step_Test1.Value.(*elementTest).pred = AndExpr_Factor_OrExpr3.Value.(*predicate)
+				case *textTest:
+					AndExpr_Factor_OrExpr_Step_Test1.Value.(*elementTest).pred = nil
+				default:
+					panic("unknown test type")
+				}
+				AndExpr_Factor_OrExpr_Step0.Value = AndExpr_Factor_OrExpr_Step_Test1.Value
+			}
+			_ = AndExpr_Factor_OrExpr_Step_Test1
+			_ = LBR2
+			_ = AndExpr_Factor_OrExpr3
+			_ = RBR4
+		case 40:
+			AndExpr_Factor_OrExpr_Step0 := lhs
+			AndExpr_Factor_OrExpr_Step_Test1 := rhs[0]
+			LBR2 := rhs[1]
+			AndExpr_Factor_OrExpr_Path3 := rhs[2]
+			RBR4 := rhs[3]
+
+			AndExpr_Factor_OrExpr_Step0.Child = AndExpr_Factor_OrExpr_Step_Test1
+			AndExpr_Factor_OrExpr_Step_Test1.Next = LBR2
+			LBR2.Next = AndExpr_Factor_OrExpr_Path3
+			AndExpr_Factor_OrExpr_Path3.Next = RBR4
+			AndExpr_Factor_OrExpr_Step0.LastChild = RBR4
+
+			{
+				switch AndExpr_Factor_OrExpr_Step_Test1.Value.(type) {
+				case *elementTest:
+			
+					// handle renaming chain OrExpr -> AndExpr -> Factor -> Step
+					switch AndExpr_Factor_OrExpr_Path3.Value.(type) {
+					case *elementTest:
+						pe := appendStep(nil, AndExpr_Factor_OrExpr_Path3.Value.(udpeTest), child)
+						pred := newAtom(pe.end())
+						AndExpr_Factor_OrExpr_Path3.Value = &pred
+					}
+			
+					AndExpr_Factor_OrExpr_Step_Test1.Value.(*elementTest).pred = AndExpr_Factor_OrExpr_Path3.Value.(*predicate)
+				case *textTest:
+					AndExpr_Factor_OrExpr_Step_Test1.Value.(*elementTest).pred = nil
+				default:
+					panic("unknown test type")
+				}
+				AndExpr_Factor_OrExpr_Step0.Value = AndExpr_Factor_OrExpr_Step_Test1.Value
+			}
+			_ = AndExpr_Factor_OrExpr_Step_Test1
+			_ = LBR2
+			_ = AndExpr_Factor_OrExpr_Path3
+			_ = RBR4
+		case 41:
+			AndExpr_Factor_OrExpr_Step0 := lhs
+			AndExpr_Factor_OrExpr_Step_Test1 := rhs[0]
+			LBR2 := rhs[1]
+			AndExpr_Factor_OrExpr_Step3 := rhs[2]
+			RBR4 := rhs[3]
+
+			AndExpr_Factor_OrExpr_Step0.Child = AndExpr_Factor_OrExpr_Step_Test1
+			AndExpr_Factor_OrExpr_Step_Test1.Next = LBR2
+			LBR2.Next = AndExpr_Factor_OrExpr_Step3
+			AndExpr_Factor_OrExpr_Step3.Next = RBR4
+			AndExpr_Factor_OrExpr_Step0.LastChild = RBR4
+
+			{
+				switch AndExpr_Factor_OrExpr_Step_Test1.Value.(type) {
+				case *elementTest:
+			
+					// handle renaming chain OrExpr -> AndExpr -> Factor -> Step
+					switch AndExpr_Factor_OrExpr_Step3.Value.(type) {
+					case *elementTest:
+						pe := appendStep(nil, AndExpr_Factor_OrExpr_Step3.Value.(udpeTest), child)
+						pred := newAtom(pe.end())
+						AndExpr_Factor_OrExpr_Step3.Value = &pred
+					}
+			
+					AndExpr_Factor_OrExpr_Step_Test1.Value.(*elementTest).pred = AndExpr_Factor_OrExpr_Step3.Value.(*predicate)
+				case *textTest:
+					AndExpr_Factor_OrExpr_Step_Test1.Value.(*elementTest).pred = nil
+				default:
+					panic("unknown test type")
+				}
+				AndExpr_Factor_OrExpr_Step0.Value = AndExpr_Factor_OrExpr_Step_Test1.Value
+			}
+			_ = AndExpr_Factor_OrExpr_Step_Test1
+			_ = LBR2
+			_ = AndExpr_Factor_OrExpr_Step3
+			_ = RBR4
+		case 42:
+			AndExpr_Factor_OrExpr_Step0 := lhs
+			AndExpr_Factor_OrExpr_Step_Test1 := rhs[0]
+			LBR2 := rhs[1]
+			AndExpr_Factor_OrExpr_Step_Test3 := rhs[2]
+			RBR4 := rhs[3]
+
+			AndExpr_Factor_OrExpr_Step0.Child = AndExpr_Factor_OrExpr_Step_Test1
+			AndExpr_Factor_OrExpr_Step_Test1.Next = LBR2
+			LBR2.Next = AndExpr_Factor_OrExpr_Step_Test3
+			AndExpr_Factor_OrExpr_Step_Test3.Next = RBR4
+			AndExpr_Factor_OrExpr_Step0.LastChild = RBR4
+
+			{
+				switch AndExpr_Factor_OrExpr_Step_Test1.Value.(type) {
+				case *elementTest:
+			
+					// handle renaming chain OrExpr -> AndExpr -> Factor -> Step
+					switch AndExpr_Factor_OrExpr_Step_Test3.Value.(type) {
+					case *elementTest:
+						pe := appendStep(nil, AndExpr_Factor_OrExpr_Step_Test3.Value.(udpeTest), child)
+						pred := newAtom(pe.end())
+						AndExpr_Factor_OrExpr_Step_Test3.Value = &pred
+					}
+			
+					AndExpr_Factor_OrExpr_Step_Test1.Value.(*elementTest).pred = AndExpr_Factor_OrExpr_Step_Test3.Value.(*predicate)
+				case *textTest:
+					AndExpr_Factor_OrExpr_Step_Test1.Value.(*elementTest).pred = nil
+				default:
+					panic("unknown test type")
+				}
+				AndExpr_Factor_OrExpr_Step0.Value = AndExpr_Factor_OrExpr_Step_Test1.Value
+			}
+			_ = AndExpr_Factor_OrExpr_Step_Test1
+			_ = LBR2
+			_ = AndExpr_Factor_OrExpr_Step_Test3
+			_ = RBR4
+		case 43:
+			AndExpr_Factor_OrExpr_Step0 := lhs
+			AndExpr_Factor_OrExpr_Step_Test1 := rhs[0]
+			LBR2 := rhs[1]
+			AndExpr_OrExpr3 := rhs[2]
+			RBR4 := rhs[3]
+
+			AndExpr_Factor_OrExpr_Step0.Child = AndExpr_Factor_OrExpr_Step_Test1
+			AndExpr_Factor_OrExpr_Step_Test1.Next = LBR2
+			LBR2.Next = AndExpr_OrExpr3
+			AndExpr_OrExpr3.Next = RBR4
+			AndExpr_Factor_OrExpr_Step0.LastChild = RBR4
+
+			{
+				switch AndExpr_Factor_OrExpr_Step_Test1.Value.(type) {
+				case *elementTest:
+			
+					// handle renaming chain OrExpr -> AndExpr -> Factor -> Step
+					switch AndExpr_OrExpr3.Value.(type) {
+					case *elementTest:
+						pe := appendStep(nil, AndExpr_OrExpr3.Value.(udpeTest), child)
+						pred := newAtom(pe.end())
+						AndExpr_OrExpr3.Value = &pred
+					}
+			
+					AndExpr_Factor_OrExpr_Step_Test1.Value.(*elementTest).pred = AndExpr_OrExpr3.Value.(*predicate)
+				case *textTest:
+					AndExpr_Factor_OrExpr_Step_Test1.Value.(*elementTest).pred = nil
+				default:
+					panic("unknown test type")
+				}
+				AndExpr_Factor_OrExpr_Step0.Value = AndExpr_Factor_OrExpr_Step_Test1.Value
+			}
+			_ = AndExpr_Factor_OrExpr_Step_Test1
+			_ = LBR2
+			_ = AndExpr_OrExpr3
+			_ = RBR4
+		case 44:
+			AndExpr_Factor_OrExpr_Step0 := lhs
+			AndExpr_Factor_OrExpr_Step_Test1 := rhs[0]
+			LBR2 := rhs[1]
+			OrExpr3 := rhs[2]
+			RBR4 := rhs[3]
+
+			AndExpr_Factor_OrExpr_Step0.Child = AndExpr_Factor_OrExpr_Step_Test1
+			AndExpr_Factor_OrExpr_Step_Test1.Next = LBR2
+			LBR2.Next = OrExpr3
+			OrExpr3.Next = RBR4
+			AndExpr_Factor_OrExpr_Step0.LastChild = RBR4
+
+			{
+				switch AndExpr_Factor_OrExpr_Step_Test1.Value.(type) {
+				case *elementTest:
+			
+					// handle renaming chain OrExpr -> AndExpr -> Factor -> Step
+					switch OrExpr3.Value.(type) {
+					case *elementTest:
+						pe := appendStep(nil, OrExpr3.Value.(udpeTest), child)
+						pred := newAtom(pe.end())
+						OrExpr3.Value = &pred
+					}
+			
+					AndExpr_Factor_OrExpr_Step_Test1.Value.(*elementTest).pred = OrExpr3.Value.(*predicate)
+				case *textTest:
+					AndExpr_Factor_OrExpr_Step_Test1.Value.(*elementTest).pred = nil
+				default:
+					panic("unknown test type")
+				}
+				AndExpr_Factor_OrExpr_Step0.Value = AndExpr_Factor_OrExpr_Step_Test1.Value
+			}
+			_ = AndExpr_Factor_OrExpr_Step_Test1
+			_ = LBR2
+			_ = OrExpr3
+			_ = RBR4
+		case 45:
+			OrExpr0 := lhs
+			AndExpr_Factor_OrExpr_Step_Test1 := rhs[0]
+			OR2 := rhs[1]
+			AndExpr_Factor_OrExpr3 := rhs[2]
+
+			OrExpr0.Child = AndExpr_Factor_OrExpr_Step_Test1
+			AndExpr_Factor_OrExpr_Step_Test1.Next = OR2
+			OR2.Next = AndExpr_Factor_OrExpr3
+			OrExpr0.LastChild = AndExpr_Factor_OrExpr3
+
+			{
+				OrExpr0.Value = combine(or(), AndExpr_Factor_OrExpr_Step_Test1.Value.(predicate), AndExpr_Factor_OrExpr3.Value.(predicate))
+			}
+			_ = AndExpr_Factor_OrExpr_Step_Test1
+			_ = OR2
+			_ = AndExpr_Factor_OrExpr3
+		case 46:
+			OrExpr0 := lhs
+			AndExpr_Factor_OrExpr_Step_Test1 := rhs[0]
+			OR2 := rhs[1]
+			AndExpr_Factor_OrExpr_Path3 := rhs[2]
+
+			OrExpr0.Child = AndExpr_Factor_OrExpr_Step_Test1
+			AndExpr_Factor_OrExpr_Step_Test1.Next = OR2
+			OR2.Next = AndExpr_Factor_OrExpr_Path3
+			OrExpr0.LastChild = AndExpr_Factor_OrExpr_Path3
+
+			{
+				OrExpr0.Value = combine(or(), AndExpr_Factor_OrExpr_Step_Test1.Value.(predicate), AndExpr_Factor_OrExpr_Path3.Value.(predicate))
+			}
+			_ = AndExpr_Factor_OrExpr_Step_Test1
+			_ = OR2
+			_ = AndExpr_Factor_OrExpr_Path3
+		case 47:
+			OrExpr0 := lhs
+			AndExpr_Factor_OrExpr_Step_Test1 := rhs[0]
+			OR2 := rhs[1]
+			AndExpr_Factor_OrExpr_Step3 := rhs[2]
+
+			OrExpr0.Child = AndExpr_Factor_OrExpr_Step_Test1
+			AndExpr_Factor_OrExpr_Step_Test1.Next = OR2
+			OR2.Next = AndExpr_Factor_OrExpr_Step3
+			OrExpr0.LastChild = AndExpr_Factor_OrExpr_Step3
+
+			{
+				OrExpr0.Value = combine(or(), AndExpr_Factor_OrExpr_Step_Test1.Value.(predicate), AndExpr_Factor_OrExpr_Step3.Value.(predicate))
+			}
+			_ = AndExpr_Factor_OrExpr_Step_Test1
+			_ = OR2
+			_ = AndExpr_Factor_OrExpr_Step3
+		case 48:
+			OrExpr0 := lhs
+			AndExpr_Factor_OrExpr_Step_Test1 := rhs[0]
+			OR2 := rhs[1]
+			AndExpr_Factor_OrExpr_Step_Test3 := rhs[2]
+
+			OrExpr0.Child = AndExpr_Factor_OrExpr_Step_Test1
+			AndExpr_Factor_OrExpr_Step_Test1.Next = OR2
+			OR2.Next = AndExpr_Factor_OrExpr_Step_Test3
+			OrExpr0.LastChild = AndExpr_Factor_OrExpr_Step_Test3
+
+			{
+				OrExpr0.Value = combine(or(), AndExpr_Factor_OrExpr_Step_Test1.Value.(predicate), AndExpr_Factor_OrExpr_Step_Test3.Value.(predicate))
+			}
+			_ = AndExpr_Factor_OrExpr_Step_Test1
+			_ = OR2
+			_ = AndExpr_Factor_OrExpr_Step_Test3
+		case 49:
+			OrExpr0 := lhs
+			AndExpr_Factor_OrExpr_Step_Test1 := rhs[0]
+			OR2 := rhs[1]
+			AndExpr_OrExpr3 := rhs[2]
+
+			OrExpr0.Child = AndExpr_Factor_OrExpr_Step_Test1
+			AndExpr_Factor_OrExpr_Step_Test1.Next = OR2
+			OR2.Next = AndExpr_OrExpr3
+			OrExpr0.LastChild = AndExpr_OrExpr3
+
+			{
+				OrExpr0.Value = combine(or(), AndExpr_Factor_OrExpr_Step_Test1.Value.(predicate), AndExpr_OrExpr3.Value.(predicate))
+			}
+			_ = AndExpr_Factor_OrExpr_Step_Test1
+			_ = OR2
+			_ = AndExpr_OrExpr3
+		case 50:
 			OrExpr0 := lhs
 			AndExpr_OrExpr1 := rhs[0]
 			OR2 := rhs[1]
@@ -772,7 +1472,7 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = AndExpr_OrExpr1
 			_ = OR2
 			_ = AndExpr_Factor_OrExpr3
-		case 19:
+		case 51:
 			OrExpr0 := lhs
 			AndExpr_OrExpr1 := rhs[0]
 			OR2 := rhs[1]
@@ -789,7 +1489,41 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = AndExpr_OrExpr1
 			_ = OR2
 			_ = AndExpr_Factor_OrExpr_Path3
-		case 20:
+		case 52:
+			OrExpr0 := lhs
+			AndExpr_OrExpr1 := rhs[0]
+			OR2 := rhs[1]
+			AndExpr_Factor_OrExpr_Step3 := rhs[2]
+
+			OrExpr0.Child = AndExpr_OrExpr1
+			AndExpr_OrExpr1.Next = OR2
+			OR2.Next = AndExpr_Factor_OrExpr_Step3
+			OrExpr0.LastChild = AndExpr_Factor_OrExpr_Step3
+
+			{
+				OrExpr0.Value = combine(or(), AndExpr_OrExpr1.Value.(predicate), AndExpr_Factor_OrExpr_Step3.Value.(predicate))
+			}
+			_ = AndExpr_OrExpr1
+			_ = OR2
+			_ = AndExpr_Factor_OrExpr_Step3
+		case 53:
+			OrExpr0 := lhs
+			AndExpr_OrExpr1 := rhs[0]
+			OR2 := rhs[1]
+			AndExpr_Factor_OrExpr_Step_Test3 := rhs[2]
+
+			OrExpr0.Child = AndExpr_OrExpr1
+			AndExpr_OrExpr1.Next = OR2
+			OR2.Next = AndExpr_Factor_OrExpr_Step_Test3
+			OrExpr0.LastChild = AndExpr_Factor_OrExpr_Step_Test3
+
+			{
+				OrExpr0.Value = combine(or(), AndExpr_OrExpr1.Value.(predicate), AndExpr_Factor_OrExpr_Step_Test3.Value.(predicate))
+			}
+			_ = AndExpr_OrExpr1
+			_ = OR2
+			_ = AndExpr_Factor_OrExpr_Step_Test3
+		case 54:
 			OrExpr0 := lhs
 			AndExpr_OrExpr1 := rhs[0]
 			OR2 := rhs[1]
@@ -806,248 +1540,136 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = AndExpr_OrExpr1
 			_ = OR2
 			_ = AndExpr_OrExpr3
-		case 21:
-			Step0 := lhs
-			Step_Test1 := rhs[0]
-			LBR2 := rhs[1]
-			AndExpr_Factor_OrExpr3 := rhs[2]
-			RBR4 := rhs[3]
-
-			Step0.Child = Step_Test1
-			Step_Test1.Next = LBR2
-			LBR2.Next = AndExpr_Factor_OrExpr3
-			AndExpr_Factor_OrExpr3.Next = RBR4
-			Step0.LastChild = RBR4
-
-			{
-				switch Step_Test1.Value.(type) {
-				case *elementTest:
-					Step_Test1.Value.(*elementTest).pred = AndExpr_Factor_OrExpr3.Value.(*predicate)
-				case *textTest:
-					Step_Test1.Value.(*elementTest).pred = nil
-				default:
-					panic("unknown test type")
-				}
-				Step0.Value = Step_Test1.Value
-			}
-			_ = Step_Test1
-			_ = LBR2
-			_ = AndExpr_Factor_OrExpr3
-			_ = RBR4
-		case 22:
-			Step0 := lhs
-			Step_Test1 := rhs[0]
-			LBR2 := rhs[1]
-			AndExpr_Factor_OrExpr_Path3 := rhs[2]
-			RBR4 := rhs[3]
-
-			Step0.Child = Step_Test1
-			Step_Test1.Next = LBR2
-			LBR2.Next = AndExpr_Factor_OrExpr_Path3
-			AndExpr_Factor_OrExpr_Path3.Next = RBR4
-			Step0.LastChild = RBR4
-
-			{
-				switch Step_Test1.Value.(type) {
-				case *elementTest:
-					Step_Test1.Value.(*elementTest).pred = AndExpr_Factor_OrExpr_Path3.Value.(*predicate)
-				case *textTest:
-					Step_Test1.Value.(*elementTest).pred = nil
-				default:
-					panic("unknown test type")
-				}
-				Step0.Value = Step_Test1.Value
-			}
-			_ = Step_Test1
-			_ = LBR2
-			_ = AndExpr_Factor_OrExpr_Path3
-			_ = RBR4
-		case 23:
-			Step0 := lhs
-			Step_Test1 := rhs[0]
-			LBR2 := rhs[1]
-			AndExpr_OrExpr3 := rhs[2]
-			RBR4 := rhs[3]
-
-			Step0.Child = Step_Test1
-			Step_Test1.Next = LBR2
-			LBR2.Next = AndExpr_OrExpr3
-			AndExpr_OrExpr3.Next = RBR4
-			Step0.LastChild = RBR4
-
-			{
-				switch Step_Test1.Value.(type) {
-				case *elementTest:
-					Step_Test1.Value.(*elementTest).pred = AndExpr_OrExpr3.Value.(*predicate)
-				case *textTest:
-					Step_Test1.Value.(*elementTest).pred = nil
-				default:
-					panic("unknown test type")
-				}
-				Step0.Value = Step_Test1.Value
-			}
-			_ = Step_Test1
-			_ = LBR2
-			_ = AndExpr_OrExpr3
-			_ = RBR4
-		case 24:
-			Step0 := lhs
-			Step_Test1 := rhs[0]
-			LBR2 := rhs[1]
-			OrExpr3 := rhs[2]
-			RBR4 := rhs[3]
-
-			Step0.Child = Step_Test1
-			Step_Test1.Next = LBR2
-			LBR2.Next = OrExpr3
-			OrExpr3.Next = RBR4
-			Step0.LastChild = RBR4
-
-			{
-				switch Step_Test1.Value.(type) {
-				case *elementTest:
-					Step_Test1.Value.(*elementTest).pred = OrExpr3.Value.(*predicate)
-				case *textTest:
-					Step_Test1.Value.(*elementTest).pred = nil
-				default:
-					panic("unknown test type")
-				}
-				Step0.Value = Step_Test1.Value
-			}
-			_ = Step_Test1
-			_ = LBR2
-			_ = OrExpr3
-			_ = RBR4
-		case 25:
+		case 55:
 			AndExpr_Factor_OrExpr_Path0 := lhs
 			ANCESTOR1 := rhs[0]
-			Step2 := rhs[1]
+			AndExpr_Factor_OrExpr_Step2 := rhs[1]
 
 			AndExpr_Factor_OrExpr_Path0.Child = ANCESTOR1
-			ANCESTOR1.Next = Step2
-			AndExpr_Factor_OrExpr_Path0.LastChild = Step2
+			ANCESTOR1.Next = AndExpr_Factor_OrExpr_Step2
+			AndExpr_Factor_OrExpr_Path0.LastChild = AndExpr_Factor_OrExpr_Step2
 
 			{
-				AndExpr_Factor_OrExpr_Path0.Value = appendStep(nil, Step2.Value.(udpeTest), ancestorOrSelf)
+				AndExpr_Factor_OrExpr_Path0.Value = appendStep(nil, AndExpr_Factor_OrExpr_Step2.Value.(udpeTest), ancestorOrSelf)
 			}
 			_ = ANCESTOR1
-			_ = Step2
-		case 26:
+			_ = AndExpr_Factor_OrExpr_Step2
+		case 56:
 			AndExpr_Factor_OrExpr_Path0 := lhs
 			ANCESTOR1 := rhs[0]
-			Step_Test2 := rhs[1]
+			AndExpr_Factor_OrExpr_Step_Test2 := rhs[1]
 
 			AndExpr_Factor_OrExpr_Path0.Child = ANCESTOR1
-			ANCESTOR1.Next = Step_Test2
-			AndExpr_Factor_OrExpr_Path0.LastChild = Step_Test2
+			ANCESTOR1.Next = AndExpr_Factor_OrExpr_Step_Test2
+			AndExpr_Factor_OrExpr_Path0.LastChild = AndExpr_Factor_OrExpr_Step_Test2
 
 			{
-				AndExpr_Factor_OrExpr_Path0.Value = appendStep(nil, Step_Test2.Value.(udpeTest), ancestorOrSelf)
+				AndExpr_Factor_OrExpr_Path0.Value = appendStep(nil, AndExpr_Factor_OrExpr_Step_Test2.Value.(udpeTest), ancestorOrSelf)
 			}
 			_ = ANCESTOR1
-			_ = Step_Test2
-		case 27:
-			Step_Test0 := lhs
+			_ = AndExpr_Factor_OrExpr_Step_Test2
+		case 57:
+			AndExpr_Factor_OrExpr_Step_Test0 := lhs
 			AT1 := rhs[0]
 			IDENT2 := rhs[1]
 
-			Step_Test0.Child = AT1
+			AndExpr_Factor_OrExpr_Step_Test0.Child = AT1
 			AT1.Next = IDENT2
-			Step_Test0.LastChild = IDENT2
+			AndExpr_Factor_OrExpr_Step_Test0.LastChild = IDENT2
 
 			{
-				Step_Test0.Value = newElementTest("*", &Attribute{Key: IDENT2.Value.(string)}, nil)
+				AndExpr_Factor_OrExpr_Step_Test0.Value = newElementTest("*", &Attribute{Key: IDENT2.Value.(string)}, nil)
 			}
 			_ = AT1
 			_ = IDENT2
-		case 28:
-			Step_Test0 := lhs
+		case 58:
+			AndExpr_Factor_OrExpr_Step_Test0 := lhs
 			AT1 := rhs[0]
 			IDENT2 := rhs[1]
 			EQ3 := rhs[2]
 			STRING4 := rhs[3]
 
-			Step_Test0.Child = AT1
+			AndExpr_Factor_OrExpr_Step_Test0.Child = AT1
 			AT1.Next = IDENT2
 			IDENT2.Next = EQ3
 			EQ3.Next = STRING4
-			Step_Test0.LastChild = STRING4
+			AndExpr_Factor_OrExpr_Step_Test0.LastChild = STRING4
 
 			{
-				Step_Test0.Value = newElementTest("*", &Attribute{Key: IDENT2.Value.(string), Value: EQ3.Value.(string)}, nil)
+				AndExpr_Factor_OrExpr_Step_Test0.Value = newElementTest("*", &Attribute{Key: IDENT2.Value.(string), Value: EQ3.Value.(string)}, nil)
 			}
 			_ = AT1
 			_ = IDENT2
 			_ = EQ3
 			_ = STRING4
-		case 29:
+		case 59:
 			AndExpr_Factor_OrExpr_Path0 := lhs
 			CHILD1 := rhs[0]
-			Step2 := rhs[1]
+			AndExpr_Factor_OrExpr_Step2 := rhs[1]
 
 			AndExpr_Factor_OrExpr_Path0.Child = CHILD1
-			CHILD1.Next = Step2
-			AndExpr_Factor_OrExpr_Path0.LastChild = Step2
+			CHILD1.Next = AndExpr_Factor_OrExpr_Step2
+			AndExpr_Factor_OrExpr_Path0.LastChild = AndExpr_Factor_OrExpr_Step2
 
 			{
-				AndExpr_Factor_OrExpr_Path0.Value = appendStep(nil, Step2.Value.(udpeTest), child)
+				AndExpr_Factor_OrExpr_Path0.Value = appendStep(nil, AndExpr_Factor_OrExpr_Step2.Value.(udpeTest), child)
 			}
 			_ = CHILD1
-			_ = Step2
-		case 30:
+			_ = AndExpr_Factor_OrExpr_Step2
+		case 60:
 			AndExpr_Factor_OrExpr_Path0 := lhs
 			CHILD1 := rhs[0]
-			Step_Test2 := rhs[1]
+			AndExpr_Factor_OrExpr_Step_Test2 := rhs[1]
 
 			AndExpr_Factor_OrExpr_Path0.Child = CHILD1
-			CHILD1.Next = Step_Test2
-			AndExpr_Factor_OrExpr_Path0.LastChild = Step_Test2
+			CHILD1.Next = AndExpr_Factor_OrExpr_Step_Test2
+			AndExpr_Factor_OrExpr_Path0.LastChild = AndExpr_Factor_OrExpr_Step_Test2
 
 			{
-				AndExpr_Factor_OrExpr_Path0.Value = appendStep(nil, Step_Test2.Value.(udpeTest), child)
+				AndExpr_Factor_OrExpr_Path0.Value = appendStep(nil, AndExpr_Factor_OrExpr_Step_Test2.Value.(udpeTest), child)
 			}
 			_ = CHILD1
-			_ = Step_Test2
-		case 31:
+			_ = AndExpr_Factor_OrExpr_Step_Test2
+		case 61:
 			AndExpr_Factor_OrExpr_Path0 := lhs
 			DESCENDANT1 := rhs[0]
-			Step2 := rhs[1]
+			AndExpr_Factor_OrExpr_Step2 := rhs[1]
 
 			AndExpr_Factor_OrExpr_Path0.Child = DESCENDANT1
-			DESCENDANT1.Next = Step2
-			AndExpr_Factor_OrExpr_Path0.LastChild = Step2
+			DESCENDANT1.Next = AndExpr_Factor_OrExpr_Step2
+			AndExpr_Factor_OrExpr_Path0.LastChild = AndExpr_Factor_OrExpr_Step2
 
 			{
-				AndExpr_Factor_OrExpr_Path0.Value = appendStep(nil, Step2.Value.(udpeTest), descendantOrSelf)
+				AndExpr_Factor_OrExpr_Path0.Value = appendStep(nil, AndExpr_Factor_OrExpr_Step2.Value.(udpeTest), descendantOrSelf)
 			}
 			_ = DESCENDANT1
-			_ = Step2
-		case 32:
+			_ = AndExpr_Factor_OrExpr_Step2
+		case 62:
 			AndExpr_Factor_OrExpr_Path0 := lhs
 			DESCENDANT1 := rhs[0]
-			Step_Test2 := rhs[1]
+			AndExpr_Factor_OrExpr_Step_Test2 := rhs[1]
 
 			AndExpr_Factor_OrExpr_Path0.Child = DESCENDANT1
-			DESCENDANT1.Next = Step_Test2
-			AndExpr_Factor_OrExpr_Path0.LastChild = Step_Test2
+			DESCENDANT1.Next = AndExpr_Factor_OrExpr_Step_Test2
+			AndExpr_Factor_OrExpr_Path0.LastChild = AndExpr_Factor_OrExpr_Step_Test2
 
 			{
-				AndExpr_Factor_OrExpr_Path0.Value = appendStep(nil, Step_Test2.Value.(udpeTest), descendantOrSelf)
+				AndExpr_Factor_OrExpr_Path0.Value = appendStep(nil, AndExpr_Factor_OrExpr_Step_Test2.Value.(udpeTest), descendantOrSelf)
 			}
 			_ = DESCENDANT1
-			_ = Step_Test2
-		case 33:
-			Step_Test0 := lhs
+			_ = AndExpr_Factor_OrExpr_Step_Test2
+		case 63:
+			AndExpr_Factor_OrExpr_Step_Test0 := lhs
 			IDENT1 := rhs[0]
 
-			Step_Test0.Child = IDENT1
-			Step_Test0.LastChild = IDENT1
+			AndExpr_Factor_OrExpr_Step_Test0.Child = IDENT1
+			AndExpr_Factor_OrExpr_Step_Test0.LastChild = IDENT1
 
 			{
-				Step_Test0.Value = newElementTest(IDENT1.Value.(string), nil, nil)
+				AndExpr_Factor_OrExpr_Step_Test0.Value = newElementTest(IDENT1.Value.(string), nil, nil)
 			}
 			_ = IDENT1
-		case 34:
+		case 64:
 			AndExpr_Factor_OrExpr0 := lhs
 			LPAR1 := rhs[0]
 			AndExpr_Factor_OrExpr2 := rhs[1]
@@ -1064,7 +1686,7 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = LPAR1
 			_ = AndExpr_Factor_OrExpr2
 			_ = RPAR3
-		case 35:
+		case 65:
 			AndExpr_Factor_OrExpr0 := lhs
 			LPAR1 := rhs[0]
 			AndExpr_Factor_OrExpr_Path2 := rhs[1]
@@ -1081,7 +1703,41 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = LPAR1
 			_ = AndExpr_Factor_OrExpr_Path2
 			_ = RPAR3
-		case 36:
+		case 66:
+			AndExpr_Factor_OrExpr0 := lhs
+			LPAR1 := rhs[0]
+			AndExpr_Factor_OrExpr_Step2 := rhs[1]
+			RPAR3 := rhs[2]
+
+			AndExpr_Factor_OrExpr0.Child = LPAR1
+			LPAR1.Next = AndExpr_Factor_OrExpr_Step2
+			AndExpr_Factor_OrExpr_Step2.Next = RPAR3
+			AndExpr_Factor_OrExpr0.LastChild = RPAR3
+
+			{
+				AndExpr_Factor_OrExpr0.Value = AndExpr_Factor_OrExpr_Step2.Value
+			}
+			_ = LPAR1
+			_ = AndExpr_Factor_OrExpr_Step2
+			_ = RPAR3
+		case 67:
+			AndExpr_Factor_OrExpr0 := lhs
+			LPAR1 := rhs[0]
+			AndExpr_Factor_OrExpr_Step_Test2 := rhs[1]
+			RPAR3 := rhs[2]
+
+			AndExpr_Factor_OrExpr0.Child = LPAR1
+			LPAR1.Next = AndExpr_Factor_OrExpr_Step_Test2
+			AndExpr_Factor_OrExpr_Step_Test2.Next = RPAR3
+			AndExpr_Factor_OrExpr0.LastChild = RPAR3
+
+			{
+				AndExpr_Factor_OrExpr0.Value = AndExpr_Factor_OrExpr_Step_Test2.Value
+			}
+			_ = LPAR1
+			_ = AndExpr_Factor_OrExpr_Step_Test2
+			_ = RPAR3
+		case 68:
 			AndExpr_Factor_OrExpr0 := lhs
 			LPAR1 := rhs[0]
 			AndExpr_OrExpr2 := rhs[1]
@@ -1098,7 +1754,7 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = LPAR1
 			_ = AndExpr_OrExpr2
 			_ = RPAR3
-		case 37:
+		case 69:
 			AndExpr_Factor_OrExpr0 := lhs
 			LPAR1 := rhs[0]
 			OrExpr2 := rhs[1]
@@ -1115,7 +1771,7 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = LPAR1
 			_ = OrExpr2
 			_ = RPAR3
-		case 38:
+		case 70:
 			AndExpr_Factor_OrExpr0 := lhs
 			NOT1 := rhs[0]
 			AndExpr_Factor_OrExpr_Path2 := rhs[1]
@@ -1129,7 +1785,37 @@ func NewGrammar() *gopapageno.Grammar {
 			}
 			_ = NOT1
 			_ = AndExpr_Factor_OrExpr_Path2
-		case 39:
+		case 71:
+			AndExpr_Factor_OrExpr0 := lhs
+			NOT1 := rhs[0]
+			AndExpr_Factor_OrExpr_Step2 := rhs[1]
+
+			AndExpr_Factor_OrExpr0.Child = NOT1
+			NOT1.Next = AndExpr_Factor_OrExpr_Step2
+			AndExpr_Factor_OrExpr0.LastChild = AndExpr_Factor_OrExpr_Step2
+
+			{
+				step := appendStep(nil, AndExpr_Factor_OrExpr_Step2.Value.(udpeTest), child)
+				AndExpr_Factor_OrExpr0.Value = notNode(newAtom(step.end()))
+			}
+			_ = NOT1
+			_ = AndExpr_Factor_OrExpr_Step2
+		case 72:
+			AndExpr_Factor_OrExpr0 := lhs
+			NOT1 := rhs[0]
+			AndExpr_Factor_OrExpr_Step_Test2 := rhs[1]
+
+			AndExpr_Factor_OrExpr0.Child = NOT1
+			NOT1.Next = AndExpr_Factor_OrExpr_Step_Test2
+			AndExpr_Factor_OrExpr0.LastChild = AndExpr_Factor_OrExpr_Step_Test2
+
+			{
+				step := appendStep(nil, AndExpr_Factor_OrExpr_Step_Test2.Value.(udpeTest), child)
+				AndExpr_Factor_OrExpr0.Value = notNode(newAtom(step.end()))
+			}
+			_ = NOT1
+			_ = AndExpr_Factor_OrExpr_Step_Test2
+		case 73:
 			AndExpr_Factor_OrExpr0 := lhs
 			NOT1 := rhs[0]
 			LPAR2 := rhs[1]
@@ -1149,7 +1835,7 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = LPAR2
 			_ = AndExpr_Factor_OrExpr3
 			_ = RPAR4
-		case 40:
+		case 74:
 			AndExpr_Factor_OrExpr0 := lhs
 			NOT1 := rhs[0]
 			LPAR2 := rhs[1]
@@ -1169,7 +1855,47 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = LPAR2
 			_ = AndExpr_Factor_OrExpr_Path3
 			_ = RPAR4
-		case 41:
+		case 75:
+			AndExpr_Factor_OrExpr0 := lhs
+			NOT1 := rhs[0]
+			LPAR2 := rhs[1]
+			AndExpr_Factor_OrExpr_Step3 := rhs[2]
+			RPAR4 := rhs[3]
+
+			AndExpr_Factor_OrExpr0.Child = NOT1
+			NOT1.Next = LPAR2
+			LPAR2.Next = AndExpr_Factor_OrExpr_Step3
+			AndExpr_Factor_OrExpr_Step3.Next = RPAR4
+			AndExpr_Factor_OrExpr0.LastChild = RPAR4
+
+			{
+				AndExpr_Factor_OrExpr0.Value = notNode(AndExpr_Factor_OrExpr_Step3.Value.(predicate))
+			}
+			_ = NOT1
+			_ = LPAR2
+			_ = AndExpr_Factor_OrExpr_Step3
+			_ = RPAR4
+		case 76:
+			AndExpr_Factor_OrExpr0 := lhs
+			NOT1 := rhs[0]
+			LPAR2 := rhs[1]
+			AndExpr_Factor_OrExpr_Step_Test3 := rhs[2]
+			RPAR4 := rhs[3]
+
+			AndExpr_Factor_OrExpr0.Child = NOT1
+			NOT1.Next = LPAR2
+			LPAR2.Next = AndExpr_Factor_OrExpr_Step_Test3
+			AndExpr_Factor_OrExpr_Step_Test3.Next = RPAR4
+			AndExpr_Factor_OrExpr0.LastChild = RPAR4
+
+			{
+				AndExpr_Factor_OrExpr0.Value = notNode(AndExpr_Factor_OrExpr_Step_Test3.Value.(predicate))
+			}
+			_ = NOT1
+			_ = LPAR2
+			_ = AndExpr_Factor_OrExpr_Step_Test3
+			_ = RPAR4
+		case 77:
 			AndExpr_Factor_OrExpr0 := lhs
 			NOT1 := rhs[0]
 			LPAR2 := rhs[1]
@@ -1189,7 +1915,7 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = LPAR2
 			_ = AndExpr_OrExpr3
 			_ = RPAR4
-		case 42:
+		case 78:
 			AndExpr_Factor_OrExpr0 := lhs
 			NOT1 := rhs[0]
 			LPAR2 := rhs[1]
@@ -1209,58 +1935,58 @@ func NewGrammar() *gopapageno.Grammar {
 			_ = LPAR2
 			_ = OrExpr3
 			_ = RPAR4
-		case 43:
+		case 79:
 			AndExpr_Factor_OrExpr_Path0 := lhs
 			PARENT1 := rhs[0]
-			Step2 := rhs[1]
+			AndExpr_Factor_OrExpr_Step2 := rhs[1]
 
 			AndExpr_Factor_OrExpr_Path0.Child = PARENT1
-			PARENT1.Next = Step2
-			AndExpr_Factor_OrExpr_Path0.LastChild = Step2
+			PARENT1.Next = AndExpr_Factor_OrExpr_Step2
+			AndExpr_Factor_OrExpr_Path0.LastChild = AndExpr_Factor_OrExpr_Step2
 
 			{
-				AndExpr_Factor_OrExpr_Path0.Value = appendStep(nil, Step2.Value.(udpeTest), parent)
+				AndExpr_Factor_OrExpr_Path0.Value = appendStep(nil, AndExpr_Factor_OrExpr_Step2.Value.(udpeTest), parent)
 			}
 			_ = PARENT1
-			_ = Step2
-		case 44:
+			_ = AndExpr_Factor_OrExpr_Step2
+		case 80:
 			AndExpr_Factor_OrExpr_Path0 := lhs
 			PARENT1 := rhs[0]
-			Step_Test2 := rhs[1]
+			AndExpr_Factor_OrExpr_Step_Test2 := rhs[1]
 
 			AndExpr_Factor_OrExpr_Path0.Child = PARENT1
-			PARENT1.Next = Step_Test2
-			AndExpr_Factor_OrExpr_Path0.LastChild = Step_Test2
+			PARENT1.Next = AndExpr_Factor_OrExpr_Step_Test2
+			AndExpr_Factor_OrExpr_Path0.LastChild = AndExpr_Factor_OrExpr_Step_Test2
 
 			{
-				AndExpr_Factor_OrExpr_Path0.Value = appendStep(nil, Step_Test2.Value.(udpeTest), parent)
+				AndExpr_Factor_OrExpr_Path0.Value = appendStep(nil, AndExpr_Factor_OrExpr_Step_Test2.Value.(udpeTest), parent)
 			}
 			_ = PARENT1
-			_ = Step_Test2
-		case 45:
-			Step_Test0 := lhs
+			_ = AndExpr_Factor_OrExpr_Step_Test2
+		case 81:
+			AndExpr_Factor_OrExpr_Step_Test0 := lhs
 			TEXT1 := rhs[0]
 
-			Step_Test0.Child = TEXT1
-			Step_Test0.LastChild = TEXT1
+			AndExpr_Factor_OrExpr_Step_Test0.Child = TEXT1
+			AndExpr_Factor_OrExpr_Step_Test0.LastChild = TEXT1
 
 			{
-				Step_Test0.Value = newTextTest("")
+				AndExpr_Factor_OrExpr_Step_Test0.Value = newTextTest("")
 			}
 			_ = TEXT1
-		case 46:
-			Step_Test0 := lhs
+		case 82:
+			AndExpr_Factor_OrExpr_Step_Test0 := lhs
 			TEXT1 := rhs[0]
 			EQ2 := rhs[1]
 			STRING3 := rhs[2]
 
-			Step_Test0.Child = TEXT1
+			AndExpr_Factor_OrExpr_Step_Test0.Child = TEXT1
 			TEXT1.Next = EQ2
 			EQ2.Next = STRING3
-			Step_Test0.LastChild = STRING3
+			AndExpr_Factor_OrExpr_Step_Test0.LastChild = STRING3
 
 			{
-				Step_Test0.Value = newTextTest(EQ2.Value.(string))
+				AndExpr_Factor_OrExpr_Step_Test0.Value = newTextTest(EQ2.Value.(string))
 			}
 			_ = TEXT1
 			_ = EQ2
