@@ -114,7 +114,7 @@ func TestPredicate(t *testing.T) {
 	)
 	var predicateBuilder = func() (p predicate) {
 		//p(A,E,F,H) = -F and E and (H or A)
-		p = &predicateImpl{
+		p = predicate{
 			expressionVector: []operator{
 				0:  and(),
 				1:  not(),
@@ -199,7 +199,7 @@ func TestPredicate(t *testing.T) {
 		p := predicateBuilder()
 		pc := p.copy()
 
-		if !reflect.DeepEqual(p, pc) {
+		if !reflect.DeepEqual(p, *pc) {
 			t.Error(`p.copy() not deep equal to p`)
 		}
 	})

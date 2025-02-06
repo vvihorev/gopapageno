@@ -56,24 +56,6 @@ func (p *predicate) parentIndexOf(opIndex int) int {
 }
 
 /*
-* leftChildIndexOf computes the index of the left child operator
-* inside the flat representation of the predicate's binary
-* tree data structure.
- */
-func (p *predicate) leftChildIndexOf(opIndex int) int {
-	return 2*opIndex + 1
-}
-
-/*
-* rightChildIndexOf computes the index of the right child operator
-* inside the flat representation of the predicate's binary
-* tree data structure.
- */
-func (p *predicate) rightChildIndexOf(opIndex int) int {
-	return 2*opIndex + 2
-}
-
-/*
 * atomsIDs returns all the atoms which take part to the predicate.
 * The order by which the atomID appear does NOT respect the order by
 * which they were added to the predicate

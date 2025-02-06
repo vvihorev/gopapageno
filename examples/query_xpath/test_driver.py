@@ -1,3 +1,4 @@
+import sys
 import os
 import subprocess
 
@@ -28,3 +29,6 @@ for query in queries:
         exit(1)
     else:
         print('PASSED:', query)
+        if len(sys.argv) > 1:  # verbose test output
+            print(proc.stdout.decode())
+            input()
