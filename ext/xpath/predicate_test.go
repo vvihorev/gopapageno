@@ -106,31 +106,25 @@ func TestOrOperator(t *testing.T) {
 }
 
 func TestPredicate(t *testing.T) {
-	const (
-		F = atomID(0)
-		E = atomID(1)
-		H = atomID(2)
-		A = atomID(3)
-	)
+	var F, E, H, A *predNode
+
 	var predicateBuilder = func() (p predicate) {
 		//p(A,E,F,H) = -F and E and (H or A)
+		n4 := predNode{op: and()}
+
+		n3 := predNode{op: not(), parent: &n4}
+		F = &predNode{op: atom(), parent: &n3}
+
+		n1 := predNode{op: and(), parent: &n4}
+		E = &predNode{op: atom(), parent: &n1}
+
+		n2 := predNode{op: or(), parent: &n1}
+		A = &predNode{op: atom(), parent: &n2}
+		H = &predNode{op: atom(), parent: &n2}
+
 		p = predicate{
-			expressionVector: []operator{
-				0:  and(),
-				1:  not(),
-				2:  and(),
-				3:  atom(), //F
-				5:  atom(), //E
-				6:  or(),
-				13: atom(), //H
-				14: atom(), //A
-			},
-			atomsLookup: map[atomID]int{
-				F: 3,
-				E: 5,
-				H: 13,
-				A: 14,
-			},
+			root: &n4,
+			undoneAtoms: []*predNode{F, E, H, A},
 		}
 		return p
 	}
@@ -138,7 +132,7 @@ func TestPredicate(t *testing.T) {
 		t.Run(`p.earlyEvaluate(F, True)=False -> ... -> p.earlyEvaluate(_, _)=False`, func(t *testing.T) {
 			p := predicateBuilder()
 			var evaluations = []struct {
-				atomID atomID
+				atom   *predNode
 				value  customBool
 				want   customBool
 			}{
@@ -148,8 +142,8 @@ func TestPredicate(t *testing.T) {
 				{H, False, False},
 			}
 			for _, evaluation := range evaluations {
-				if got := p.earlyEvaluate(evaluation.atomID, evaluation.value); got != evaluation.want {
-					t.Errorf(`p.earlyEvaluate(%v, %v)=%v | want %v`, evaluation.atomID, evaluation.value, got, evaluation.want)
+				if got := p.earlyEvaluate(evaluation.atom, evaluation.value); got != evaluation.want {
+					t.Errorf(`p.earlyEvaluate(%v, %v)=%v | want %v`, evaluation.atom, evaluation.value, got, evaluation.want)
 				}
 			}
 		})
@@ -157,7 +151,7 @@ func TestPredicate(t *testing.T) {
 		t.Run(`p.earlyEvaluation(E, False)=False -> ... -> p.earlyEvaluate(_, _)=False`, func(t *testing.T) {
 			p := predicateBuilder()
 			var evaluations = []struct {
-				atomID atomID
+				atom   *predNode
 				value  customBool
 				want   customBool
 			}{
@@ -168,8 +162,8 @@ func TestPredicate(t *testing.T) {
 			}
 
 			for _, evaluation := range evaluations {
-				if got := p.earlyEvaluate(evaluation.atomID, evaluation.value); got != evaluation.want {
-					t.Errorf(`p.earlyEvaluate(%v, %v)=%v | want %v`, evaluation.atomID, evaluation.value, got, evaluation.want)
+				if got := p.earlyEvaluate(evaluation.atom, evaluation.value); got != evaluation.want {
+					t.Errorf(`p.earlyEvaluate(%v, %v)=%v | want %v`, evaluation.atom, evaluation.value, got, evaluation.want)
 				}
 			}
 		})
@@ -177,7 +171,7 @@ func TestPredicate(t *testing.T) {
 		t.Run(`p.earlyEvaluate(_, _)=Undefined -> ... -> p.earlyEvaluate(F, False)=True`, func(t *testing.T) {
 			p := predicateBuilder()
 			var evaluations = []struct {
-				atomID atomID
+				atom   *predNode
 				value  customBool
 				want   customBool
 			}{
@@ -187,8 +181,8 @@ func TestPredicate(t *testing.T) {
 				{F, False, True},
 			}
 			for _, evaluation := range evaluations {
-				if got := p.earlyEvaluate(evaluation.atomID, evaluation.value); got != evaluation.want {
-					t.Errorf(`p.earlyEvaluate(%v, %v)=%v | want %v`, evaluation.atomID, evaluation.value, got, evaluation.want)
+				if got := p.earlyEvaluate(evaluation.atom, evaluation.value); got != evaluation.want {
+					t.Errorf(`p.earlyEvaluate(%v, %v)=%v | want %v`, evaluation.atom, evaluation.value, got, evaluation.want)
 				}
 			}
 
@@ -206,8 +200,8 @@ func TestPredicate(t *testing.T) {
 
 	t.Run(`atomsIDs`, func(t *testing.T) {
 		p := predicateBuilder()
-		want := []atomID{F, E, H, A}
-		got := p.atomsIDs()
+		want := []*predNode{F, E, H, A}
+		got := p.undoneAtoms
 
 		if lenGot, lenWant := len(got), len(want); lenGot != lenWant {
 			t.Errorf(`len(p.atomsIDs())=%d | want %d`, lenGot, lenWant)
@@ -223,7 +217,7 @@ func TestPredicate(t *testing.T) {
 }
 
 //utils
-func contains(s []atomID, e atomID) bool {
+func contains(s []*predNode, e *predNode) bool {
 	for _, v := range s {
 		if v == e {
 			return true

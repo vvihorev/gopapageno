@@ -1,13 +1,8 @@
 package xpath
 
-import (
-	"fmt"
-	"math"
-)
-
 type customBool int
 
-//Custom boolean values which comprises the 'Undefined' value
+// Custom boolean values which comprises the 'Undefined' value
 const (
 	Undefined customBool = iota
 	False
@@ -30,60 +25,36 @@ func (cb customBool) String() string {
 type atomID int
 
 type predicate struct {
-	value            customBool
-	expressionVector []operator
-	atomsLookup      map[atomID]int
+	value       customBool
+	root        *predNode
+	undoneAtoms []*predNode
 }
 
-func newPredicate() *predicate {
-	return new(predicate)
-}
-
-func (p *predicate) String() string {
-	return fmt.Sprintf("p[%v]", p.atomsIDs())
-}
-
-/*
-* parentIndexOf computes the index of the parent operator
-* inside the flat representation of the predicate's binary
-* tree data structure.
- */
-func (p *predicate) parentIndexOf(opIndex int) int {
-	if opIndex == 0 {
-		return -1
-	}
-	return int(math.Floor(float64((opIndex - 1) / 2)))
-}
-
-/*
-* atomsIDs returns all the atoms which take part to the predicate.
-* The order by which the atomID appear does NOT respect the order by
-* which they were added to the predicate
- */
-func (p *predicate) atomsIDs() []atomID {
-	keys := make([]atomID, 0, len(p.atomsLookup))
-	for k := range p.atomsLookup {
-		keys = append(keys, k)
-	}
-	return keys
+type predNode struct {
+	op     operator
+	parent *predNode
 }
 
 /*
 * This method returns the boolean value of the predicate as soon
 * as it can be computed by means of the value assigned to a specific atom.
  */
-func (p *predicate) earlyEvaluate(atomID atomID, value customBool) customBool {
-	currentOpIndex, ok := p.atomsLookup[atomID]
-	if p.value != Undefined || !ok || value == Undefined {
+func (p *predicate) earlyEvaluate(atom *predNode, value customBool) customBool {
+	if p.value != Undefined || value == Undefined {
 		return p.value
 	}
-	delete(p.atomsLookup, atomID)
 
-	for value != Undefined && currentOpIndex >= 0 {
-		currentOp := p.expressionVector[currentOpIndex]
-		value = currentOp.evaluate(value)
-		currentOpIndex = p.parentIndexOf(currentOpIndex)
+	atomsLeft := make([]*predNode, 0)
+	for _, p := range p.undoneAtoms {
+		atomsLeft = append(atomsLeft, p)
 	}
+	p.undoneAtoms = atomsLeft
+
+	for value != Undefined && atom != nil {
+		value = atom.op.evaluate(value)
+		atom = atom.parent
+	}
+
 	p.value = value
 	return value
 }
@@ -115,18 +86,8 @@ func (cb customBool) tobool() (value, ok bool) {
 }
 
 func (p *predicate) copy() *predicate {
-	expressionVectorCopy := make([]operator, len(p.expressionVector))
-	copy(expressionVectorCopy, p.expressionVector)
-
-	atomsLookupCopy := make(map[atomID]int)
-	for k, v := range p.atomsLookup {
-		atomsLookupCopy[k] = v
-	}
-
-	return &predicate{
-		expressionVector: expressionVectorCopy,
-		atomsLookup:      atomsLookupCopy,
-	}
+	// TODO(vvihorev): implement if copying is actually required
+	return p
 }
 
 type operator interface {
@@ -135,7 +96,7 @@ type operator interface {
 
 type opConstructor func() operator
 
-//atom operator concrete implementation
+// atom operator concrete implementation
 type atomOperator struct{}
 
 func (and *atomOperator) evaluate(operand customBool) customBool {
@@ -146,8 +107,8 @@ func atom() operator {
 	return new(atomOperator)
 }
 
-//not operator concrete implementation
-type notOperator struct {}
+// not operator concrete implementation
+type notOperator struct{}
 
 func (not *notOperator) evaluate(operand customBool) customBool {
 	switch operand {
@@ -164,7 +125,7 @@ func not() operator {
 	return new(notOperator)
 }
 
-//or operator concrete implementation
+// or operator concrete implementation
 type orOperator struct {
 	previousOperand customBool
 }
@@ -186,7 +147,7 @@ func or() operator {
 	return new(orOperator)
 }
 
-//and operator concrete implementation
+// and operator concrete implementation
 type andOperator struct {
 	previousOperand customBool
 }
