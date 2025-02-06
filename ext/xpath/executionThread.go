@@ -84,10 +84,10 @@ func (et *executionThread) checkAndUpdateSpeculations(v evaluator) (areSpeculati
 	for _, speculation := range et.speculations.array[:et.speculations.size] {
 		speculationValue := Undefined
 		predicateAtomsIDs := speculation.prd.undoneAtoms
-		for id, atom := range predicateAtomsIDs {
+		for atomID, _ := range predicateAtomsIDs {
 			// TODO(vvihorev): might be an imporer use of id here, it used to be the atomID that was passed
-			atomValue := v(id, &speculation.ctx, speculation.evaluationsCount)
-			speculationValue = speculation.prd.earlyEvaluate(atom, atomValue)
+			atomValue := v(atomID, &speculation.ctx, speculation.evaluationsCount)
+			speculationValue = speculation.prd.earlyEvaluate(atomID, atomValue)
 			if speculationValue != Undefined {
 				break
 			}

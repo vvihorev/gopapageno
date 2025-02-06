@@ -1,9 +1,30 @@
 package xpath
 
+import (
+	"fmt"
+	"context"
+	"github.com/giornetta/gopapageno"
+)
+
 func parse(xpathQuery string) mainQueryType {
-	return parseDPE(xpathQuery, 0, len(xpathQuery))
+	udpeGlobalTable = new(globalUdpeTable)
+	nudpeGlobalTable = new(globalNudpeTable)
+	// return parseDPE(xpathQuery, 0, len(xpathQuery))
+
+	r := gopapageno.NewRunner(
+		NewLexer(),
+		NewGrammar(),
+	)
+	root, err := r.Run(context.Background(), []byte(xpathQuery))
+	if err != nil {
+		panic(fmt.Errorf("could not parse xpath query: %v", err))
+	}
+	fmt.Println(root.Value)
+
+	return UDPE
 }
 
+// TODO(vvihorev): remove this function once the gopapageno generated query parser is ready
 func parseDPE(xpathQuery string, start, end int) mainQueryType {
 	var curFpe *fpeBuilder
 	var curRpe *rpeBuilder
@@ -15,9 +36,6 @@ func parseDPE(xpathQuery string, start, end int) mainQueryType {
 	if end == start {
 		panic("expected a non-empty xpath query")
 	}
-
-	udpeGlobalTable = new(globalUdpeTable)
-	nudpeGlobalTable = new(globalNudpeTable)
 
 	peek := func() byte {
 		if i+1 >= end {

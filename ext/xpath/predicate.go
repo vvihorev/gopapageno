@@ -27,7 +27,7 @@ type atomID int
 type predicate struct {
 	value       customBool
 	root        *predNode
-	undoneAtoms []*predNode
+	undoneAtoms map[int]*predNode
 }
 
 type predNode struct {
@@ -39,16 +39,13 @@ type predNode struct {
 * This method returns the boolean value of the predicate as soon
 * as it can be computed by means of the value assigned to a specific atom.
  */
-func (p *predicate) earlyEvaluate(atom *predNode, value customBool) customBool {
+func (p *predicate) earlyEvaluate(atomID int, value customBool) customBool {
 	if p.value != Undefined || value == Undefined {
 		return p.value
 	}
 
-	atomsLeft := make([]*predNode, 0)
-	for _, p := range p.undoneAtoms {
-		atomsLeft = append(atomsLeft, p)
-	}
-	p.undoneAtoms = atomsLeft
+	atom := p.undoneAtoms[atomID]
+	delete(p.undoneAtoms, atomID)
 
 	for value != Undefined && atom != nil {
 		value = atom.op.evaluate(value)

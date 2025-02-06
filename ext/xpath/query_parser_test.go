@@ -160,7 +160,7 @@ func TestOneTagRPE(t *testing.T) {
 
 func TestTwoTagRPEWithAncestor(t *testing.T) {
 	executor := executor{}
-	executor.parseQuery("\\script\\\\head")
+	executor.parseQuery("\\\\script\\\\\\\\head")
 
 	if len(udpeGlobalTable.list) != 1 {
 		t.Fatalf("Expected one UDPE in the global table")
@@ -216,7 +216,7 @@ func TestTwoTagRPEWithAncestor(t *testing.T) {
 
 func TestNUDPE(t *testing.T) {
 	executor := executor{}
-	executor.parseQuery("/html//div\\body")
+	executor.parseQuery("/html//div\\\\body")
 
 	if len(udpeGlobalTable.list) != 2 {
 		t.Fatalf("Expected one UDPE in the global table")

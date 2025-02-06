@@ -21,6 +21,11 @@ const (
 	RPE
 )
 
+type builder interface {
+	addAxis(axis axis)
+	addUdpeTest(step udpeTest)
+}
+
 func (ut udpeType) String() string {
 	switch ut {
 	case FPE:

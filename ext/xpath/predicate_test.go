@@ -106,25 +106,30 @@ func TestOrOperator(t *testing.T) {
 }
 
 func TestPredicate(t *testing.T) {
-	var F, E, H, A *predNode
+	const (
+		F = iota + 0
+		E
+		H
+		A
+	)
 
 	var predicateBuilder = func() (p predicate) {
 		//p(A,E,F,H) = -F and E and (H or A)
 		n4 := predNode{op: and()}
 
 		n3 := predNode{op: not(), parent: &n4}
-		F = &predNode{op: atom(), parent: &n3}
+		F := &predNode{op: atom(), parent: &n3}
 
 		n1 := predNode{op: and(), parent: &n4}
-		E = &predNode{op: atom(), parent: &n1}
+		E := &predNode{op: atom(), parent: &n1}
 
 		n2 := predNode{op: or(), parent: &n1}
-		A = &predNode{op: atom(), parent: &n2}
-		H = &predNode{op: atom(), parent: &n2}
+		A := &predNode{op: atom(), parent: &n2}
+		H := &predNode{op: atom(), parent: &n2}
 
 		p = predicate{
 			root: &n4,
-			undoneAtoms: []*predNode{F, E, H, A},
+			undoneAtoms: map[int]*predNode{0: F, 1: E, 2: H, 3: A},
 		}
 		return p
 	}
@@ -132,7 +137,7 @@ func TestPredicate(t *testing.T) {
 		t.Run(`p.earlyEvaluate(F, True)=False -> ... -> p.earlyEvaluate(_, _)=False`, func(t *testing.T) {
 			p := predicateBuilder()
 			var evaluations = []struct {
-				atom   *predNode
+				atomID   int
 				value  customBool
 				want   customBool
 			}{
@@ -142,8 +147,8 @@ func TestPredicate(t *testing.T) {
 				{H, False, False},
 			}
 			for _, evaluation := range evaluations {
-				if got := p.earlyEvaluate(evaluation.atom, evaluation.value); got != evaluation.want {
-					t.Errorf(`p.earlyEvaluate(%v, %v)=%v | want %v`, evaluation.atom, evaluation.value, got, evaluation.want)
+				if got := p.earlyEvaluate(evaluation.atomID, evaluation.value); got != evaluation.want {
+					t.Errorf(`p.earlyEvaluate(%v, %v)=%v | want %v`, evaluation.atomID, evaluation.value, got, evaluation.want)
 				}
 			}
 		})
@@ -151,7 +156,7 @@ func TestPredicate(t *testing.T) {
 		t.Run(`p.earlyEvaluation(E, False)=False -> ... -> p.earlyEvaluate(_, _)=False`, func(t *testing.T) {
 			p := predicateBuilder()
 			var evaluations = []struct {
-				atom   *predNode
+				atomID   int
 				value  customBool
 				want   customBool
 			}{
@@ -162,8 +167,8 @@ func TestPredicate(t *testing.T) {
 			}
 
 			for _, evaluation := range evaluations {
-				if got := p.earlyEvaluate(evaluation.atom, evaluation.value); got != evaluation.want {
-					t.Errorf(`p.earlyEvaluate(%v, %v)=%v | want %v`, evaluation.atom, evaluation.value, got, evaluation.want)
+				if got := p.earlyEvaluate(evaluation.atomID, evaluation.value); got != evaluation.want {
+					t.Errorf(`p.earlyEvaluate(%v, %v)=%v | want %v`, evaluation.atomID, evaluation.value, got, evaluation.want)
 				}
 			}
 		})
@@ -171,7 +176,7 @@ func TestPredicate(t *testing.T) {
 		t.Run(`p.earlyEvaluate(_, _)=Undefined -> ... -> p.earlyEvaluate(F, False)=True`, func(t *testing.T) {
 			p := predicateBuilder()
 			var evaluations = []struct {
-				atom   *predNode
+				atomID int
 				value  customBool
 				want   customBool
 			}{
@@ -181,8 +186,8 @@ func TestPredicate(t *testing.T) {
 				{F, False, True},
 			}
 			for _, evaluation := range evaluations {
-				if got := p.earlyEvaluate(evaluation.atom, evaluation.value); got != evaluation.want {
-					t.Errorf(`p.earlyEvaluate(%v, %v)=%v | want %v`, evaluation.atom, evaluation.value, got, evaluation.want)
+				if got := p.earlyEvaluate(evaluation.atomID, evaluation.value); got != evaluation.want {
+					t.Errorf(`p.earlyEvaluate(%v, %v)=%v | want %v`, evaluation.atomID, evaluation.value, got, evaluation.want)
 				}
 			}
 
@@ -200,7 +205,7 @@ func TestPredicate(t *testing.T) {
 
 	t.Run(`atomsIDs`, func(t *testing.T) {
 		p := predicateBuilder()
-		want := []*predNode{F, E, H, A}
+		want := []int{F, E, H, A}
 		got := p.undoneAtoms
 
 		if lenGot, lenWant := len(got), len(want); lenGot != lenWant {
@@ -217,9 +222,9 @@ func TestPredicate(t *testing.T) {
 }
 
 //utils
-func contains(s []*predNode, e *predNode) bool {
-	for _, v := range s {
-		if v == e {
+func contains(s map[int]*predNode, e int) bool {
+	for k := range s {
+		if k == e {
 			return true
 		}
 	}
