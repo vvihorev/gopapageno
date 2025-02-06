@@ -141,7 +141,7 @@ func NewLexer() *gopapageno.Lexer {
 			}
 		case 15:
 			{
-				token.Value = text
+				token.Value = text[1:len(text)-1]
 				token.Type = STRING
 			}
 		case 16:

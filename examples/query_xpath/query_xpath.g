@@ -51,11 +51,11 @@ Step : Test {}
 Test : IDENT {
 	$$.Value = newElementTest($1.Value.(string), nil, nil)
 } | AT IDENT EQ STRING {
-	$$.Value = newElementTest("*", &Attribute{Key: $2.Value.(string), Value: $3.Value.(string)}, nil)
+	$$.Value = newElementTest("*", &Attribute{Key: $2.Value.(string), Value: $4.Value.(string)}, nil)
 } | AT IDENT {
 	$$.Value = newElementTest("*", &Attribute{Key: $2.Value.(string)}, nil)
 } | TEXT EQ STRING {
-	$$.Value = newTextTest($2.Value.(string))
+	$$.Value = newTextTest($3.Value.(string))
 } | TEXT {
 	$$.Value = newTextTest("")
 };

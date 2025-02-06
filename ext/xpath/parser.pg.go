@@ -1596,7 +1596,7 @@ func NewGrammar() *gopapageno.Grammar {
 			AndExpr_Factor_OrExpr_Step_Test0.LastChild = STRING4
 
 			{
-				AndExpr_Factor_OrExpr_Step_Test0.Value = newElementTest("*", &Attribute{Key: IDENT2.Value.(string), Value: EQ3.Value.(string)}, nil)
+				AndExpr_Factor_OrExpr_Step_Test0.Value = newElementTest("*", &Attribute{Key: IDENT2.Value.(string), Value: STRING4.Value.(string)}, nil)
 			}
 			_ = AT1
 			_ = IDENT2
@@ -1986,7 +1986,7 @@ func NewGrammar() *gopapageno.Grammar {
 			AndExpr_Factor_OrExpr_Step_Test0.LastChild = STRING3
 
 			{
-				AndExpr_Factor_OrExpr_Step_Test0.Value = newTextTest(EQ2.Value.(string))
+				AndExpr_Factor_OrExpr_Step_Test0.Value = newTextTest(STRING3.Value.(string))
 			}
 			_ = TEXT1
 			_ = EQ2

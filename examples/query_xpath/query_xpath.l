@@ -109,7 +109,7 @@ NEWLINE [\r\n]
 }
 {QUOTE}{CHAR}*{QUOTE}
 {
-	token.Value = text
+	token.Value = text[1:len(text)-1]
 	token.Type = STRING
 }
 ({SPACE}|{NEWLINE})+
