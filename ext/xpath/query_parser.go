@@ -19,7 +19,8 @@ func parse(xpathQuery string) mainQueryType {
 	if err != nil {
 		panic(fmt.Errorf("could not parse xpath query: %v", err))
 	}
-	fmt.Println(root.Value)
+	// NOTE(vvihorev): last path expression remaining has not been added to global tables yet.
+	root.Value.(*peSemValue).end()
 
 	return UDPE
 }
@@ -94,7 +95,6 @@ func parseDPE(xpathQuery string, start, end int) mainQueryType {
 		// 		atomID(fpe2ID): 2,
 		// 	},
 		// }
-
 		if i < end && xpathQuery[i] == '[' {
 			switch peek() {
 			case '@':

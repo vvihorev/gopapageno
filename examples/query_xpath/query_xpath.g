@@ -10,131 +10,73 @@
 // WARNING: semantic action is deleted: Factor [Path]
 
 Query : Path {
-    $$.Value = $1.Value
+	$$.Value = $1.Value
 };
 
 Path : Path CHILD Step {
-    $$.Value = appendStep($1.Value.(*peSemValue), $3.Value.(udpeTest), child)
+	$$.Value = appendStep($1.Value.(*peSemValue), $3.Value.(udpeTest), child)
 } | Path PARENT Step {
-    $$.Value = appendStep($1.Value.(*peSemValue), $3.Value.(udpeTest), parent)
+	$$.Value = appendStep($1.Value.(*peSemValue), $3.Value.(udpeTest), parent)
 } | Path ANCESTOR Step {
-    $$.Value = appendStep($1.Value.(*peSemValue), $3.Value.(udpeTest), ancestorOrSelf)
+	$$.Value = appendStep($1.Value.(*peSemValue), $3.Value.(udpeTest), ancestorOrSelf)
 } | Path DESCENDANT Step {
-    $$.Value = appendStep($1.Value.(*peSemValue), $3.Value.(udpeTest), descendantOrSelf)
+	$$.Value = appendStep($1.Value.(*peSemValue), $3.Value.(udpeTest), descendantOrSelf)
 } | CHILD Step {
-    $$.Value = appendStep(nil, $2.Value.(udpeTest), child)
+	$$.Value = appendStep(nil, $2.Value.(udpeTest), child)
 } | PARENT Step {
-    $$.Value = appendStep(nil, $2.Value.(udpeTest), parent)
+	$$.Value = appendStep(nil, $2.Value.(udpeTest), parent)
 } | ANCESTOR Step {
-    $$.Value = appendStep(nil, $2.Value.(udpeTest), ancestorOrSelf)
+	$$.Value = appendStep(nil, $2.Value.(udpeTest), ancestorOrSelf)
 } | DESCENDANT Step {
-    $$.Value = appendStep(nil, $2.Value.(udpeTest), descendantOrSelf)
+	$$.Value = appendStep(nil, $2.Value.(udpeTest), descendantOrSelf)
 };
 
 Step : Test {
-    $$.Value = $1.Value
+	$$.Value = $1.Value
 } | Test LBR OrExpr RBR {
-    switch $1.Value.(type) {
-    case *elementTest:
-        $1.Value.(*elementTest).pred = $3.Value.(*predicate)
-    case *textTest:
-        $1.Value.(*elementTest).pred = nil
-    default:
-        panic("unknown test type")
-    }
-    $$.Value = $1.Value
+	switch $1.Value.(type) {
+	case *elementTest:
+		$1.Value.(*elementTest).pred = $3.Value.(*predicate)
+	case *textTest:
+		$1.Value.(*elementTest).pred = nil
+	default:
+		panic("unknown test type")
+	}
+	$$.Value = $1.Value
 };
 
 Test : IDENT {
-    $$.Value = newElementTest($1.Value.(string), nil, nil)
+	$$.Value = newElementTest($1.Value.(string), nil, nil)
 } | AT IDENT {
-    $$.Value = newElementTest("*", &Attribute{Key: $2.Value.(string)}, nil)
+	$$.Value = newElementTest("*", &Attribute{Key: $2.Value.(string)}, nil)
 } | AT IDENT EQ STRING {
-    $$.Value = newElementTest("*", &Attribute{Key: $2.Value.(string), Value: $4.Value.(string)}, nil)
+	$$.Value = newElementTest("*", &Attribute{Key: $2.Value.(string), Value: $4.Value.(string)}, nil)
 } | TEXT {
-    $$.Value = newTextTest("")
+	$$.Value = newTextTest("")
 } | TEXT EQ STRING {
-    $$.Value = newTextTest($3.Value.(string))
+	$$.Value = newTextTest($3.Value.(string))
 };
 
 OrExpr : AndExpr {
-    $$.Value = $1.Value
+	$$.Value = $1.Value
 } | AndExpr OR AndExpr {
-	predl := $1.Value.(predicate)
-	predr := $3.Value.(predicate)
-
-	node := predNode{op: or()}
-	predl.root.parent = &node
-	predr.root.parent = &node
-
-	for k, v := range predr.undoneAtoms {
-		predl.undoneAtoms[k] = v
-	}
-
-	$$.Value = predicate{
-		root: &node,
-		undoneAtoms: predl.undoneAtoms,
-	}
+	$$.Value = combine(or(), $1.Value.(predicate), $3.Value.(predicate))
 };
 
 AndExpr : Factor {
 	$$.Value = $1.Value
 } | Factor AND Factor {
-	predl := $1.Value.(predicate)
-	predr := $3.Value.(predicate)
-
-	node := predNode{op: and()}
-	predl.root.parent = &node
-	predr.root.parent = &node
-
-	for k, v := range predr.undoneAtoms {
-		predl.undoneAtoms[k] = v
-	}
-
-	$$.Value = predicate{
-		root: &node,
-		undoneAtoms: predl.undoneAtoms,
-	}
+	$$.Value = combine(and(), $1.Value.(predicate), $3.Value.(predicate))
 };
 
 Factor : Path {
-	var pe_id int
-	pe := $1.Value.(peSemValue)
-	switch pe.builder.(type) {
-	case *fpeBuilder:
-		pe_id, _ = udpeGlobalTable.addFpe(pe.builder.(*fpeBuilder).end())
-	case *rpeBuilder:
-		pe_id, _ = udpeGlobalTable.addRpe(pe.builder.(*rpeBuilder).end())
-	default:
-		panic("something worong")
-	}
-
-	node := predNode{op: atom()}
-	$$.Value = predicate{root: &node, undoneAtoms: map[int]*predNode{pe_id: &node}}
+	$$.Value = newAtom($1.Value.(peSemValue).end())
 } | NOT Path {
-	var pe_id int
-	pe := $2.Value.(peSemValue)
-	switch pe.builder.(type) {
-	case *fpeBuilder:
-		pe_id, _ = udpeGlobalTable.addFpe(pe.builder.(*fpeBuilder).end())
-	case *rpeBuilder:
-		pe_id, _ = udpeGlobalTable.addRpe(pe.builder.(*rpeBuilder).end())
-	default:
-		panic("something worong")
-	}
-
-	node := predNode{op: atom()}
-	$$.Value = predicate{root: &node, undoneAtoms: map[int]*predNode{pe_id: &node}}
+	$$.Value = notNode(newAtom($2.Value.(peSemValue).end()))
 } | LPAR OrExpr RPAR {
 	$$.Value = $2.Value
 } | NOT LPAR OrExpr RPAR {
-	pred := $3.Value.(predicate)
-
-	node := predNode{op: not()}
-	pred.root.parent = &node
-	pred.root = &node
-
-	$$.Value = pred
+	$$.Value = notNode($3.Value.(predicate))
 };
 
 %%
@@ -144,8 +86,45 @@ type peSemValue struct {
 	builder builder
 }
 
+func notNode(pred predicate) predicate {
+	node := predNode{op: not()}
+	pred.root.parent = &node
+	pred.root = &node
+	return pred
+}
+
+func newAtom(pe_id int) predicate {
+	node := predNode{op: atom()}
+	return predicate{root: &node, undoneAtoms: map[int]*predNode{pe_id: &node}}
+}
+
+func combine(op operator, dst predicate, src predicate) predicate {
+	node := predNode{op: op}
+	dst.root.parent = &node
+	src.root.parent = &node
+
+	for k, v := range src.undoneAtoms {
+		dst.undoneAtoms[k] = v
+	}
+	dst.root = &node
+	return dst
+}
+
+func (pe peSemValue) end() int {
+	switch pe.builder.(type) {
+	case *fpeBuilder:
+		pe_id, _ := udpeGlobalTable.addFpe(pe.builder.(*fpeBuilder).end())
+		return pe_id
+	case *rpeBuilder:
+		pe_id, _ := udpeGlobalTable.addRpe(pe.builder.(*rpeBuilder).end())
+		return pe_id
+	default:
+		panic("something worong")
+	}
+}
+
 func appendStep(pe *peSemValue, step udpeTest, axis axis) *peSemValue {
-        if pe == nil {
+	if pe == nil {
 		pe = &peSemValue{}
 		if axis == child || axis == descendantOrSelf {
 			pe.builder = &fpeBuilder{}
@@ -156,7 +135,7 @@ func appendStep(pe *peSemValue, step udpeTest, axis axis) *peSemValue {
 		pe.builder.addAxis(axis)
 		pe.builder.addUdpeTest(step)
 		return pe
-        }
+	}
 
 	switch pe.builder.(type) {
 	case *fpeBuilder:
@@ -181,6 +160,12 @@ func appendStep(pe *peSemValue, step udpeTest, axis axis) *peSemValue {
 	pe.builder.addUdpeTest(step)
 	return pe
 }
+
+// TODO(vvihorev): integrate NUDPE support
+// globalNudpe := nudpeGlobalTable.addNudpeRecord(udpeCount)
+// for i := range udpeGlobalTable.size() {
+// 	udpeGlobalTable.list[i].setNudpeRecord(globalNudpe)
+// }
 
 // var parserElementsPools []*gopapageno.Pool[xpath.Element]
 
