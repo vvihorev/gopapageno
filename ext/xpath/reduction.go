@@ -143,7 +143,7 @@ func (r *Reduction) Setup(reducedNT, generativeNT, wrappedNT *NonTerminal) {
 				}
 
 				if r.updatingExecutionTable.records[id].threads.array[i].pp.isEmpty() && !r.updatingExecutionTable.records[id].threads.array[i].isSpeculative() {
-					r.updatingExecutionTable.records[id].ctxSols.addContextSolution(r.updatingExecutionTable.records[id].threads.array[i].ctx, r.updatingExecutionTable.records[id].threads.array[i].sol)
+					r.updatingExecutionTable.records[id].ctxSols.addContextSolution(r.updatingExecutionTable.records[id].threads.array[i].ctx.Position().Start(), r.updatingExecutionTable.records[id].threads.array[i].ctx.Position().End(), r.updatingExecutionTable.records[id].threads.array[i].sol)
 					if DEBUG {
 						logger.Printf("added a context-solution: [ %v, %v ] to record: %v", r.updatingExecutionTable.records[id].threads.array[i].ctx.String(), r.updatingExecutionTable.records[id].threads.array[i].sol.String(), r.updatingExecutionTable.records[id].String())
 					}
