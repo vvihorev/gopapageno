@@ -93,16 +93,19 @@ func (r *Reduction) Setup(reducedNT, generativeNT, wrappedNT *NonTerminal) {
 				}
 
 				if ok {
-					var etReceivingSpeculation = r.updatingExecutionTable.records[id].threads.array[i]
 					if newPathPattern != nil {
-						etReceivingSpeculation = r.updatingExecutionTable.records[id].addExecutionThread(r.updatingExecutionTable.records[id].threads.array[i].ctx, r.updatingExecutionTable.records[id].threads.array[i].sol, newPathPattern)
+						etReceivingSpeculation := r.updatingExecutionTable.records[id].addExecutionThread(r.updatingExecutionTable.records[id].threads.array[i].ctx, r.updatingExecutionTable.records[id].threads.array[i].sol, newPathPattern)
 						r.updatingExecutionTable.records[id].threads.array[i].addChild(etReceivingSpeculation)
 						r.updatingExecutionTable.records[id].threads.array[i].pp = newPathPattern
+						if predicate != nil {
+							etReceivingSpeculation.addSpeculation(predicate, *r.reducedNT)
+						}
+					} else {
+						if predicate != nil {
+							r.updatingExecutionTable.records[id].threads.array[i].addSpeculation(predicate, *r.reducedNT)
+						}
 					}
 
-					if predicate != nil {
-						_ = etReceivingSpeculation.addSpeculation(predicate, *r.reducedNT)
-					}
 				} else {
 					r.updatingExecutionTable.records[id].removeExecutionThread(r.updatingExecutionTable.records[id].threads.array[i], false)
 				}

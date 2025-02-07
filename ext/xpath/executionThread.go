@@ -46,10 +46,9 @@ func (et *executionThread) isSpeculative() bool {
 	return et.speculations.size != 0
 }
 
-func (et *executionThread) addSpeculation(prd *predicate, ctx NonTerminal) speculation {
+func (et *executionThread) addSpeculation(prd *predicate, ctx NonTerminal) {
 	sp := speculation{prd: *prd, ctx: ctx}
 	et.speculations.append(sp)
-	return sp
 }
 
 func (et *executionThread) removeSpeculation(sp speculation) {
@@ -81,26 +80,27 @@ type evaluator func(id int, context *NonTerminal, evaluationsCount int) customBo
 func (et *executionThread) checkAndUpdateSpeculations(v evaluator) (areSpeculationsFounded bool) {
 	areSpeculationsFounded = true
 
-	for _, speculation := range et.speculations.array[:et.speculations.size] {
+	for i := 0; i < et.speculations.size; i++ {
 		speculationValue := Undefined
-		predicateAtomsIDs := speculation.prd.undoneAtoms
-		for atomID, _ := range predicateAtomsIDs {
-			// TODO(vvihorev): might be an imporer use of id here, it used to be the atomID that was passed
-			atomValue := v(atomID, &speculation.ctx, speculation.evaluationsCount)
-			speculationValue = speculation.prd.earlyEvaluate(atomID, atomValue)
+		predicateAtomsIDs := et.speculations.array[i].prd.undoneAtoms
+		for atomID := range predicateAtomsIDs {
+			// TODO(vvihorev): might be an improper use of id here, it used to be the atomID that was passed
+			atomValue := v(atomID, &et.speculations.array[i].ctx, et.speculations.array[i].evaluationsCount)
+			speculationValue = et.speculations.array[i].prd.earlyEvaluate(atomID, atomValue)
 			if speculationValue != Undefined {
 				break
 			}
 		}
-		speculation.evaluationsCount++
+		et.speculations.array[i].evaluationsCount++
 
 		switch speculationValue {
 		case False:
 			areSpeculationsFounded = false
-			et.removeSpeculation(speculation)
-			continue
+			et.removeSpeculation(et.speculations.array[i])
+			// TODO(vvihorev): need to double check if this should break
+			break
 		case True:
-			et.removeSpeculation(speculation)
+			et.removeSpeculation(et.speculations.array[i])
 		case Undefined:
 		}
 	}

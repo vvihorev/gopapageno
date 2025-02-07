@@ -88,12 +88,6 @@ func appendStep(pe *peSemValue, step udpeTest, axis axis) *peSemValue {
 	return pe
 }
 
-// TODO(vvihorev): integrate NUDPE support
-// globalNudpe := nudpeGlobalTable.addNudpeRecord(udpeCount)
-// for i := range udpeGlobalTable.size() {
-// 	udpeGlobalTable.list[i].setNudpeRecord(globalNudpe)
-// }
-
 // var parserElementsPools []*gopapageno.Pool[xpath.Element]
 
 // ParserPreallocMem initializes all the memory pools required by the semantic function of the parser.
@@ -1162,6 +1156,7 @@ func NewGrammar() *gopapageno.Grammar {
 			AndExpr_Factor_OrExpr_Step0.LastChild = RBR4
 
 			{
+				// TODO(vvihorev): support NUDPEs inside predicates
 				switch AndExpr_Factor_OrExpr_Step_Test1.Value.(type) {
 				case *elementTest:
 			
@@ -1199,6 +1194,7 @@ func NewGrammar() *gopapageno.Grammar {
 			AndExpr_Factor_OrExpr_Step0.LastChild = RBR4
 
 			{
+				// TODO(vvihorev): support NUDPEs inside predicates
 				switch AndExpr_Factor_OrExpr_Step_Test1.Value.(type) {
 				case *elementTest:
 			
@@ -1236,6 +1232,7 @@ func NewGrammar() *gopapageno.Grammar {
 			AndExpr_Factor_OrExpr_Step0.LastChild = RBR4
 
 			{
+				// TODO(vvihorev): support NUDPEs inside predicates
 				switch AndExpr_Factor_OrExpr_Step_Test1.Value.(type) {
 				case *elementTest:
 			
@@ -1273,6 +1270,7 @@ func NewGrammar() *gopapageno.Grammar {
 			AndExpr_Factor_OrExpr_Step0.LastChild = RBR4
 
 			{
+				// TODO(vvihorev): support NUDPEs inside predicates
 				switch AndExpr_Factor_OrExpr_Step_Test1.Value.(type) {
 				case *elementTest:
 			
@@ -1310,6 +1308,7 @@ func NewGrammar() *gopapageno.Grammar {
 			AndExpr_Factor_OrExpr_Step0.LastChild = RBR4
 
 			{
+				// TODO(vvihorev): support NUDPEs inside predicates
 				switch AndExpr_Factor_OrExpr_Step_Test1.Value.(type) {
 				case *elementTest:
 			
@@ -1347,6 +1346,7 @@ func NewGrammar() *gopapageno.Grammar {
 			AndExpr_Factor_OrExpr_Step0.LastChild = RBR4
 
 			{
+				// TODO(vvihorev): support NUDPEs inside predicates
 				switch AndExpr_Factor_OrExpr_Step_Test1.Value.(type) {
 				case *elementTest:
 			

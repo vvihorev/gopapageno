@@ -28,6 +28,7 @@ Path : Path CHILD Step {
 
 Step : Test {}
   | Test LBR OrExpr RBR {
+	// TODO(vvihorev): support NUDPEs inside predicates
 	switch $1.Value.(type) {
 	case *elementTest:
 
@@ -166,12 +167,6 @@ func appendStep(pe *peSemValue, step udpeTest, axis axis) *peSemValue {
 	pe.builder.addUdpeTest(step)
 	return pe
 }
-
-// TODO(vvihorev): integrate NUDPE support
-// globalNudpe := nudpeGlobalTable.addNudpeRecord(udpeCount)
-// for i := range udpeGlobalTable.size() {
-// 	udpeGlobalTable.list[i].setNudpeRecord(globalNudpe)
-// }
 
 // var parserElementsPools []*gopapageno.Pool[xpath.Element]
 
