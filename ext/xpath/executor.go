@@ -140,16 +140,17 @@ func (executor *executor) completeExecutionOfUDPEsAndNUDPEs() (err error) {
 		}
 
 		// stop unfounded speculative execution threads
+		for i := 0; i < er.threads.size; i++ {
+			if areSpeculationsFounded := er.threads.array[i].checkAndUpdateSpeculations(executor.nudpeBooleanValueEvaluator); !areSpeculationsFounded {
+				er.removeExecutionThread(er.threads.array[i], true)
+			}
+		}
+
 		// produce context solutions out of completed non speculative execution threads
-		{
-			for i := 0; i < er.threads.size; i++ {
-				if areSpeculationsFounded := er.threads.array[i].checkAndUpdateSpeculations(executor.nudpeBooleanValueEvaluator); !areSpeculationsFounded {
-					er.removeExecutionThread(er.threads.array[i], true)
-				}
-				if er.threads.array[i].pp.isEmpty() && !er.threads.array[i].isSpeculative() {
-					er.ctxSols.addContextSolution(er.threads.array[i].ctx.Position().Start(), er.threads.array[i].ctx.Position().End(), er.threads.array[i].sol)
-					er.removeExecutionThread(er.threads.array[i], false)
-				}
+		for i := 0; i < er.threads.size; i++ {
+			if er.threads.array[i].pp.isEmpty() && !er.threads.array[i].isSpeculative() {
+				er.ctxSols.addContextSolution(er.threads.array[i].ctx.Position().Start(), er.threads.array[i].ctx.Position().End(), er.threads.array[i].sol)
+				er.removeExecutionThread(er.threads.array[i], false)
 			}
 		}
 
