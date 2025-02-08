@@ -165,7 +165,7 @@ func TestMatchAttributeInRPE(t *testing.T) {
 	ExpectResults(
 		t,
 		`<body><div class="row"></div><div class="col"><p></p></div></body>`,
-		`\\\\div[@class="col"]`,
-		[]string{`<div class="col"><p></p></div>`},
+		`//div[@class]`,
+		[]string{`<div class="col"><p></p></div>`, `<div class="row"></div>`},
 	)
 }

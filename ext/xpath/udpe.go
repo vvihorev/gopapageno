@@ -107,16 +107,17 @@ func (et *elementTest) test(tested interface{}) bool {
 	}
 
 	if et.attr != nil {
-		hasAttribute := false
 		attr := element.attribute
 		for attr != nil {
-			if *attr == *et.attr {
-				hasAttribute = true
-				break
+			if attr.Key == et.attr.Key {
+				if et.attr.Value == "" {
+					return true
+				}
+				return attr.Value == et.attr.Value
 			}
 			attr = attr.Next
 		}
-		return hasAttribute
+		return false
 	}
 
 	return true

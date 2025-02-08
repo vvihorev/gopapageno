@@ -33,9 +33,9 @@ func (et *executionTable) merge(incoming *executionTable) (ok bool) {
 
 	for id := range len(et.records) {
 		if DEBUG {
-			logger.Printf("merging record %v", et.records[id].String())
+			logger.Printf("  merging record %v", et.records[id].String())
 			for i := 0; i < et.records[id].threads.size; i++ {
-				logger.Printf("own thread: %v", et.records[id].threads.array[i].String())
+				logger.Printf("   own thread: %v", et.records[id].threads.array[i].String())
 			}
 		}
 

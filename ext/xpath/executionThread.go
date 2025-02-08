@@ -80,11 +80,11 @@ type evaluator func(id int, context *NonTerminal, evaluationsCount int) customBo
 func (et *executionThread) checkAndUpdateSpeculations(v evaluator) (areSpeculationsFounded bool) {
 	areSpeculationsFounded = true
 
-	for i := 0; i < et.speculations.size; i++ {
+	i := 0
+	for i < et.speculations.size {
 		speculationValue := Undefined
 		predicateAtomsIDs := et.speculations.array[i].prd.undoneAtoms
 		for atomID := range predicateAtomsIDs {
-			// TODO(vvihorev): might be an improper use of id here, it used to be the atomID that was passed
 			atomValue := v(atomID, &et.speculations.array[i].ctx, et.speculations.array[i].evaluationsCount)
 			speculationValue = et.speculations.array[i].prd.earlyEvaluate(atomID, atomValue)
 			if speculationValue != Undefined {
@@ -102,6 +102,7 @@ func (et *executionThread) checkAndUpdateSpeculations(v evaluator) (areSpeculati
 		case True:
 			et.removeSpeculation(et.speculations.array[i])
 		case Undefined:
+			i++
 		}
 	}
 	return

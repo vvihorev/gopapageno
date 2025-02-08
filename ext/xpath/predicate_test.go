@@ -127,8 +127,16 @@ func TestPredicate(t *testing.T) {
 		A := &predNode{op: atom(), parent: &n2}
 		H := &predNode{op: atom(), parent: &n2}
 
+		n4.left = &n3
+		n4.right = &n1
+		n3.left = F
+		n1.left = E
+		n1.right = &n2
+		n2.left = A
+		n2.right = H
+
 		p = predicate{
-			root: &n4,
+			root:        &n4,
 			undoneAtoms: map[int]*predNode{0: F, 1: E, 2: H, 3: A},
 		}
 		return p
@@ -137,7 +145,7 @@ func TestPredicate(t *testing.T) {
 		t.Run(`p.earlyEvaluate(F, True)=False -> ... -> p.earlyEvaluate(_, _)=False`, func(t *testing.T) {
 			p := predicateBuilder()
 			var evaluations = []struct {
-				atomID   int
+				atomID int
 				value  customBool
 				want   customBool
 			}{
@@ -156,7 +164,7 @@ func TestPredicate(t *testing.T) {
 		t.Run(`p.earlyEvaluation(E, False)=False -> ... -> p.earlyEvaluate(_, _)=False`, func(t *testing.T) {
 			p := predicateBuilder()
 			var evaluations = []struct {
-				atomID   int
+				atomID int
 				value  customBool
 				want   customBool
 			}{
@@ -221,7 +229,7 @@ func TestPredicate(t *testing.T) {
 	})
 }
 
-//utils
+// utils
 func contains(s map[int]*predNode, e int) bool {
 	for k := range s {
 		if k == e {

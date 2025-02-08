@@ -16,6 +16,7 @@ type peSemValue struct {
 func notNode(pred predicate) predicate {
 	node := predNode{op: not()}
 	pred.root.parent = &node
+	node.left = pred.root.parent
 	pred.root = &node
 	return pred
 }
@@ -26,7 +27,7 @@ func newAtom(pe_id int) predicate {
 }
 
 func combine(op operator, dst predicate, src predicate) predicate {
-	node := predNode{op: op}
+	node := predNode{op: op, left: dst.root, right: src.root}
 	dst.root.parent = &node
 	src.root.parent = &node
 

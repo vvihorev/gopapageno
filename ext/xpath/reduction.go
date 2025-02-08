@@ -20,7 +20,7 @@ func (r *Reduction) Setup(reducedNT, generativeNT, wrappedNT *NonTerminal) {
 	}
 
 	if DEBUG {
-		logger.Printf("reduction: %v <-- %v <> %v </>", reducedNT.String(), generativeNT.String(), wrappedNT.String())
+		logger.Printf("REDUCTION: %v <-- %v <> %v </>", reducedNT.String(), generativeNT.String(), wrappedNT.String())
 	}
 
 	r.reducedNT = reducedNT
@@ -31,11 +31,17 @@ func (r *Reduction) Setup(reducedNT, generativeNT, wrappedNT *NonTerminal) {
 	// iterate over all global udpe records and execute main phases
 	for id, gr := range udpeGlobalTable.list {
 		r.globalUdpeRecordBeingConsidered = &gr
+		if DEBUG {
+			logger.Printf(" UDPE %d", id)
+		}
 
 		// Phase 1 checks if the udpe's entry point matches current
 		// Reduction, without updating the path pattern, and, if it
 		// maches, creates new execution threads accordingly
 		{
+			if DEBUG {
+				logger.Printf("  PHASE 1")
+			}
 			udpe := r.globalUdpeRecordBeingConsidered.udpe()
 			entryPoint := udpe.entryPoint()
 
@@ -45,7 +51,7 @@ func (r *Reduction) Setup(reducedNT, generativeNT, wrappedNT *NonTerminal) {
 					// When a node matches an FPE entry point, the thread has found a solution
 					if DEBUG {
 						et := r.updatingExecutionTable.records[id].addExecutionThread(nil, r.reducedNT, entryPoint)
-						logger.Printf("adding execution thread: %v", et.String())
+						logger.Printf("   adding execution thread: %v", et.String())
 					} else {
 						r.updatingExecutionTable.records[id].addExecutionThread(nil, r.reducedNT, entryPoint)
 					}
@@ -54,7 +60,7 @@ func (r *Reduction) Setup(reducedNT, generativeNT, wrappedNT *NonTerminal) {
 						// When a node matches an RPE entry point, the thread has found a context
 						if DEBUG {
 							et := r.updatingExecutionTable.records[id].addExecutionThread(r.wrappedNT, nil, entryPoint)
-							logger.Printf("adding execution thread: %v", et.String())
+							logger.Printf("   adding execution thread: %v", et.String())
 						} else {
 							r.updatingExecutionTable.records[id].addExecutionThread(r.wrappedNT, nil, entryPoint)
 						}
@@ -75,6 +81,9 @@ func (r *Reduction) Setup(reducedNT, generativeNT, wrappedNT *NonTerminal) {
 			var newPathPattern pathPattern
 			var ok bool
 
+			if DEBUG {
+				logger.Printf("  PHASE 2")
+			}
 			for i := 0; i < r.updatingExecutionTable.records[id].threads.size; i++ {
 				etPathPattern := r.updatingExecutionTable.records[id].threads.array[i].pp
 
@@ -87,7 +96,7 @@ func (r *Reduction) Setup(reducedNT, generativeNT, wrappedNT *NonTerminal) {
 				if DEBUG {
 					ppBefore := etPathPattern.String()
 					predicate, newPathPattern, ok = etPathPattern.matchWithReductionOf(r.reducedNT.Node(), true)
-					logger.Printf("updating execution thread: %v -> %v", ppBefore, etPathPattern.String())
+					logger.Printf("   updating execution thread: %v -> %v", ppBefore, etPathPattern.String())
 				} else {
 					predicate, newPathPattern, ok = etPathPattern.matchWithReductionOf(r.reducedNT.Node(), true)
 				}
@@ -114,6 +123,9 @@ func (r *Reduction) Setup(reducedNT, generativeNT, wrappedNT *NonTerminal) {
 
 		// Phase 3 - Stop speculative threads, store context-solution pairs for compeleted threads
 		{
+			if DEBUG {
+				logger.Printf("  PHASE 3")
+			}
 			for i := 0; i < r.updatingExecutionTable.records[id].threads.size; i++ {
 				// If a thread speculation is unfounded, stop the speculative execution thread, and all its Children recursively
 				if areSpeculationsFounded := r.updatingExecutionTable.records[id].threads.array[i].checkAndUpdateSpeculations(r.updatingExecutionTable.evaluateID); !areSpeculationsFounded {
@@ -139,18 +151,22 @@ func (r *Reduction) Setup(reducedNT, generativeNT, wrappedNT *NonTerminal) {
 			for i := 0; i < r.updatingExecutionTable.records[id].threads.size; i++ {
 				// produce context solutions out of completed non speculative execution threads
 				if DEBUG {
-					logger.Printf("checking context-solutions for: %v", r.updatingExecutionTable.records[id].threads.array[i].String())
+					logger.Printf("   checking context-solutions for: %v", r.updatingExecutionTable.records[id].threads.array[i].String())
 				}
 
 				if r.updatingExecutionTable.records[id].threads.array[i].pp.isEmpty() && !r.updatingExecutionTable.records[id].threads.array[i].isSpeculative() {
 					r.updatingExecutionTable.records[id].ctxSols.addContextSolution(r.updatingExecutionTable.records[id].threads.array[i].ctx.Position().Start(), r.updatingExecutionTable.records[id].threads.array[i].ctx.Position().End(), r.updatingExecutionTable.records[id].threads.array[i].sol)
 					if DEBUG {
-						logger.Printf("added a context-solution: [ %v, %v ] to record: %v", r.updatingExecutionTable.records[id].threads.array[i].ctx.String(), r.updatingExecutionTable.records[id].threads.array[i].sol.String(), r.updatingExecutionTable.records[id].String())
+						logger.Printf("   added a context-solution: [ %v, %v ] to record: %d %v", r.updatingExecutionTable.records[id].threads.array[i].ctx.String(), r.updatingExecutionTable.records[id].threads.array[i].sol.String(), i, r.updatingExecutionTable.records[id].String())
 					}
 					r.updatingExecutionTable.records[id].removeExecutionThread(r.updatingExecutionTable.records[id].threads.array[i], false)
 				}
 			}
 		}
+	}
+
+	if DEBUG {
+		logger.Printf(" MERGE")
 	}
 
 	if r.generativeNT != nil {
@@ -163,15 +179,15 @@ func (r *Reduction) Setup(reducedNT, generativeNT, wrappedNT *NonTerminal) {
 	}
 
 	if DEBUG {
-		for _, er := range updatingExecutionTable.records {
+		for i, er := range updatingExecutionTable.records {
 			if r.generativeNT == nil {
-				logger.Printf("skipping merge %v", er.String())
+				logger.Printf("  skipping merge %d %v", i, er.String())
 			} else {
-				logger.Printf("after merge %v", er.String())
+				logger.Printf("  after merge %d %v", i, er.String())
 			}
 
 			for i := 0; i < er.threads.size; i++ {
-				logger.Printf("own thread: %v", er.threads.array[i].String())
+				logger.Printf("  own thread: %v", er.threads.array[i].String())
 			}
 		}
 	}

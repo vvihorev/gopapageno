@@ -82,7 +82,7 @@ func (executorCommand *ExecutorCommand) Run(runner *gopapageno.Runner) (results 
 
 	executor.parseQuery(executorCommand.xpathQuery)
 	if DEBUG {
-		logger.Printf("Executing Query: %v", executorCommand.xpathQuery)
+		logger.Printf("EXECUTING QUERY: %v", executorCommand.xpathQuery)
 	}
 
 	err = executor.executeUDPEsWhileParsing()
@@ -183,8 +183,9 @@ func (executor *executor) nudpeBooleanValueEvaluator(udpeID int, context *NonTer
 
 func (executor *executor) retrieveResults() (results []Position) {
 	if DEBUG {
+		logger.Printf("RETRIEVE RESULTS")
 		for _, er := range executor.resultingExecutionTable.records {
-			logger.Printf("results record: %v", er.String())
+			logger.Printf(" results record: %v", er.String())
 			for i := 0; i < er.threads.size; i++ {
 				logger.Printf("  resulting thread: %v", er.threads.array[i].String())
 			}

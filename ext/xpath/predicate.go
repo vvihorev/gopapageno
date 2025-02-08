@@ -33,6 +33,8 @@ type predicate struct {
 type predNode struct {
 	op     operator
 	parent *predNode
+	left   *predNode
+	right  *predNode
 }
 
 /*
@@ -82,9 +84,47 @@ func (cb customBool) tobool() (value, ok bool) {
 	return
 }
 
+func (n *predNode) copyNode(undoneSrc, undoneDst map[int]*predNode) *predNode {
+	if n == nil {
+		return nil
+	}
+
+	newNode := &predNode{
+		op: n.op,
+	}
+
+	for k, v := range undoneSrc {
+		if v == n {
+			undoneDst[k] = newNode
+		}
+	}
+
+	newNode.left = n.left.copyNode(undoneSrc, undoneDst)
+	newNode.right = n.right.copyNode(undoneSrc, undoneDst)
+
+	if newNode.left != nil {
+		newNode.left.parent = newNode
+	}
+	if newNode.right != nil {
+		newNode.right.parent = newNode
+	}
+
+	return newNode
+}
+
 func (p *predicate) copy() *predicate {
-	// TODO(vvihorev): implement if copying is actually required
-	return p
+	if p == nil {
+		return nil
+	}
+
+	undoneAtomsCopy := make(map[int]*predNode)
+	newPredicate := &predicate{
+		value: p.value,
+		root:  p.root.copyNode(p.undoneAtoms, undoneAtomsCopy),
+	}
+	newPredicate.undoneAtoms = undoneAtomsCopy
+
+	return newPredicate
 }
 
 type operator interface {
