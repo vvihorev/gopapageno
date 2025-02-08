@@ -217,3 +217,417 @@ func (executor *executor) retrieveResults() (results []Position) {
 
 	return
 }
+
+
+func PrepareBenchmark(runner *gopapageno.Runner, source []byte, numberOfThreads int) *executor {
+	executor := &executor{
+		numberOfThreads: numberOfThreads,
+		runner:          runner,
+		source: source,
+	}
+
+	udpeGlobalTable = new(globalUdpeTable)
+	nudpeGlobalTable = new(globalNudpeTable)
+
+	return executor
+}
+ 
+func (executor *executor) ExecuteBenchmark() []Position {
+	err := executor.executeUDPEsWhileParsing()
+	if err != nil {
+		return nil
+	}
+
+	err = executor.completeExecutionOfUDPEsAndNUDPEs()
+	if err != nil {
+		return nil
+	}
+
+	results := executor.retrieveResults()
+	return results
+}
+
+func (executor *executor) A1() {
+	executor.mainQueryType = UDPE
+	/* /site/closed_auctions/closed_auction/annotation/description/Text/keyword */
+
+	fpeBuilder1 := fpeBuilder{}
+	fpeBuilder1.addAxis(child)
+	fpeBuilder1.addUdpeTest(newElementTest("site", nil, nil))
+	fpeBuilder1.addAxis(child)
+	fpeBuilder1.addUdpeTest(newElementTest("closed_auctions", nil, nil))
+	fpeBuilder1.addAxis(child)
+	fpeBuilder1.addUdpeTest(newElementTest("closed_auction", nil, nil))
+	fpeBuilder1.addAxis(child)
+	fpeBuilder1.addUdpeTest(newElementTest("annotation", nil, nil))
+	fpeBuilder1.addAxis(child)
+	fpeBuilder1.addUdpeTest(newElementTest("description", nil, nil))
+	fpeBuilder1.addAxis(child)
+	fpeBuilder1.addUdpeTest(newElementTest("Text", nil, nil))
+	fpeBuilder1.addAxis(child)
+	fpeBuilder1.addUdpeTest(newElementTest("keyword", nil, nil))
+
+	udpeGlobalTable.addFpe(fpeBuilder1.end())
+}
+
+func (executor *executor) A2() {
+	executor.mainQueryType = UDPE
+	/* //closed_auction//keyword */
+
+	fpeBuilder1 := fpeBuilder{}
+	fpeBuilder1.addAxis(descendantOrSelf)
+	fpeBuilder1.addUdpeTest(newElementTest("closed_auction", nil, nil))
+	fpeBuilder1.addAxis(descendantOrSelf)
+	fpeBuilder1.addUdpeTest(newElementTest("keyword", nil, nil))
+
+	udpeGlobalTable.addFpe(fpeBuilder1.end())
+}
+
+func (executor *executor) A3() {
+	executor.mainQueryType = UDPE
+	/* /site/closed_auctions/closed_auction//keyword */
+
+	fpeBuilder1 := fpeBuilder{}
+	fpeBuilder1.addAxis(child)
+	fpeBuilder1.addUdpeTest(newElementTest("site", nil, nil))
+	fpeBuilder1.addAxis(child)
+	fpeBuilder1.addUdpeTest(newElementTest("closed_auctions", nil, nil))
+	fpeBuilder1.addAxis(child)
+	fpeBuilder1.addUdpeTest(newElementTest("closed_auction", nil, nil))
+	fpeBuilder1.addAxis(descendantOrSelf)
+	fpeBuilder1.addUdpeTest(newElementTest("keyword", nil, nil))
+
+	udpeGlobalTable.addFpe(fpeBuilder1.end())
+}
+
+func (executor *executor) A4() {
+	executor.mainQueryType = UDPE
+
+	/* p = /closed_auction/annotation/description/Text/keyword */
+
+	fpeBuilder1 := fpeBuilder{}
+	fpeBuilder1.addAxis(child)
+	fpeBuilder1.addUdpeTest(newElementTest("closed_auction", nil, nil))
+	fpeBuilder1.addAxis(child)
+	fpeBuilder1.addUdpeTest(newElementTest("annotation", nil, nil))
+	fpeBuilder1.addAxis(child)
+	fpeBuilder1.addUdpeTest(newElementTest("description", nil, nil))
+	fpeBuilder1.addAxis(child)
+	fpeBuilder1.addUdpeTest(newElementTest("Text", nil, nil))
+	fpeBuilder1.addAxis(child)
+	fpeBuilder1.addUdpeTest(newElementTest("keyword", nil, nil))
+
+	fpeID, _ := udpeGlobalTable.addFpe(fpeBuilder1.end())
+
+	node := predNode{op: atom()}
+	p := &predicate{
+		root: &node,
+		undoneAtoms: map[int]*predNode{fpeID: &node},
+	}
+
+	/* /site/closed_auctions/closed_auction[p]/date */
+
+	fpeBuilder2 := fpeBuilder{}
+	fpeBuilder2.addAxis(child)
+	fpeBuilder2.addUdpeTest(newElementTest("site", nil, nil))
+	fpeBuilder2.addAxis(child)
+	fpeBuilder2.addUdpeTest(newElementTest("closed_auctions", nil, nil))
+	fpeBuilder2.addAxis(child)
+	fpeBuilder2.addUdpeTest(newElementTest("closed_auction", nil, p))
+	fpeBuilder2.addAxis(child)
+	fpeBuilder2.addUdpeTest(newElementTest("date", nil, nil))
+
+	udpeGlobalTable.addFpe(fpeBuilder2.end())
+}
+
+func (executor *executor) A5() {
+	executor.mainQueryType = UDPE
+
+	/* p = closed_auction//keyword */
+	fpeBuilder1 := fpeBuilder{}
+	fpeBuilder1.addAxis(child)
+	fpeBuilder1.addUdpeTest(newElementTest("closed_auction", nil, nil))
+	fpeBuilder1.addAxis(descendantOrSelf)
+	fpeBuilder1.addUdpeTest(newElementTest("keyword", nil, nil))
+
+	fpeID, _ := udpeGlobalTable.addFpe(fpeBuilder1.end())
+
+	node := predNode{op: atom()}
+	p := &predicate{
+		root: &node,
+		undoneAtoms: map[int]*predNode{fpeID: &node},
+	}
+
+	/* /site/closed_auctions/closed_auction[p]/date */
+	fpeBuilder2 := fpeBuilder{}
+	fpeBuilder2.addAxis(child)
+	fpeBuilder2.addUdpeTest(newElementTest("site", nil, nil))
+	fpeBuilder2.addAxis(child)
+	fpeBuilder2.addUdpeTest(newElementTest("closed_auctions", nil, nil))
+	fpeBuilder2.addAxis(child)
+	fpeBuilder2.addUdpeTest(newElementTest("closed_auction", nil, p))
+	fpeBuilder2.addAxis(child)
+	fpeBuilder2.addUdpeTest(newElementTest("date", nil, nil))
+
+	udpeGlobalTable.addFpe(fpeBuilder2.end())
+}
+
+func (executor *executor) A6() {
+	executor.mainQueryType = UDPE
+
+	/* /person/profile/gender */
+	fpeBuilder1 := fpeBuilder{}
+	fpeBuilder1.addAxis(child)
+	fpeBuilder1.addUdpeTest(newElementTest("person", nil, nil))
+	fpeBuilder1.addAxis(child)
+	fpeBuilder1.addUdpeTest(newElementTest("profile", nil, nil))
+	fpeBuilder1.addAxis(child)
+	fpeBuilder1.addUdpeTest(newElementTest("gender", nil, nil))
+
+	/* /person/profile/age */
+	fpeBuilder2 := fpeBuilder{}
+	fpeBuilder2.addAxis(child)
+	fpeBuilder2.addUdpeTest(newElementTest("person", nil, nil))
+	fpeBuilder2.addAxis(child)
+	fpeBuilder2.addUdpeTest(newElementTest("profile", nil, nil))
+	fpeBuilder2.addAxis(child)
+	fpeBuilder2.addUdpeTest(newElementTest("age", nil, nil))
+
+	fpe1ID, _ := udpeGlobalTable.addFpe(fpeBuilder1.end())
+	fpe2ID, _ := udpeGlobalTable.addFpe(fpeBuilder2.end())
+
+	node1 := predNode{op: atom()}
+	node2 := predNode{op: atom()}
+	nodeAnd := predNode{op: and()}
+	nodeAnd.left = &node1
+	nodeAnd.left = &node2
+	node1.parent = &nodeAnd
+	node2.parent = &nodeAnd
+	p := &predicate{
+		root: &nodeAnd,
+		undoneAtoms: map[int]*predNode{fpe1ID: &node1, fpe2ID: &node2},
+	}
+
+	/* /site/people/person[p]/name */
+	fpebuilder3 := fpeBuilder{}
+	fpebuilder3.addAxis(child)
+	fpebuilder3.addUdpeTest(newElementTest("site", nil, nil))
+	fpebuilder3.addAxis(child)
+	fpebuilder3.addUdpeTest(newElementTest("people", nil, nil))
+	fpebuilder3.addAxis(child)
+	fpebuilder3.addUdpeTest(newElementTest("person", nil, p))
+	fpebuilder3.addAxis(child)
+	fpebuilder3.addUdpeTest(newElementTest("name", nil, nil))
+
+	udpeGlobalTable.addFpe(fpebuilder3.end())
+}
+
+func (executor *executor) A7() {
+	executor.mainQueryType = UDPE
+
+	/* /person/phone */
+	fpeBuilder1 := fpeBuilder{}
+	fpeBuilder1.addAxis(child)
+	fpeBuilder1.addUdpeTest(newElementTest("person", nil, nil))
+	fpeBuilder1.addAxis(child)
+	fpeBuilder1.addUdpeTest(newElementTest("phone", nil, nil))
+
+	/* /person/homepage */
+	fpeBuilder2 := fpeBuilder{}
+	fpeBuilder2.addAxis(child)
+	fpeBuilder2.addUdpeTest(newElementTest("person", nil, nil))
+	fpeBuilder2.addAxis(child)
+	fpeBuilder2.addUdpeTest(newElementTest("homepage", nil, nil))
+
+	fpe1ID, _ := udpeGlobalTable.addFpe(fpeBuilder1.end())
+	fpe2ID, _ := udpeGlobalTable.addFpe(fpeBuilder2.end())
+
+	node1 := predNode{op: atom()}
+	node2 := predNode{op: atom()}
+	nodeOr := predNode{op: or()}
+	nodeOr.left = &node1
+	nodeOr.left = &node2
+	node1.parent = &nodeOr
+	node2.parent = &nodeOr
+	p := &predicate{
+		root: &nodeOr,
+		undoneAtoms: map[int]*predNode{fpe1ID: &node1, fpe2ID: &node2},
+	}
+
+	/* /site/people/person[p]/name */
+	fpebuilder3 := fpeBuilder{}
+	fpebuilder3.addAxis(child)
+	fpebuilder3.addUdpeTest(newElementTest("site", nil, nil))
+	fpebuilder3.addAxis(child)
+	fpebuilder3.addUdpeTest(newElementTest("people", nil, nil))
+	fpebuilder3.addAxis(child)
+	fpebuilder3.addUdpeTest(newElementTest("person", nil, p))
+	fpebuilder3.addAxis(child)
+	fpebuilder3.addUdpeTest(newElementTest("name", nil, nil))
+
+	udpeGlobalTable.addFpe(fpebuilder3.end())
+
+}
+
+func (executor *executor) A8() {
+	executor.mainQueryType = UDPE
+
+	fpeBuilder1 := fpeBuilder{}
+	fpeBuilder1.addAxis(child)
+	fpeBuilder1.addUdpeTest(newElementTest("person", nil, nil))
+	fpeBuilder1.addAxis(child)
+	fpeBuilder1.addUdpeTest(newElementTest("address", nil, nil))
+
+	fpeBuilder2 := fpeBuilder{}
+	fpeBuilder2.addAxis(child)
+	fpeBuilder2.addUdpeTest(newElementTest("person", nil, nil))
+	fpeBuilder2.addAxis(child)
+	fpeBuilder2.addUdpeTest(newElementTest("phone", nil, nil))
+
+	fpeBuilder3 := fpeBuilder{}
+	fpeBuilder3.addAxis(child)
+	fpeBuilder3.addUdpeTest(newElementTest("person", nil, nil))
+	fpeBuilder3.addAxis(child)
+	fpeBuilder3.addUdpeTest(newElementTest("homepage", nil, nil))
+
+	fpeBuilder4 := fpeBuilder{}
+	fpeBuilder4.addAxis(child)
+	fpeBuilder4.addUdpeTest(newElementTest("person", nil, nil))
+	fpeBuilder4.addAxis(child)
+	fpeBuilder4.addUdpeTest(newElementTest("creditcard", nil, nil))
+
+	fpeBuilder5 := fpeBuilder{}
+	fpeBuilder5.addAxis(child)
+	fpeBuilder5.addUdpeTest(newElementTest("person", nil, nil))
+	fpeBuilder5.addAxis(child)
+	fpeBuilder5.addUdpeTest(newElementTest("profile", nil, nil))
+
+	fpe1ID, _ := udpeGlobalTable.addFpe(fpeBuilder1.end())
+	fpe2ID, _ := udpeGlobalTable.addFpe(fpeBuilder2.end())
+	fpe3ID, _ := udpeGlobalTable.addFpe(fpeBuilder3.end())
+	fpe4ID, _ := udpeGlobalTable.addFpe(fpeBuilder4.end())
+	fpe5ID, _ := udpeGlobalTable.addFpe(fpeBuilder5.end())
+
+	n1 := predNode{op: atom()}
+	n2 := predNode{op: atom()}
+	n3 := predNode{op: atom()}
+	n4 := predNode{op: atom()}
+	n5 := predNode{op: atom()}
+
+	nAnd1 := predNode{op: and()}
+	nAnd2 := predNode{op: and()}
+	nOr1 := predNode{op: or()}
+	nOr2 := predNode{op: or()}
+
+	nAnd1.left = &n1
+	nAnd1.right = &nAnd2
+	n1.parent = &nAnd1
+	nAnd2.parent = &nAnd1
+
+	nAnd2.left = &nOr1
+	nAnd2.right = &nOr2
+	nOr1.parent = &nAnd2
+	nOr2.parent = &nAnd2
+
+	nOr1.left = &n2
+	nOr1.right = &n3
+	nOr2.left = &n4
+	nOr2.right = &n5
+
+	n2.parent = &nOr1
+	n3.parent = &nOr1
+	n4.parent = &nOr2
+	n5.parent = &nOr2
+
+	p := &predicate{
+		root: &nAnd1,
+		undoneAtoms: map[int]*predNode{
+			fpe1ID: &n1,
+			fpe2ID: &n2,
+			fpe3ID: &n3,
+			fpe4ID: &n4,
+			fpe5ID: &n5,
+		},
+	}
+
+	/* /site/people/person[p]/name */
+	fpebuilder6 := fpeBuilder{}
+	fpebuilder6.addAxis(child)
+	fpebuilder6.addUdpeTest(newElementTest("site", nil, nil))
+	fpebuilder6.addAxis(child)
+	fpebuilder6.addUdpeTest(newElementTest("people", nil, nil))
+	fpebuilder6.addAxis(child)
+	fpebuilder6.addUdpeTest(newElementTest("person", nil, p))
+	fpebuilder6.addAxis(child)
+	fpebuilder6.addUdpeTest(newElementTest("name", nil, nil))
+
+	udpeGlobalTable.addFpe(fpebuilder6.end())
+}
+
+func (executor *executor) B1() {
+	executor.mainQueryType = UDPE
+
+	rpeBuilder1 := rpeBuilder{}
+	rpeBuilder1.addAxis(parent)
+	rpeBuilder1.addUdpeTest(newElementTest("namerica", nil, nil))
+	rpeBuilder1.addAxis(parent)
+	rpeBuilder1.addUdpeTest(newElementTest("samerica", nil, nil))
+
+	rpe1ID, _ := udpeGlobalTable.addRpe(rpeBuilder1.end())
+
+	node := predNode{op: atom()}
+	p := &predicate{
+		root: &node,
+		undoneAtoms: map[int]*predNode{rpe1ID: &node},
+	}
+
+	/* /site/regions/namerica/item[p]/name */
+	fpebuilder2 := fpeBuilder{}
+	fpebuilder2.addAxis(child)
+	fpebuilder2.addUdpeTest(newElementTest("site", nil, nil))
+	fpebuilder2.addAxis(child)
+	fpebuilder2.addUdpeTest(newElementTest("regions", nil, nil))
+	fpebuilder2.addAxis(child)
+	fpebuilder2.addUdpeTest(newElementTest("*", nil, nil))
+	fpebuilder2.addAxis(child)
+	fpebuilder2.addUdpeTest(newElementTest("item", nil, p))
+	fpebuilder2.addAxis(child)
+	fpebuilder2.addUdpeTest(newElementTest("name", nil, nil))
+
+	udpeGlobalTable.addFpe(fpebuilder2.end())
+}
+
+func (executor *executor) B2() {
+	executor.mainQueryType = NUDPE
+	nudpeRec := nudpeGlobalTable.addNudpeRecord(3)
+
+	fpeBuilder1 := fpeBuilder{}
+	fpeBuilder1.addAxis(descendantOrSelf)
+	fpeBuilder1.addUdpeTest(newElementTest("keyword", nil, nil))
+
+	rpeBuilder1 := rpeBuilder{}
+	rpeBuilder1.addAxis(ancestorOrSelf)
+	rpeBuilder1.addUdpeTest(newElementTest("listitem", nil, nil))
+
+	fpeBuilder2 := fpeBuilder{}
+	fpeBuilder2.addAxis(child)
+	fpeBuilder2.addUdpeTest(newElementTest("listitem", nil, nil))
+	fpeBuilder2.addAxis(child)
+	fpeBuilder2.addUdpeTest(newElementTest("Text", nil, nil))
+	fpeBuilder2.addAxis(child)
+	fpeBuilder2.addUdpeTest(newElementTest("keyword", nil, nil))
+
+	fpe1 := fpeBuilder1.end()
+	_, rec1 := udpeGlobalTable.addFpe(fpe1)
+	rec1.setNudpeRecord(nudpeRec)
+
+	rpe1 := rpeBuilder1.end()
+	_, rec2 := udpeGlobalTable.addRpe(rpe1)
+	rec2.setNudpeRecord(nudpeRec)
+
+	fpe2 := fpeBuilder2.end()
+	_, rec3 := udpeGlobalTable.addFpe(fpe2)
+	rec3.setNudpeRecord(nudpeRec)
+}
+
+type Executor executor

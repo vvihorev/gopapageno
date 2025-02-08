@@ -3,4 +3,6 @@ xpath_query_parser:
 test:
 	go test ./ext/xpath/ && go test ./examples/xpath/cmd/xpath
 bench:
-	go test -bench=BenchmarkXPathMark -benchmem ./examples/xpath/cmd/xpath
+	go test -bench=. -benchmem ./examples/xpath/cmd/xpath
+bench-xpathmark:
+	go test -bench=. -benchmem ./benchmark_xpathmark_queries_test.go

@@ -1532,15 +1532,12 @@ func NewGrammar() *gopapageno.Grammar {
 				// TODO(vvihorev): support NUDPEs inside predicates
 				switch AndExpr_Factor_OrExpr_Step_Test1.Value.(type) {
 				case *elementTest:
-			
 					// handle renaming chain OrExpr -> AndExpr -> Factor -> Step
 					switch AndExpr_Factor_OrExpr3.Value.(type) {
 					case *elementTest:
-			            // we must be getting an attribute test
 						pe := appendStep(nil, AndExpr_Factor_OrExpr3.Value.(udpeTest), child)
 						AndExpr_Factor_OrExpr3.Value = newAtom(pe.end())
 					case *peSemValue:
-			            // we must be getting an NUDPE inside the predicate
 						AndExpr_Factor_OrExpr3.Value = newAtom(AndExpr_Factor_OrExpr3.Value.(*peSemValue).end())
 					}
 			
@@ -1570,18 +1567,14 @@ func NewGrammar() *gopapageno.Grammar {
 			AndExpr_Factor_OrExpr_Step0.LastChild = RBR4
 
 			{
-				// TODO(vvihorev): support NUDPEs inside predicates
 				switch AndExpr_Factor_OrExpr_Step_Test1.Value.(type) {
 				case *elementTest:
-			
 					// handle renaming chain OrExpr -> AndExpr -> Factor -> Step
 					switch AndExpr_Factor_OrExpr_Path3.Value.(type) {
 					case *elementTest:
-			            // we must be getting an attribute test
 						pe := appendStep(nil, AndExpr_Factor_OrExpr_Path3.Value.(udpeTest), child)
 						AndExpr_Factor_OrExpr_Path3.Value = newAtom(pe.end())
 					case *peSemValue:
-			            // we must be getting an NUDPE inside the predicate
 						AndExpr_Factor_OrExpr_Path3.Value = newAtom(AndExpr_Factor_OrExpr_Path3.Value.(*peSemValue).end())
 					}
 			
@@ -1614,15 +1607,12 @@ func NewGrammar() *gopapageno.Grammar {
 				// TODO(vvihorev): support NUDPEs inside predicates
 				switch AndExpr_Factor_OrExpr_Step_Test1.Value.(type) {
 				case *elementTest:
-			
 					// handle renaming chain OrExpr -> AndExpr -> Factor -> Step
 					switch AndExpr_Factor_OrExpr_Step3.Value.(type) {
 					case *elementTest:
-			            // we must be getting an attribute test
 						pe := appendStep(nil, AndExpr_Factor_OrExpr_Step3.Value.(udpeTest), child)
 						AndExpr_Factor_OrExpr_Step3.Value = newAtom(pe.end())
 					case *peSemValue:
-			            // we must be getting an NUDPE inside the predicate
 						AndExpr_Factor_OrExpr_Step3.Value = newAtom(AndExpr_Factor_OrExpr_Step3.Value.(*peSemValue).end())
 					}
 			
@@ -1655,15 +1645,12 @@ func NewGrammar() *gopapageno.Grammar {
 				// TODO(vvihorev): support NUDPEs inside predicates
 				switch AndExpr_Factor_OrExpr_Step_Test1.Value.(type) {
 				case *elementTest:
-			
 					// handle renaming chain OrExpr -> AndExpr -> Factor -> Step
 					switch AndExpr_Factor_OrExpr_Step_Test3.Value.(type) {
 					case *elementTest:
-			            // we must be getting an attribute test
 						pe := appendStep(nil, AndExpr_Factor_OrExpr_Step_Test3.Value.(udpeTest), child)
 						AndExpr_Factor_OrExpr_Step_Test3.Value = newAtom(pe.end())
 					case *peSemValue:
-			            // we must be getting an NUDPE inside the predicate
 						AndExpr_Factor_OrExpr_Step_Test3.Value = newAtom(AndExpr_Factor_OrExpr_Step_Test3.Value.(*peSemValue).end())
 					}
 			
@@ -1696,15 +1683,12 @@ func NewGrammar() *gopapageno.Grammar {
 				// TODO(vvihorev): support NUDPEs inside predicates
 				switch AndExpr_Factor_OrExpr_Step_Test1.Value.(type) {
 				case *elementTest:
-			
 					// handle renaming chain OrExpr -> AndExpr -> Factor -> Step
 					switch AndExpr_OrExpr3.Value.(type) {
 					case *elementTest:
-			            // we must be getting an attribute test
 						pe := appendStep(nil, AndExpr_OrExpr3.Value.(udpeTest), child)
 						AndExpr_OrExpr3.Value = newAtom(pe.end())
 					case *peSemValue:
-			            // we must be getting an NUDPE inside the predicate
 						AndExpr_OrExpr3.Value = newAtom(AndExpr_OrExpr3.Value.(*peSemValue).end())
 					}
 			
@@ -1737,15 +1721,12 @@ func NewGrammar() *gopapageno.Grammar {
 				// TODO(vvihorev): support NUDPEs inside predicates
 				switch AndExpr_Factor_OrExpr_Step_Test1.Value.(type) {
 				case *elementTest:
-			
 					// handle renaming chain OrExpr -> AndExpr -> Factor -> Step
 					switch OrExpr3.Value.(type) {
 					case *elementTest:
-			            // we must be getting an attribute test
 						pe := appendStep(nil, OrExpr3.Value.(udpeTest), child)
 						OrExpr3.Value = newAtom(pe.end())
 					case *peSemValue:
-			            // we must be getting an NUDPE inside the predicate
 						OrExpr3.Value = newAtom(OrExpr3.Value.(*peSemValue).end())
 					}
 			

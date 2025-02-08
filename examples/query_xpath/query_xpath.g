@@ -27,11 +27,29 @@ Path : Path CHILD Step {
 };
 
 Step : Test {}
-  | Test LBR OrExpr RBR {
+  | Test LBR Path RBR {
+	switch $1.Value.(type) {
+	case *elementTest:
+		// handle renaming chain OrExpr -> AndExpr -> Factor -> Step
+		switch $3.Value.(type) {
+		case *elementTest:
+			pe := appendStep(nil, $3.Value.(udpeTest), child)
+			$3.Value = newAtom(pe.end())
+		case *peSemValue:
+			$3.Value = newAtom($3.Value.(*peSemValue).end())
+		}
+
+		$1.Value.(*elementTest).pred = $3.Value.(*predicate)
+	case *textTest:
+		$1.Value.(*elementTest).pred = nil
+	default:
+		panic("unknown test type")
+	}
+	$$.Value = $1.Value
+} | Test LBR OrExpr RBR {
 	// TODO(vvihorev): support NUDPEs inside predicates
 	switch $1.Value.(type) {
 	case *elementTest:
-
 		// handle renaming chain OrExpr -> AndExpr -> Factor -> Step
 		switch $3.Value.(type) {
 		case *elementTest:
