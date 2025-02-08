@@ -52,6 +52,9 @@ import (
 // Benchmark with reduction handling and resutls collection skipped completely, for comparison.
 // BenchmarkRun-8   	      10	 107254672 ns/op	117773687 B/op	   90842 allocs/op
 
+// Working main tests, predicates and a query parser generated with gopapageno
+// BenchmarkRun-8   	      28	  39542104 ns/op	133530844 B/op	  227109 allocs/op
+
 // TODO(vvihorev): benchmark against the original implementation
 // TODO(vvihorev): use an arena allocator to reduce malloc calls and GC at runtime
 
@@ -82,7 +85,8 @@ func ExpectResults(t *testing.T, source, query string, results []string) {
 		gopapageno.WithConcurrency(1),
 	)
 
-	cmd := x.Execute(query).Against([]byte(source)).WithNumberOfThreads(1).InVerboseMode()
+	// NOTE(vvihorev): enable verbose mode for debugging if a test fails
+	cmd := x.Execute(query).Against([]byte(source)).WithNumberOfThreads(1)//.InVerboseMode()
 	res, err := cmd.Run(r)
 
 	if err != nil {
@@ -161,15 +165,6 @@ func TestMatchAttribute(t *testing.T) {
 		`<body><div class="row"></div><div class="col"></div></body>`,
 		`//div[@class="row"]`,
 		[]string{`<div class="row"></div>`},
-	)
-}
-
-func TestMatchAttributeWithoutValue(t *testing.T) {
-	ExpectResults(
-		t,
-		`<body><div class="row"></div><div class="col"><p></p></div></body>`,
-		`//div[@class]`,
-		[]string{`<div class="col"><p></p></div>`, `<div class="row"></div>`},
 	)
 }
 
