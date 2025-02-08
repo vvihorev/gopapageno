@@ -1536,8 +1536,12 @@ func NewGrammar() *gopapageno.Grammar {
 					// handle renaming chain OrExpr -> AndExpr -> Factor -> Step
 					switch AndExpr_Factor_OrExpr3.Value.(type) {
 					case *elementTest:
+			            // we must be getting an attribute test
 						pe := appendStep(nil, AndExpr_Factor_OrExpr3.Value.(udpeTest), child)
 						AndExpr_Factor_OrExpr3.Value = newAtom(pe.end())
+					case *peSemValue:
+			            // we must be getting an NUDPE inside the predicate
+						AndExpr_Factor_OrExpr3.Value = newAtom(AndExpr_Factor_OrExpr3.Value.(*peSemValue).end())
 					}
 			
 					AndExpr_Factor_OrExpr_Step_Test1.Value.(*elementTest).pred = AndExpr_Factor_OrExpr3.Value.(*predicate)
@@ -1573,8 +1577,12 @@ func NewGrammar() *gopapageno.Grammar {
 					// handle renaming chain OrExpr -> AndExpr -> Factor -> Step
 					switch AndExpr_Factor_OrExpr_Path3.Value.(type) {
 					case *elementTest:
+			            // we must be getting an attribute test
 						pe := appendStep(nil, AndExpr_Factor_OrExpr_Path3.Value.(udpeTest), child)
 						AndExpr_Factor_OrExpr_Path3.Value = newAtom(pe.end())
+					case *peSemValue:
+			            // we must be getting an NUDPE inside the predicate
+						AndExpr_Factor_OrExpr_Path3.Value = newAtom(AndExpr_Factor_OrExpr_Path3.Value.(*peSemValue).end())
 					}
 			
 					AndExpr_Factor_OrExpr_Step_Test1.Value.(*elementTest).pred = AndExpr_Factor_OrExpr_Path3.Value.(*predicate)
@@ -1610,8 +1618,12 @@ func NewGrammar() *gopapageno.Grammar {
 					// handle renaming chain OrExpr -> AndExpr -> Factor -> Step
 					switch AndExpr_Factor_OrExpr_Step3.Value.(type) {
 					case *elementTest:
+			            // we must be getting an attribute test
 						pe := appendStep(nil, AndExpr_Factor_OrExpr_Step3.Value.(udpeTest), child)
 						AndExpr_Factor_OrExpr_Step3.Value = newAtom(pe.end())
+					case *peSemValue:
+			            // we must be getting an NUDPE inside the predicate
+						AndExpr_Factor_OrExpr_Step3.Value = newAtom(AndExpr_Factor_OrExpr_Step3.Value.(*peSemValue).end())
 					}
 			
 					AndExpr_Factor_OrExpr_Step_Test1.Value.(*elementTest).pred = AndExpr_Factor_OrExpr_Step3.Value.(*predicate)
@@ -1647,8 +1659,12 @@ func NewGrammar() *gopapageno.Grammar {
 					// handle renaming chain OrExpr -> AndExpr -> Factor -> Step
 					switch AndExpr_Factor_OrExpr_Step_Test3.Value.(type) {
 					case *elementTest:
+			            // we must be getting an attribute test
 						pe := appendStep(nil, AndExpr_Factor_OrExpr_Step_Test3.Value.(udpeTest), child)
 						AndExpr_Factor_OrExpr_Step_Test3.Value = newAtom(pe.end())
+					case *peSemValue:
+			            // we must be getting an NUDPE inside the predicate
+						AndExpr_Factor_OrExpr_Step_Test3.Value = newAtom(AndExpr_Factor_OrExpr_Step_Test3.Value.(*peSemValue).end())
 					}
 			
 					AndExpr_Factor_OrExpr_Step_Test1.Value.(*elementTest).pred = AndExpr_Factor_OrExpr_Step_Test3.Value.(*predicate)
@@ -1684,8 +1700,12 @@ func NewGrammar() *gopapageno.Grammar {
 					// handle renaming chain OrExpr -> AndExpr -> Factor -> Step
 					switch AndExpr_OrExpr3.Value.(type) {
 					case *elementTest:
+			            // we must be getting an attribute test
 						pe := appendStep(nil, AndExpr_OrExpr3.Value.(udpeTest), child)
 						AndExpr_OrExpr3.Value = newAtom(pe.end())
+					case *peSemValue:
+			            // we must be getting an NUDPE inside the predicate
+						AndExpr_OrExpr3.Value = newAtom(AndExpr_OrExpr3.Value.(*peSemValue).end())
 					}
 			
 					AndExpr_Factor_OrExpr_Step_Test1.Value.(*elementTest).pred = AndExpr_OrExpr3.Value.(*predicate)
@@ -1721,8 +1741,12 @@ func NewGrammar() *gopapageno.Grammar {
 					// handle renaming chain OrExpr -> AndExpr -> Factor -> Step
 					switch OrExpr3.Value.(type) {
 					case *elementTest:
+			            // we must be getting an attribute test
 						pe := appendStep(nil, OrExpr3.Value.(udpeTest), child)
 						OrExpr3.Value = newAtom(pe.end())
+					case *peSemValue:
+			            // we must be getting an NUDPE inside the predicate
+						OrExpr3.Value = newAtom(OrExpr3.Value.(*peSemValue).end())
 					}
 			
 					AndExpr_Factor_OrExpr_Step_Test1.Value.(*elementTest).pred = OrExpr3.Value.(*predicate)

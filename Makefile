@@ -3,4 +3,4 @@ xpath_query_parser:
 test:
 	go test ./ext/xpath/ && go test ./examples/xpath/cmd/xpath
 bench:
-	go test -bench=BenchmarkRun -benchmem ./examples/xpath/cmd/xpath
+	go test -bench=BenchmarkXPathMark -benchmem ./examples/xpath/cmd/xpath

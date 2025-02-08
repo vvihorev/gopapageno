@@ -37,6 +37,8 @@ Step : Test {}
 		case *elementTest:
 			pe := appendStep(nil, $3.Value.(udpeTest), child)
 			$3.Value = newAtom(pe.end())
+		case *peSemValue:
+			$3.Value = newAtom($3.Value.(*peSemValue).end())
 		}
 
 		$1.Value.(*elementTest).pred = $3.Value.(*predicate)

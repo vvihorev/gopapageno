@@ -156,10 +156,10 @@ func NewGrammar() *gopapageno.Grammar {
 			ELEM0.LastChild = OPENCLOSETAG2
 
 			{
-				openCloseTag := OPENCLOSETAG2.Value.(xpath.OpenTagSemanticValue)
+				openCloseTag := OPENCLOSETAG2.Value.(*xpath.OpenTagSemanticValue)
 
 				element := parserElementsPools[thread].Get()
-				element.SetFromSingleTag(openCloseTag)
+				element.SetFromSingleTag(*openCloseTag)
 
 				generativeNonTerminal := ELEM1.Value.(*xpath.NonTerminal)
 				nt := parserNonTerminalPools[thread].Get()
@@ -255,10 +255,10 @@ func NewGrammar() *gopapageno.Grammar {
 			ELEM0.LastChild = TEXT2
 
 			{
-				tsv := TEXT2.Value.(xpath.TextSemanticValue)
+				tsv := TEXT2.Value.(*xpath.TextSemanticValue)
 
 				text := new(xpath.Text)
-				text.SetFromText(tsv)
+				text.SetFromText(*tsv)
 
 				generativeNonTerminal := ELEM1.Value.(*xpath.NonTerminal)
 
@@ -283,10 +283,10 @@ func NewGrammar() *gopapageno.Grammar {
 			ELEM0.LastChild = OPENCLOSETAG1
 
 			{
-				openCloseTag := OPENCLOSETAG1.Value.(xpath.OpenTagSemanticValue)
+				openCloseTag := OPENCLOSETAG1.Value.(*xpath.OpenTagSemanticValue)
 
 				element := parserElementsPools[thread].Get()
-				element.SetFromSingleTag(openCloseTag)
+				element.SetFromSingleTag(*openCloseTag)
 
 				nt := parserNonTerminalPools[thread].Get()
 				reducedNonTerminal := nt.SetNode(element)
