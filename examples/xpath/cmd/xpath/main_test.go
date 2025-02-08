@@ -190,3 +190,12 @@ func TestMatchPredicateOrClause(t *testing.T) {
 		[]string{`<div class="col"><p></p></div>`, `<div class="row"></div>`},
 	)
 }
+
+func TestMatchPredicateNotClause(t *testing.T) {
+	ExpectResults(
+		t,
+		`<body><div class="row"></div><div class="col"><p></p></div></body>`,
+		`//div[@class="col" or not @class="row"]`,
+		[]string{`<div class="col"><p></p></div>`},
+	)
+}

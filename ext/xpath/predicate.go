@@ -42,10 +42,9 @@ type predNode struct {
 	right  *predNode
 }
 
-
 func (p predicate) String() string {
-	var rec func (n *predNode, sb *strings.Builder)
-	rec = func (n *predNode, sb *strings.Builder) {
+	var rec func(n *predNode, sb *strings.Builder)
+	rec = func(n *predNode, sb *strings.Builder) {
 		sb.WriteString(fmt.Sprintf("%T [", n.op))
 		if n.left != nil {
 			rec(n.left, sb)
@@ -125,13 +124,12 @@ func (n *predNode) copyNode(undoneSrc, undoneDst map[int]*predNode) *predNode {
 		}
 	}
 
-	newNode.left = n.left.copyNode(undoneSrc, undoneDst)
-	newNode.right = n.right.copyNode(undoneSrc, undoneDst)
-
-	if newNode.left != nil {
+	if n.left != nil {
+		newNode.left = n.left.copyNode(undoneSrc, undoneDst)
 		newNode.left.parent = newNode
 	}
-	if newNode.right != nil {
+	if n.right != nil {
+		newNode.right = n.right.copyNode(undoneSrc, undoneDst)
 		newNode.right.parent = newNode
 	}
 

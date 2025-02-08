@@ -16,7 +16,7 @@ type peSemValue struct {
 func notNode(pred *predicate) *predicate {
 	node := predNode{op: not()}
 	pred.root.parent = &node
-	node.left = pred.root.parent
+	node.left = pred.root
 	pred.root = &node
 	return pred
 }
