@@ -36,8 +36,7 @@ Step : Test {}
 		switch $3.Value.(type) {
 		case *elementTest:
 			pe := appendStep(nil, $3.Value.(udpeTest), child)
-			pred := newAtom(pe.end())
-			$3.Value = &pred
+			$3.Value = newAtom(pe.end())
 		}
 
 		$1.Value.(*elementTest).pred = $3.Value.(*predicate)
@@ -63,12 +62,36 @@ Test : IDENT {
 
 OrExpr : AndExpr {}
   | AndExpr OR AndExpr {
-	$$.Value = combine(or(), $1.Value.(predicate), $3.Value.(predicate))
+	switch $1.Value.(type) {
+	case *elementTest:
+		pe := appendStep(nil, $1.Value.(udpeTest), child)
+		$1.Value = newAtom(pe.end())
+	}
+
+	switch $3.Value.(type) {
+	case *elementTest:
+		pe := appendStep(nil, $3.Value.(udpeTest), child)
+		$3.Value = newAtom(pe.end())
+	}
+
+	$$.Value = combine(or(), $1.Value.(*predicate), $3.Value.(*predicate))
 };
 
 AndExpr : Factor {}
   | Factor AND Factor {
-	$$.Value = combine(and(), $1.Value.(predicate), $3.Value.(predicate))
+	switch $1.Value.(type) {
+	case *elementTest:
+		pe := appendStep(nil, $1.Value.(udpeTest), child)
+		$1.Value = newAtom(pe.end())
+	}
+
+	switch $3.Value.(type) {
+	case *elementTest:
+		pe := appendStep(nil, $3.Value.(udpeTest), child)
+		$3.Value = newAtom(pe.end())
+	}
+
+	$$.Value = combine(and(), $1.Value.(*predicate), $3.Value.(*predicate))
 };
 
 // TODO(vvihorev): beware, Factor -> Path, and Factor -> Step semantic actions are getting dropped
@@ -83,7 +106,7 @@ Factor : Path {
 } | LPAR OrExpr RPAR {
 	$$.Value = $2.Value
 } | NOT LPAR OrExpr RPAR {
-	$$.Value = notNode($3.Value.(predicate))
+	$$.Value = notNode($3.Value.(*predicate))
 };
 
 %%
@@ -93,7 +116,7 @@ type peSemValue struct {
 	builder builder
 }
 
-func notNode(pred predicate) predicate {
+func notNode(pred *predicate) *predicate {
 	node := predNode{op: not()}
 	pred.root.parent = &node
 	node.left = pred.root.parent
@@ -101,12 +124,12 @@ func notNode(pred predicate) predicate {
 	return pred
 }
 
-func newAtom(pe_id int) predicate {
+func newAtom(pe_id int) *predicate {
 	node := predNode{op: atom()}
-	return predicate{root: &node, undoneAtoms: map[int]*predNode{pe_id: &node}}
+	return &predicate{root: &node, undoneAtoms: map[int]*predNode{pe_id: &node}}
 }
 
-func combine(op operator, dst predicate, src predicate) predicate {
+func combine(op operator, dst, src *predicate) *predicate {
 	node := predNode{op: op, left: dst.root, right: src.root}
 	dst.root.parent = &node
 	src.root.parent = &node

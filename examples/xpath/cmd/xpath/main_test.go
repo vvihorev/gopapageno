@@ -89,6 +89,9 @@ func ExpectResults(t *testing.T, source, query string, results []string) {
 		log.Fatal(fmt.Sprintf("%e", err))
 	}
 	if len(res) != len(results) {
+		for i := range res {
+			t.Logf("Result %d: %s", i+1, string(source[res[i].Start():res[i].End()+1]))
+		}
 		t.Fatalf("result count does not match: %v", res)
 	}
 	for i := range results {
@@ -161,11 +164,29 @@ func TestMatchAttribute(t *testing.T) {
 	)
 }
 
-func TestMatchAttributeInRPE(t *testing.T) {
+func TestMatchAttributeWithoutValue(t *testing.T) {
 	ExpectResults(
 		t,
 		`<body><div class="row"></div><div class="col"><p></p></div></body>`,
 		`//div[@class]`,
+		[]string{`<div class="col"><p></p></div>`, `<div class="row"></div>`},
+	)
+}
+
+func TestMatchPredicateAndClause(t *testing.T) {
+	ExpectResults(
+		t,
+		`<body><div class="row"></div><div class="col"><p></p></div></body>`,
+		`//div[@class and @class="row"]`,
+		[]string{`<div class="row"></div>`},
+	)
+}
+
+func TestMatchPredicateOrClause(t *testing.T) {
+	ExpectResults(
+		t,
+		`<body><div class="row"></div><div class="col"><p></p></div></body>`,
+		`//div[@class="col" or @class="row"]`,
 		[]string{`<div class="col"><p></p></div>`, `<div class="row"></div>`},
 	)
 }

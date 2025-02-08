@@ -1,5 +1,10 @@
 package xpath
 
+import (
+	"fmt"
+	"strings"
+)
+
 type customBool int
 
 // Custom boolean values which comprises the 'Undefined' value
@@ -35,6 +40,27 @@ type predNode struct {
 	parent *predNode
 	left   *predNode
 	right  *predNode
+}
+
+
+func (p predicate) String() string {
+	var rec func (n *predNode, sb *strings.Builder)
+	rec = func (n *predNode, sb *strings.Builder) {
+		sb.WriteString(fmt.Sprintf("%T [", n.op))
+		if n.left != nil {
+			rec(n.left, sb)
+		}
+		sb.WriteString("] [")
+		if n.right != nil {
+			rec(n.right, sb)
+		}
+		sb.WriteString("]")
+	}
+
+	sb := strings.Builder{}
+	sb.WriteString(fmt.Sprintf("%s: ", p.value.String()))
+	rec(p.root, &sb)
+	return sb.String()
 }
 
 /*
@@ -90,7 +116,7 @@ func (n *predNode) copyNode(undoneSrc, undoneDst map[int]*predNode) *predNode {
 	}
 
 	newNode := &predNode{
-		op: n.op,
+		op: n.op.copy(),
 	}
 
 	for k, v := range undoneSrc {
@@ -129,12 +155,17 @@ func (p *predicate) copy() *predicate {
 
 type operator interface {
 	evaluate(operand customBool) customBool
+	copy() operator
 }
 
 type opConstructor func() operator
 
 // atom operator concrete implementation
 type atomOperator struct{}
+
+func (op *atomOperator) copy() operator {
+	return atom()
+}
 
 func (and *atomOperator) evaluate(operand customBool) customBool {
 	return operand
@@ -146,6 +177,10 @@ func atom() operator {
 
 // not operator concrete implementation
 type notOperator struct{}
+
+func (op *notOperator) copy() operator {
+	return not()
+}
 
 func (not *notOperator) evaluate(operand customBool) customBool {
 	switch operand {
@@ -184,6 +219,10 @@ func or() operator {
 	return new(orOperator)
 }
 
+func (op *orOperator) copy() operator {
+	return or()
+}
+
 // and operator concrete implementation
 type andOperator struct {
 	previousOperand customBool
@@ -200,6 +239,10 @@ func (and *andOperator) evaluate(operand customBool) customBool {
 		and.previousOperand = True
 	}
 	return Undefined
+}
+
+func (op *andOperator) copy() operator {
+	return and()
 }
 
 func and() operator {
