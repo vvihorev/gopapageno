@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -9,212 +10,42 @@ import (
 	x "github.com/giornetta/gopapageno/ext/xpath"
 )
 
-func BenchmarkA1(b *testing.B) {
+func BenchmarkAll(b *testing.B) {
 	bytes, err := os.ReadFile("../../data/bench_small.xml")
 	if err != nil {
 		return
 	}
-	r := gopapageno.NewRunner(
-		xpath.NewLexer(),
-		xpath.NewGrammar(),
-		gopapageno.WithConcurrency(1),
-	)
 
-	for i := 0; i < b.N; i++ {
-		exec := x.PrepareBenchmark(r, bytes, 1)
-		exec.A1()
-		res := exec.ExecuteBenchmark()
-		if len(res) == 0 {
-//			b.Logf("empty results")
-		}
-	}
-}
-
-func BenchmarkA2(b *testing.B) {
-	bytes, err := os.ReadFile("../../data/bench_small.xml")
-	if err != nil {
-		return
-	}
-	r := gopapageno.NewRunner(
-		xpath.NewLexer(),
-		xpath.NewGrammar(),
-		gopapageno.WithConcurrency(1),
-	)
-
-	for i := 0; i < b.N; i++ {
-		exec := x.PrepareBenchmark(r, bytes, 1)
-		exec.A2()
-		res := exec.ExecuteBenchmark()
-		if len(res) == 0 {
-//			b.Logf("empty results")
-		}
-	}
-}
-
-func BenchmarkA3(b *testing.B) {
-	bytes, err := os.ReadFile("../../data/bench_small.xml")
-	if err != nil {
-		return
-	}
-	r := gopapageno.NewRunner(
-		xpath.NewLexer(),
-		xpath.NewGrammar(),
-		gopapageno.WithConcurrency(1),
-	)
-
-	for i := 0; i < b.N; i++ {
-		exec := x.PrepareBenchmark(r, bytes, 1)
-		exec.A3()
-		res := exec.ExecuteBenchmark()
-		if len(res) == 0 {
-//			b.Logf("empty results")
-		}
-	}
-}
-
-func BenchmarkA4(b *testing.B) {
-	bytes, err := os.ReadFile("../../data/bench_small.xml")
-	if err != nil {
-		return
-	}
-	r := gopapageno.NewRunner(
-		xpath.NewLexer(),
-		xpath.NewGrammar(),
-		gopapageno.WithConcurrency(1),
-	)
-
-	for i := 0; i < b.N; i++ {
-		exec := x.PrepareBenchmark(r, bytes, 1)
-		exec.A4()
-		res := exec.ExecuteBenchmark()
-		if len(res) == 0 {
-//			b.Logf("empty results")
-		}
-	}
-}
-
-func BenchmarkA5(b *testing.B) {
-	bytes, err := os.ReadFile("../../data/bench_small.xml")
-	if err != nil {
-		return
-	}
-	r := gopapageno.NewRunner(
-		xpath.NewLexer(),
-		xpath.NewGrammar(),
-		gopapageno.WithConcurrency(1),
-	)
-
-	for i := 0; i < b.N; i++ {
-		exec := x.PrepareBenchmark(r, bytes, 1)
-		exec.A5()
-		res := exec.ExecuteBenchmark()
-		if len(res) == 0 {
-//			b.Logf("empty results")
-		}
-	}
-}
-
-func BenchmarkA6(b *testing.B) {
-	bytes, err := os.ReadFile("../../data/bench_small.xml")
-	if err != nil {
-		return
-	}
-	r := gopapageno.NewRunner(
-		xpath.NewLexer(),
-		xpath.NewGrammar(),
-		gopapageno.WithConcurrency(1),
-	)
-
-	for i := 0; i < b.N; i++ {
-		exec := x.PrepareBenchmark(r, bytes, 1)
-		exec.A6()
-		res := exec.ExecuteBenchmark()
-		if len(res) == 0 {
-//			b.Logf("empty results")
-		}
-	}
-}
-
-func BenchmarkA7(b *testing.B) {
-	bytes, err := os.ReadFile("../../data/bench_small.xml")
-	if err != nil {
-		return
-	}
-	r := gopapageno.NewRunner(
-		xpath.NewLexer(),
-		xpath.NewGrammar(),
-		gopapageno.WithConcurrency(1),
-	)
-
-	for i := 0; i < b.N; i++ {
-		exec := x.PrepareBenchmark(r, bytes, 1)
-		exec.A7()
-		res := exec.ExecuteBenchmark()
-		if len(res) == 0 {
-//			b.Logf("empty results")
-		}
-	}
-}
-
-func BenchmarkA8(b *testing.B) {
-	bytes, err := os.ReadFile("../../data/bench_small.xml")
-	if err != nil {
-		return
-	}
-	r := gopapageno.NewRunner(
-		xpath.NewLexer(),
-		xpath.NewGrammar(),
-		gopapageno.WithConcurrency(1),
-	)
-
-	for i := 0; i < b.N; i++ {
-		exec := x.PrepareBenchmark(r, bytes, 1)
-		exec.A8()
-		res := exec.ExecuteBenchmark()
-		if len(res) == 0 {
-//			b.Logf("empty results")
-		}
-	}
-}
-
-func BenchmarkB1(b *testing.B) {
-	bytes, err := os.ReadFile("../../data/bench_small.xml")
-	if err != nil {
-		return
-	}
-	r := gopapageno.NewRunner(
-		xpath.NewLexer(),
-		xpath.NewGrammar(),
-		gopapageno.WithConcurrency(1),
-	)
-
-	for i := 0; i < b.N; i++ {
-		exec := x.PrepareBenchmark(r, bytes, 1)
-		exec.B1()
-		res := exec.ExecuteBenchmark()
-		if len(res) == 0 {
-//			b.Logf("empty results")
-		}
-	}
-}
-
-func BenchmarkB2(b *testing.B) {
-	bytes, err := os.ReadFile("../../data/bench_small.xml")
-	if err != nil {
-		return
-	}
-	r := gopapageno.NewRunner(
-		xpath.NewLexer(),
-		xpath.NewGrammar(),
-		gopapageno.WithConcurrency(1),
-	)
-
-	for i := 0; i < b.N; i++ {
-		exec := x.PrepareBenchmark(r, bytes, 1)
-		exec.B2()
-		res := exec.ExecuteBenchmark()
-		if len(res) == 0 {
-//			b.Logf("empty results")
-		}
+	for numThreads := 1; numThreads < 3; numThreads++ {
+		b.Run(fmt.Sprintf("threads=%d", numThreads), func(b *testing.B) {
+			for _, queryCode := range []string{
+				"A1",
+				"A2",
+				"A3",
+				"A4",
+				"A5",
+				"A6",
+				"A7",
+				"A8",
+				"B1",
+				"B2",
+			} {
+				b.Run(fmt.Sprintf("query=%s", queryCode), func(b *testing.B) {
+					r := gopapageno.NewRunner(
+						xpath.NewLexer(),
+						xpath.NewGrammar(),
+						gopapageno.WithConcurrency(numThreads),
+					)
+					for i := 0; i < b.N; i++ {
+						exec := x.PrepareBenchmark(r, bytes, 1)
+						exec.LoadQuery(queryCode)
+						res := exec.ExecuteBenchmark()
+						if len(res) == 0 {
+							//			b.Logf("empty results")
+						}
+					}
+				})
+			}
+		})
 	}
 }

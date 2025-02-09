@@ -247,6 +247,34 @@ func (executor *executor) ExecuteBenchmark() []Position {
 	return results
 }
 
+func (executor *executor) LoadQuery(queryCode string) (err error) {
+	switch queryCode {
+	case "A1":
+		executor.A1()
+	case "A2":
+		executor.A2()
+	case "A3":
+		executor.A3()
+	case "A4":
+		executor.A4()
+	case "A5":
+		executor.A5()
+	case "A6":
+		executor.A6()
+	case "A7":
+		executor.A7()
+	case "A8":
+		executor.A8()
+	case "B1":
+		executor.B1()
+	case "B2":
+		executor.B2()
+	default:
+		return fmt.Errorf("unknown query code: %s", queryCode)
+	}
+	return nil
+}
+
 func (executor *executor) A1() {
 	executor.mainQueryType = UDPE
 	/* /site/closed_auctions/closed_auction/annotation/description/Text/keyword */

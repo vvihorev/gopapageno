@@ -22,11 +22,11 @@ func BenchmarkXPathMark(b *testing.B) {
 		gopapageno.WithConcurrency(1),
 	)
 
+	// NOTE(vvihorev): query parser is broken
 	queries := []string{
 		`/site/closed_auctions/closed_auction/annotation/description/text/keyword`,
 		`//closed_auction//keyword`,
 		`/site/closed_auctions/closed_auction//keyword`,
-		// `/site/closed_auctions/closed_auction[annotation/description/text/keyword]/date`,
 		`/site/closed_auctions/closed_auction[annotation/description/text/keyword]/date`,
 		`/site/closed_auctions/closed_auction[descendant::keyword]/date`,
 		`/site/people/person[profile/gender and profile/age]/name`,

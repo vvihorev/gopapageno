@@ -128,6 +128,7 @@ func TestMatchPredicateNotClause(t *testing.T) {
 	)
 }
 
+// NOTE(vvihorev): multiple NUDPEs are not supported by the query parser
 // func TestNUDPEInPredicate(t *testing.T) {
 // 	ExpectResults(
 // 		t,
