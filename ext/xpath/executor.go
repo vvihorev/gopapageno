@@ -142,7 +142,7 @@ func (executor *executor) completeExecutionOfUDPEsAndNUDPEs() (err error) {
 		// stop unfounded speculative execution threads
 		for i := 0; i < er.threads.size; i++ {
 			if areSpeculationsFounded := er.threads.array[i].checkAndUpdateSpeculations(executor.nudpeBooleanValueEvaluator); !areSpeculationsFounded {
-				er.removeExecutionThread(er.threads.array[i], true)
+				er.removeExecutionThread(er.threads.array[i])
 			}
 		}
 
@@ -150,7 +150,7 @@ func (executor *executor) completeExecutionOfUDPEsAndNUDPEs() (err error) {
 		for i := 0; i < er.threads.size; i++ {
 			if er.threads.array[i].pp.isEmpty() && !er.threads.array[i].isSpeculative() {
 				er.ctxSols.addContextSolution(er.threads.array[i].ctx.Position().Start(), er.threads.array[i].ctx.Position().End(), er.threads.array[i].sol)
-				er.removeExecutionThread(er.threads.array[i], false)
+				er.removeExecutionThread(er.threads.array[i])
 			}
 		}
 
@@ -233,6 +233,8 @@ func PrepareBenchmark(runner *gopapageno.Runner, source []byte, numberOfThreads 
 }
  
 func (executor *executor) ExecuteBenchmark() []Position {
+	// debug.SetGCPercent(-1)
+	// debug.SetMemoryLimit(math.MaxInt64)
 	err := executor.executeUDPEsWhileParsing()
 	if err != nil {
 		return nil

@@ -8,7 +8,6 @@ import (
 // over an execution thread list and does NOT cause the new execution
 // thread to be considered by the running iteration.
 type executionThread struct {
-	offspr       []executionThread
 	ctx          *NonTerminal
 	sol          *NonTerminal
 	pp           pathPattern
@@ -53,14 +52,6 @@ func (et *executionThread) addSpeculation(prd *predicate, ctx NonTerminal) {
 
 func (et *executionThread) removeSpeculation(sp speculation) {
 	et.speculations.remove(sp)
-}
-
-func (et *executionThread) addChild(child executionThread) {
-	et.offspr = append(et.offspr, child)
-}
-
-func (et *executionThread) children() []executionThread {
-	return et.offspr
 }
 
 func (s speculation) setIndex(i int) {

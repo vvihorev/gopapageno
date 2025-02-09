@@ -115,12 +115,7 @@ func (er *executionRecord) addExecutionThread(ctx, sol *NonTerminal, pp pathPatt
 	return
 }
 
-func (er *executionRecord) removeExecutionThread(et executionThread, removeChildren bool) {
-	if removeChildren {
-		for _, childEt := range et.offspr {
-			er.removeExecutionThread(childEt, true)
-		}
-	}
+func (er *executionRecord) removeExecutionThread(et executionThread) {
 	er.threads.remove(et)
 }
 
