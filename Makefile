@@ -9,3 +9,4 @@ bench:
 	go test -bench=. -benchmem ./examples/xpath/cmd/xpath
 bench-xpathmark:
 	go test -bench=BenchmarkAll -benchmem -cpuprofile=cpu.prof -memprofile=mem.prof ./examples/xpath/cmd/xpath/benchmark_xpathmark_queries_test.go
+	# go test -bench=BenchmarkAll -benchmem ./examples/xpath/cmd/xpath/benchmark_xpathmark_queries_test.go

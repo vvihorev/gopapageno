@@ -14,11 +14,11 @@ VALUE ([^"\\]|\\.)*
 <{IDENTIFIER}({SPACE}+{IDENTIFIER}="{VALUE}")*>
 {
 	id, attributesList := getIdAndAttributesListFrom(text)
-    semanticValue := lexerOpenTagSemanticValuePools[thread].Get()
-    semanticValue.SemanticValue.Id = id
-    semanticValue.SemanticValue.StartPos = start
-    semanticValue.SemanticValue.EndPos = end
-    semanticValue.Attributes = attributesList
+	semanticValue := lexerOpenTagSemanticValuePools[thread].Get()
+	semanticValue.SemanticValue.Id = id
+	semanticValue.SemanticValue.StartPos = start
+	semanticValue.SemanticValue.EndPos = end
+	semanticValue.Attribute = attributesList
 
 	token.Type = OPENTAG
 	token.Value = semanticValue
@@ -26,25 +26,25 @@ VALUE ([^"\\]|\\.)*
 <{IDENTIFIER}({SPACE}+{IDENTIFIER}="{VALUE}")*/>
 {
 	id, attributesList := getIdAndAttributesListFrom(text)
-    semanticValue := lexerOpenCloseTagSemanticValuePools[thread].Get()
-    semanticValue.SemanticValue.Id = id
-    semanticValue.SemanticValue.StartPos = start
-    semanticValue.SemanticValue.EndPos = end
-    semanticValue.Attributes = attributesList
+	semanticValue := lexerOpenTagSemanticValuePools[thread].Get()
+	semanticValue.SemanticValue.Id = id
+	semanticValue.SemanticValue.StartPos = start
+	semanticValue.SemanticValue.EndPos = end
+	semanticValue.Attribute = attributesList
 
-    token.Type = OPENCLOSETAG
-    token.Value = semanticValue
+	token.Type = OPENCLOSETAG
+	token.Value = semanticValue
 }
 </{IDENTIFIER}>
 {
 	id, _ := getIdAndAttributesListFrom(text)
-    semanticValue := lexerCloseTagSemanticValuePools[thread].Get()
-    semanticValue.SemanticValue.Id = id
-    semanticValue.SemanticValue.StartPos = start
-    semanticValue.SemanticValue.EndPos = end
+	semanticValue := lexerCloseTagSemanticValuePools[thread].Get()
+	semanticValue.SemanticValue.Id = id
+	semanticValue.SemanticValue.StartPos = start
+	semanticValue.SemanticValue.EndPos = end
 
-    token.Type = CLOSETAG
-    token.Value = semanticValue
+	token.Type = CLOSETAG
+	token.Value = semanticValue
 }
 ({SPACE}|{NEWLINE})+
 {
@@ -69,19 +69,20 @@ VALUE ([^"\\]|\\.)*
 %%
 
 import (
-    "math"
+	"math"
 	xpath "github.com/giornetta/gopapageno/ext/xpath"
 )
 
-func getIdAndAttributesListFrom(text string) (id string, attributesList []*xpath.Attribute){
+func getIdAndAttributesListFrom(text string) (id string, attribute *xpath.Attribute) {
 	var l, r int
+	attribute = nil
 
 	l = 1
 	if text[1] == byte('/') {
 		l = 2
 	}
 
-    for ; r < (len(text) - 1) && text[r] != byte(' '); r++ {}
+	for ; r < (len(text) - 1) && text[r] != byte(' '); r++ {}
 
 	if text[r] == byte('>') {
 		if text[r-1] == byte('/') {
@@ -108,8 +109,7 @@ func getIdAndAttributesListFrom(text string) (id string, attributesList []*xpath
 		value := string(text[l:r])
 		r = r + 1 // skip "
 
-		attribute := xpath.NewAttribute(key, value)
-		attributesList = append(attributesList, attribute)
+		attribute = &xpath.Attribute{Key: key, Value: value, Next: attribute}
 
 		if text[r] == byte('/') || text[r] == byte('>') {
 			break
@@ -118,21 +118,19 @@ func getIdAndAttributesListFrom(text string) (id string, attributesList []*xpath
 	return
 }
 
+
 var lexerOpenTagSemanticValuePools []*gopapageno.Pool[xpath.OpenTagSemanticValue]
-var lexerOpenCloseTagSemanticValuePools []*gopapageno.Pool[xpath.OpenCloseTagSemanticValue]
 var lexerCloseTagSemanticValuePools []*gopapageno.Pool[xpath.CloseTagSemanticValue]
 
 func LexerPreallocMem(inputSize int, numThreads int) {
 	lexerOpenTagSemanticValuePools = make([]*gopapageno.Pool[xpath.OpenTagSemanticValue], numThreads)
-	lexerOpenCloseTagSemanticValuePools = make([]*gopapageno.Pool[xpath.OpenCloseTagSemanticValue], numThreads)
 	lexerCloseTagSemanticValuePools = make([]*gopapageno.Pool[xpath.CloseTagSemanticValue], numThreads)
 
-	avgCharsPerNumber := float64(2)
-	poolSizePerThread := int(math.Ceil((float64(inputSize) / avgCharsPerNumber) / float64(numThreads)))
+	tagTypes := float64(2)
+	poolSizePerThread := int(math.Ceil((float64(inputSize) / tagTypes) / float64(numThreads)))
 
 	for i := 0; i < numThreads; i++ {
 		lexerOpenTagSemanticValuePools[i] = gopapageno.NewPool[xpath.OpenTagSemanticValue](poolSizePerThread)
-		lexerOpenCloseTagSemanticValuePools[i] = gopapageno.NewPool[xpath.OpenCloseTagSemanticValue](poolSizePerThread)
 		lexerCloseTagSemanticValuePools[i] = gopapageno.NewPool[xpath.CloseTagSemanticValue](poolSizePerThread)
 	}
 }
