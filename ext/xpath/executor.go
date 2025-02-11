@@ -6,6 +6,9 @@ import (
 	"log"
 	"os"
 
+	"runtime/debug"
+	"math"
+
 	"github.com/giornetta/gopapageno"
 )
 
@@ -233,8 +236,8 @@ func PrepareBenchmark(runner *gopapageno.Runner, source []byte, numberOfThreads 
 }
  
 func (executor *executor) ExecuteBenchmark() []Position {
-	// debug.SetGCPercent(-1)
-	// debug.SetMemoryLimit(math.MaxInt64)
+	debug.SetGCPercent(-1)
+	debug.SetMemoryLimit(math.MaxInt64)
 	err := executor.executeUDPEsWhileParsing()
 	if err != nil {
 		return nil

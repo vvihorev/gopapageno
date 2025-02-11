@@ -17,6 +17,7 @@ func BenchmarkAll(b *testing.B) {
 	}
 
 	for numThreads := 1; numThreads < 3; numThreads++ {
+	// for numThreads := 1; numThreads < 8; numThreads++ {
 		b.Run(fmt.Sprintf("threads=%d", numThreads), func(b *testing.B) {
 			for _, queryCode := range []string{
 				"A1",
@@ -37,8 +38,10 @@ func BenchmarkAll(b *testing.B) {
 						gopapageno.WithConcurrency(numThreads),
 					)
 					for i := 0; i < b.N; i++ {
+						b.StopTimer()
 						exec := x.PrepareBenchmark(r, bytes, 1)
 						exec.LoadQuery(queryCode)
+						b.StartTimer()
 						res := exec.ExecuteBenchmark()
 						if len(res) == 0 {
 							//			b.Logf("empty results")
