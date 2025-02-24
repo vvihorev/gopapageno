@@ -3,7 +3,7 @@ version: '3'
 vars:
   EXAMPLE: xpath
   STRAT: opp
-  FNAME: 'handwritten-regex'
+  FNAME: '03-remove-slow-printf-calls'
   COUNT: 7
 
 tasks:
@@ -31,7 +31,7 @@ tasks:
 
   benchmark:
     cmds:
-      - go test github.com/giornetta/gopapageno/examples/{{ .EXAMPLE }}/{{ .STRAT }} -bench=. -count={{ .COUNT }} -benchmem -timeout 2h -run=^$ > ./examples/{{ .EXAMPLE }}/benchmark_results/{{ .STRAT }}-{{ .FNAME }}.txt
+      - go test github.com/giornetta/gopapageno/examples/{{ .EXAMPLE }}/{{ .STRAT }} -bench=^BenchmarkParse$ -count={{ .COUNT }} -benchmem -timeout 2h -run=^$ > ./examples/{{ .EXAMPLE }}/benchmark_results/{{ .STRAT }}-{{ .FNAME }}.txt
 
   benchmark-all:
     cmds:
@@ -41,3 +41,7 @@ tasks:
         vars: { STRAT: 'aopp' }
       - task: benchmark
         vars: { STRAT: 'copp' }
+
+  profile:
+    cmds:
+      - go test github.com/giornetta/gopapageno/examples/{{ .EXAMPLE }}/{{ .STRAT }} -bench=^BenchmarkParse$ -cpuprofile=cpu.prof -benchmem -timeout 2h -run=^$

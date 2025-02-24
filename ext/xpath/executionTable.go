@@ -175,15 +175,15 @@ func (er *executionRecordImpl) updateAllExecutionThreads(reduced NonTerminal) {
 			return
 		}
 
-		etReprBeforeUpdate := fmt.Sprintf("%v", et)
+		// etReprBeforeUpdate := fmt.Sprintf("%v", et)
 		predicate, newPathPattern, ok := etPathPattern.matchWithReductionOf(reduced.Node(), true)
 		if !ok {
-			logger.Printf("removing execution thread beacuse path pattern does NOT match: %s", etReprBeforeUpdate)
+			// logger.Printf("removing execution thread beacuse path pattern does NOT match: %s", etReprBeforeUpdate)
 			er.etList.removeExecutionThread(et, false)
 			return
 		}
-		etReprAfterUpdate := fmt.Sprintf("%v", et)
-		logger.Printf("updated execution thread: %s -> %s", etReprBeforeUpdate, etReprAfterUpdate)
+		// etReprAfterUpdate := fmt.Sprintf("%v", et)
+		// logger.Printf("updated execution thread: %s -> %s", etReprBeforeUpdate, etReprAfterUpdate)
 
 		var etReceivingSpeculation = et
 		if newPathPattern != nil {

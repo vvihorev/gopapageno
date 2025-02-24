@@ -1,0 +1,131 @@
+goos: linux
+goarch: amd64
+pkg: github.com/giornetta/gopapageno/examples/xpath/opp
+cpu: Intel(R) Core(TM) i7-7820HQ CPU @ 2.90GHz
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=1/reduction=sweep/query=A2-8         	      36	  36375375 ns/op	55519456 B/op	  508713 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=1/reduction=sweep/query=A2-8         	      32	  36349038 ns/op	55517623 B/op	  508705 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=1/reduction=sweep/query=A2-8         	      27	  37231354 ns/op	55519217 B/op	  508709 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=1/reduction=sweep/query=A2-8         	      32	  35685770 ns/op	55518078 B/op	  508707 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=1/reduction=sweep/query=A2-8         	      30	  36390571 ns/op	55517957 B/op	  508706 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=1/reduction=sweep/query=A2-8         	      28	  36169309 ns/op	55520104 B/op	  508712 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=1/reduction=sweep/query=A2-8         	      32	  35006631 ns/op	55518075 B/op	  508708 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=1/reduction=sweep/query=A3-8         	      33	  35958454 ns/op	55193819 B/op	  512888 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=1/reduction=sweep/query=A3-8         	      32	  36047695 ns/op	55193765 B/op	  512888 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=1/reduction=sweep/query=A3-8         	      32	  35220013 ns/op	55193771 B/op	  512887 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=1/reduction=sweep/query=A3-8         	      32	  35550902 ns/op	55193767 B/op	  512888 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=1/reduction=sweep/query=A3-8         	      27	  38123667 ns/op	55193759 B/op	  512887 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=1/reduction=sweep/query=A3-8         	      32	  35754063 ns/op	55193731 B/op	  512888 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=1/reduction=sweep/query=A3-8         	      32	  35327741 ns/op	55193739 B/op	  512887 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=2/reduction=sweep/query=A2-8         	      34	  35356411 ns/op	66226617 B/op	  503078 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=2/reduction=sweep/query=A2-8         	      36	  32191620 ns/op	66226814 B/op	  503079 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=2/reduction=sweep/query=A2-8         	      36	  33094678 ns/op	66225248 B/op	  503074 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=2/reduction=sweep/query=A2-8         	      39	  33383760 ns/op	66226569 B/op	  503079 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=2/reduction=sweep/query=A2-8         	      36	  33122056 ns/op	66226083 B/op	  503077 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=2/reduction=sweep/query=A2-8         	      42	  32655355 ns/op	66225560 B/op	  503076 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=2/reduction=sweep/query=A2-8         	      33	  34620490 ns/op	66225887 B/op	  503077 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=2/reduction=sweep/query=A3-8         	      32	  32593059 ns/op	65901250 B/op	  507257 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=2/reduction=sweep/query=A3-8         	      30	  33548437 ns/op	65901141 B/op	  507257 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=2/reduction=sweep/query=A3-8         	      39	  32731378 ns/op	65901159 B/op	  507256 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=2/reduction=sweep/query=A3-8         	      37	  33355859 ns/op	65901157 B/op	  507256 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=2/reduction=sweep/query=A3-8         	      42	  32371376 ns/op	65901048 B/op	  507256 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=2/reduction=sweep/query=A3-8         	      31	  34156023 ns/op	65901159 B/op	  507257 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=2/reduction=sweep/query=A3-8         	      38	  31728879 ns/op	65900928 B/op	  507256 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=3/reduction=sweep/query=A2-8         	      32	  31671663 ns/op	64535497 B/op	  501651 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=3/reduction=sweep/query=A2-8         	      33	  30401340 ns/op	64536268 B/op	  501652 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=3/reduction=sweep/query=A2-8         	      37	  29815594 ns/op	64533992 B/op	  501646 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=3/reduction=sweep/query=A2-8         	      49	  32663564 ns/op	64534338 B/op	  501648 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=3/reduction=sweep/query=A2-8         	      38	  29975538 ns/op	64535659 B/op	  501651 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=3/reduction=sweep/query=A2-8         	      33	  31543086 ns/op	64535435 B/op	  501650 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=3/reduction=sweep/query=A2-8         	      39	  30505365 ns/op	64534448 B/op	  501648 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=3/reduction=sweep/query=A3-8         	      38	  31651434 ns/op	64209957 B/op	  505828 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=3/reduction=sweep/query=A3-8         	      36	  30917103 ns/op	64210033 B/op	  505828 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=3/reduction=sweep/query=A3-8         	      38	  30557308 ns/op	64209911 B/op	  505828 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=3/reduction=sweep/query=A3-8         	      51	  32278622 ns/op	64210040 B/op	  505828 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=3/reduction=sweep/query=A3-8         	      38	  31143622 ns/op	64209990 B/op	  505828 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=3/reduction=sweep/query=A3-8         	      38	  29986516 ns/op	64209979 B/op	  505828 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=3/reduction=sweep/query=A3-8         	      43	  33832059 ns/op	64209772 B/op	  505827 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=4/reduction=sweep/query=A2-8         	      42	  28155662 ns/op	66092115 B/op	  501670 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=4/reduction=sweep/query=A2-8         	      45	  29251828 ns/op	66092830 B/op	  501672 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=4/reduction=sweep/query=A2-8         	      46	  28363557 ns/op	66091716 B/op	  501669 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=4/reduction=sweep/query=A2-8         	      49	  28534354 ns/op	66092440 B/op	  501672 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=4/reduction=sweep/query=A2-8         	      46	  27916884 ns/op	66092356 B/op	  501671 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=4/reduction=sweep/query=A2-8         	      43	  29183858 ns/op	66092506 B/op	  501672 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=4/reduction=sweep/query=A2-8         	      38	  28647777 ns/op	66092548 B/op	  501672 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=4/reduction=sweep/query=A3-8         	      42	  27741897 ns/op	65767722 B/op	  505851 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=4/reduction=sweep/query=A3-8         	      40	  27920511 ns/op	65767501 B/op	  505851 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=4/reduction=sweep/query=A3-8         	      39	  27625090 ns/op	65767529 B/op	  505851 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=4/reduction=sweep/query=A3-8         	      44	  27824944 ns/op	65767531 B/op	  505851 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=4/reduction=sweep/query=A3-8         	      42	  28254150 ns/op	65767649 B/op	  505852 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=4/reduction=sweep/query=A3-8         	      50	  27813088 ns/op	65767376 B/op	  505850 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=4/reduction=sweep/query=A3-8         	      45	  28363372 ns/op	65767542 B/op	  505851 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=5/reduction=sweep/query=A2-8         	      43	  26228151 ns/op	65520189 B/op	  501691 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=5/reduction=sweep/query=A2-8         	      44	  25652684 ns/op	65519840 B/op	  501691 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=5/reduction=sweep/query=A2-8         	      49	  25721479 ns/op	65519053 B/op	  501688 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=5/reduction=sweep/query=A2-8         	      40	  26357354 ns/op	65520148 B/op	  501691 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=5/reduction=sweep/query=A2-8         	      45	  26622465 ns/op	65520161 B/op	  501691 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=5/reduction=sweep/query=A2-8         	      43	  25957301 ns/op	65520298 B/op	  501692 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=5/reduction=sweep/query=A2-8         	      49	  27135806 ns/op	65519923 B/op	  501691 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=5/reduction=sweep/query=A3-8         	      46	  25884053 ns/op	65194889 B/op	  505869 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=5/reduction=sweep/query=A3-8         	      52	  25957647 ns/op	65194903 B/op	  505869 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=5/reduction=sweep/query=A3-8         	      49	  25638759 ns/op	65194997 B/op	  505870 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=5/reduction=sweep/query=A3-8         	      46	  40813440 ns/op	65194939 B/op	  505869 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=5/reduction=sweep/query=A3-8         	      45	  25494711 ns/op	65194847 B/op	  505869 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=5/reduction=sweep/query=A3-8         	      54	  29435519 ns/op	65194829 B/op	  505868 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=5/reduction=sweep/query=A3-8         	      39	  30874593 ns/op	65194999 B/op	  505869 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=6/reduction=sweep/query=A2-8         	      38	  33368466 ns/op	70207518 B/op	  501719 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=6/reduction=sweep/query=A2-8         	      40	  36321273 ns/op	70207508 B/op	  501719 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=6/reduction=sweep/query=A2-8         	      10	 107773270 ns/op	70209560 B/op	  501728 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=6/reduction=sweep/query=A2-8         	      39	  51334610 ns/op	70207608 B/op	  501720 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=6/reduction=sweep/query=A2-8         	      30	  87656429 ns/op	70206300 B/op	  501716 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=6/reduction=sweep/query=A2-8         	      40	 104727650 ns/op	70207064 B/op	  501719 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=6/reduction=sweep/query=A2-8         	      42	  26818192 ns/op	70207288 B/op	  501719 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=6/reduction=sweep/query=A3-8         	      43	  26500892 ns/op	69881941 B/op	  505898 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=6/reduction=sweep/query=A3-8         	      37	  47685042 ns/op	69881923 B/op	  505897 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=6/reduction=sweep/query=A3-8         	      46	  26785924 ns/op	69881960 B/op	  505896 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=6/reduction=sweep/query=A3-8         	      55	  40159992 ns/op	69881968 B/op	  505897 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=6/reduction=sweep/query=A3-8         	      51	  41609770 ns/op	69881954 B/op	  505897 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=6/reduction=sweep/query=A3-8         	      48	  27145004 ns/op	69882002 B/op	  505897 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=6/reduction=sweep/query=A3-8         	      34	  41694632 ns/op	69881960 B/op	  505898 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=7/reduction=sweep/query=A2-8         	      48	  24561052 ns/op	66488452 B/op	  501731 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=7/reduction=sweep/query=A2-8         	      46	  24720349 ns/op	66487387 B/op	  501728 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=7/reduction=sweep/query=A2-8         	      55	  24565021 ns/op	66487639 B/op	  501729 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=7/reduction=sweep/query=A2-8         	      48	  24676750 ns/op	66487520 B/op	  501728 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=7/reduction=sweep/query=A2-8         	      45	  30827558 ns/op	66487819 B/op	  501729 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=7/reduction=sweep/query=A2-8         	      46	  24863926 ns/op	66488206 B/op	  501730 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=7/reduction=sweep/query=A2-8         	      46	  24814189 ns/op	66488493 B/op	  501731 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=7/reduction=sweep/query=A3-8         	      48	  40542940 ns/op	66162951 B/op	  505908 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=7/reduction=sweep/query=A3-8         	      57	  33452581 ns/op	66163065 B/op	  505909 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=7/reduction=sweep/query=A3-8         	      48	  38025944 ns/op	66163037 B/op	  505909 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=7/reduction=sweep/query=A3-8         	      49	  24643815 ns/op	66163059 B/op	  505909 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=7/reduction=sweep/query=A3-8         	      43	  34182399 ns/op	66163066 B/op	  505909 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=7/reduction=sweep/query=A3-8         	      48	  24553927 ns/op	66163117 B/op	  505909 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=7/reduction=sweep/query=A3-8         	      48	  24759326 ns/op	66163036 B/op	  505909 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=8/reduction=sweep/query=A2-8         	      46	  40302663 ns/op	70159874 B/op	  501757 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=8/reduction=sweep/query=A2-8         	      55	  25048151 ns/op	70159562 B/op	  501756 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=8/reduction=sweep/query=A2-8         	      52	  29748310 ns/op	70158896 B/op	  501754 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=8/reduction=sweep/query=A2-8         	      49	  24684601 ns/op	70159273 B/op	  501756 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=8/reduction=sweep/query=A2-8         	      48	  40374120 ns/op	70160099 B/op	  501758 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=8/reduction=sweep/query=A2-8         	      50	  40249629 ns/op	70158992 B/op	  501755 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=8/reduction=sweep/query=A2-8         	      50	  39283492 ns/op	70158903 B/op	  501754 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=8/reduction=sweep/query=A3-8         	      55	  37732291 ns/op	69834016 B/op	  505934 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=8/reduction=sweep/query=A3-8         	      48	  39897005 ns/op	69834042 B/op	  505934 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=8/reduction=sweep/query=A3-8         	      40	  43730388 ns/op	69834081 B/op	  505934 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=8/reduction=sweep/query=A3-8         	      51	  24190719 ns/op	69833959 B/op	  505934 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=8/reduction=sweep/query=A3-8         	      50	  24791889 ns/op	69834108 B/op	  505933 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=8/reduction=sweep/query=A3-8         	      46	  24254625 ns/op	69834076 B/op	  505934 allocs/op
+BenchmarkParse/strategy=OPP/file=1MB.xml/goroutines=8/reduction=sweep/query=A3-8         	      44	  42760492 ns/op	69834055 B/op	  505933 allocs/op
+panic: runtime error: invalid memory address or nil pointer dereference
+[signal SIGSEGV: segmentation violation code=0x1 addr=0x38 pc=0x53bc93]
+
+goroutine 58574 [running]:
+github.com/giornetta/gopapageno/ext/xpath.(*Reduction).Setup(0xc0000aa230, {0x5d25f0, 0xc00051eb40}, {0x0, 0x0}, {0x0, 0x0})
+	/mnt/share/vvihorev/code/_polimi/gopapageno-from-scratch/ext/xpath/reduction.go:19 +0x53
+github.com/giornetta/gopapageno/examples/xpath/opp.NewGrammar.func1(0x48?, 0x1?, 0xc0037a2000, {0xc00051d4f8?, 0x0?, 0x0?}, 0x0?)
+	/mnt/share/vvihorev/code/_polimi/gopapageno-from-scratch/examples/xpath/opp/parser.pg.go:363 +0x175e
+github.com/giornetta/gopapageno.(*oppWorker).parse(0xc000010030, {0xc0000945d0?, 0xc00005d7d0?}, 0xc0037a0040, 0xc000094540?, 0x0?, 0xd0?, 0xc0004c2230, 0xc000014310)
+	/mnt/share/vvihorev/code/_polimi/gopapageno-from-scratch/opp.go:306 +0xbac
+created by github.com/giornetta/gopapageno.(*OPParser).Parse in goroutine 58523
+	/mnt/share/vvihorev/code/_polimi/gopapageno-from-scratch/opp.go:96 +0x125
+exit status 2
+FAIL	github.com/giornetta/gopapageno/examples/xpath/opp	186.389s
+FAIL
