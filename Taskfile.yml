@@ -1,10 +1,10 @@
 version: '3'
 
 vars:
-  EXAMPLE: adder
+  EXAMPLE: xpath
   STRAT: opp
   FNAME: 'default'
-  COUNT: 10
+  COUNT: 7
 
 tasks:
   generate:
