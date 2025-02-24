@@ -56,6 +56,51 @@ func Runner[T any](b *testing.B, parsingStrategy gopapageno.ParsingStrategy, new
 	})
 }
 
+func CustomFuncRunner[T any](
+	b *testing.B,
+	parsingStrategy gopapageno.ParsingStrategy,
+	newLexer func() *gopapageno.Lexer,
+	newGrammar func() *gopapageno.Grammar,
+	entries []*Entry[T],
+	runFunc func(*testing.B, *gopapageno.Runner, []byte),
+) {
+	reductionStrategies := []gopapageno.ReductionStrategy{gopapageno.ReductionSweep} //, gopapageno.ReductionParallel, gopapageno.ReductionMixed}
+
+	threads := int(math.Min(float64(runtime.NumCPU()), 32))
+
+	b.Run(fmt.Sprintf("strategy=%s", parsingStrategy), func(b *testing.B) {
+		for _, entry := range entries {
+			b.Run(fmt.Sprintf("file=%s", path.Base(entry.Filename)), func(b *testing.B) {
+				for c := 1; c <= threads; c++ {
+					b.Run(fmt.Sprintf("goroutines=%d", c), func(b *testing.B) {
+						for _, reductionStrat := range reductionStrategies {
+							b.Run(fmt.Sprintf("reduction=%s", reductionStrat), func(b *testing.B) {
+								bytes, err := os.ReadFile(entry.Filename)
+								if err != nil {
+									b.Fatalf("could not read source file %s: %v", entry.Filename, err)
+								}
+
+								b.SetBytes(0)
+
+								r := gopapageno.NewRunner(
+									newLexer(),
+									newGrammar(),
+									gopapageno.WithConcurrency(c),
+									gopapageno.WithReductionStrategy(reductionStrat),
+									gopapageno.WithParallelFactor(entry.ParallelFactor),
+									gopapageno.WithAverageTokenLength(entry.AvgTokenLength),
+								)
+
+								runFunc(b, r, bytes)
+							})
+						}
+					})
+				}
+			})
+		}
+	})
+}
+
 func ParserRunner[T any](b *testing.B, parsingStrategy gopapageno.ParsingStrategy, newLexer func() *gopapageno.Lexer, newGrammar func() *gopapageno.Grammar, entries []*Entry[T]) {
 	reductionStrategies := []gopapageno.ReductionStrategy{gopapageno.ReductionSweep, gopapageno.ReductionParallel, gopapageno.ReductionMixed}
 

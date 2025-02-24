@@ -1,8 +1,10 @@
-%axiom ELEM
+%axiom ROOT
 
-%preamble LexerPreallocMem
+%preamble ParserPreallocMem
 
 %%
+
+ROOT : ELEM {};
 
 ELEM : ELEM OPENTAG ELEM CLOSETAG
 {

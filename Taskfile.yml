@@ -3,7 +3,7 @@ version: '3'
 vars:
   EXAMPLE: xpath
   STRAT: opp
-  FNAME: 'default'
+  FNAME: 'initial'
   COUNT: 7
 
 tasks:
