@@ -3,7 +3,7 @@ version: '3'
 vars:
   EXAMPLE: xpath
   STRAT: opp
-  FNAME: 'initial'
+  FNAME: 'handwritten-regex'
   COUNT: 7
 
 tasks:
