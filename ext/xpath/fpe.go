@@ -84,10 +84,10 @@ func (fpeBuilder *fpeBuilderImpl) end() (result udpe) {
 }
 
 type fpeInnerTestImpl struct {
-	isEntry               bool
-	behindDescendantAxis  bool
 	udpeTest              udpeTest
 	precedingFpeInnerTest *fpeInnerTestImpl
+	isEntry               bool
+	behindDescendantAxis  bool
 }
 
 func (fpeInnerTest *fpeInnerTestImpl) matchWithReductionOf(n interface{}) (predicate predicate, next, newTest *fpeInnerTestImpl, hasNewTest, ok bool) {

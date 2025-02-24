@@ -3,7 +3,7 @@ version: '3'
 vars:
   EXAMPLE: xpath
   STRAT: opp
-  FNAME: '03-remove-slow-printf-calls'
+  FNAME: '04-simplify-execution-table'
   COUNT: 7
 
 tasks:

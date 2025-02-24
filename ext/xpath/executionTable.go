@@ -119,11 +119,10 @@ type executionRecord interface {
 }
 
 type executionRecordImpl struct {
-	expType      udpeType
-	t            executionTable
 	ctxSols      contextSolutionsMap
 	etList       executionThreadList
-	gNudpeRecord globalNudpeRecord
+	expType      udpeType
+	id           int
 }
 
 func (er *executionRecordImpl) String() string {
@@ -157,11 +156,11 @@ func (er *executionRecordImpl) udpeType() udpeType {
 }
 
 func (er *executionRecordImpl) nudpeRecord() globalNudpeRecord {
-	return er.gNudpeRecord
+	return udpeGlobalTable.recordByID(er.id).nudpeRecord()
 }
 
 func (er *executionRecordImpl) belongsToNudpe() bool {
-	return er.gNudpeRecord != nil
+	return udpeGlobalTable.recordByID(er.id).nudpeRecord() != nil
 }
 
 // updateExecutionThreads takes the node being reduced and asks all the running execution threads

@@ -8,6 +8,7 @@ type globalUdpeTable interface {
 	addRpe(rpe rpe) (id int, record globalUdpeRecord)
 	iterate(callback globalTableIterableCallback)
 	mainQueryRecord() globalUdpeRecord
+	recordByID(id int) globalUdpeRecord
 }
 
 type globalUdpeTableImpl struct {
@@ -21,11 +22,10 @@ func (globalUdpeTable *globalUdpeTableImpl) newExecutionTable() executionTable {
 	for id := range executionRecordsGroup {
 		globalUdpeRecord := globalUdpeTable.recordByID(id)
 		executionRecordsGroup[id] = &executionRecordImpl{
-			expType:      globalUdpeRecord.udpeType(),
-			t:            et,
 			ctxSols:      newContextSolutionsMap(),
 			etList:       newExecutionThreadList(),
-			gNudpeRecord: globalUdpeRecord.nudpeRecord(),
+			id:						id,
+			expType:      globalUdpeRecord.udpeType(),
 		}
 	}
 	et.list = executionRecordsGroup
