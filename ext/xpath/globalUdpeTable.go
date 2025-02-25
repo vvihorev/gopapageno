@@ -24,7 +24,7 @@ func (globalUdpeTable *globalUdpeTableImpl) newExecutionTable() executionTable {
 		executionRecordsGroup[id] = &executionRecordImpl{
 			ctxSols:      newContextSolutionsMap(),
 			etList:       newExecutionThreadList(),
-			id:						id,
+			id:           id,
 			expType:      globalUdpeRecord.udpeType(),
 		}
 	}

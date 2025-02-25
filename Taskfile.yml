@@ -3,7 +3,7 @@ version: '3'
 vars:
   EXAMPLE: xpath
   STRAT: opp
-  FNAME: '06-iterate-over-execution-threads-directly'
+  FNAME: '07-iterate-over-GUT-directly'
   COUNT: 7
 
 tasks:
