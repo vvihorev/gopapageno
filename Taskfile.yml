@@ -3,7 +3,7 @@ version: '3'
 vars:
   EXAMPLE: xpath
   STRAT: opp
-  FNAME: '07-iterate-over-GUT-directly'
+  FNAME: '08-simplify-udpe-entryPoint-check'
   COUNT: 7
 
 tasks:

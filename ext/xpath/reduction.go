@@ -87,11 +87,11 @@ func (r *Reduction) mergeUpdatingExecutionTableWithUnchangedExecutionTable() {
 // and, if it maches, creates new execution threads accordingly
 func (r *Reduction) addNewExecutionThreadsToExecutionRecord(executionRecord executionRecord) {
 	udpe := r.globalUdpeRecordBeingConsidered.udpe()
-	entryPoint := udpe.entryPoint()
 
-	if _, _, ok := entryPoint.matchWithReductionOf(r.reducedNT.Node(), false); !ok {
+	if !udpe.matchEntryPoint(r.reducedNT.Node()) {
 		return
 	}
+	entryPoint := udpe.entryPoint()
 
 	switch udpeType := r.globalUdpeRecordBeingConsidered.udpeType(); udpeType {
 	case FPE:

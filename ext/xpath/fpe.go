@@ -194,6 +194,11 @@ type fpeImpl struct {
 	entryTest *fpeInnerTestImpl
 }
 
+func (fpe *fpeImpl)	matchEntryPoint(n interface{}) bool {
+	_, _, _, _, ok := fpe.entryTest.matchWithReductionOf(n)
+	return ok
+}
+
 func (fpe *fpeImpl) entryPoint() pathPattern {
 	return &fpePathPatternImpl{fpe.entryTest}
 }

@@ -192,6 +192,11 @@ type rpeImpl struct {
 	entryTest *rpeInnerTestImpl
 }
 
+func (rpe *rpeImpl)	matchEntryPoint(n interface{}) bool {
+	_, _, _, _, ok := rpe.entryTest.matchWithReductionOf(n)
+	return ok
+}
+
 func (rpe *rpeImpl) entryPoint() pathPattern {
 	return &rpePathPathPatternImpl{rpe.entryTest}
 }

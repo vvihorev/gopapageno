@@ -59,6 +59,7 @@ type pathPattern interface {
 
 type udpe interface {
 	entryPoint() pathPattern
+	matchEntryPoint(n interface{}) bool
 	String() string
 }
 
