@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"runtime"
+	"runtime/debug"
 	"testing"
 )
 
@@ -67,6 +68,8 @@ func CustomFuncRunner[T any](
 	reductionStrategies := []gopapageno.ReductionStrategy{gopapageno.ReductionSweep} //, gopapageno.ReductionParallel, gopapageno.ReductionMixed}
 
 	threads := int(math.Min(float64(runtime.NumCPU()), 32))
+	debug.SetGCPercent(-1)
+	debug.SetMemoryLimit(math.MaxInt64)
 
 	b.Run(fmt.Sprintf("strategy=%s", parsingStrategy), func(b *testing.B) {
 		for _, entry := range entries {

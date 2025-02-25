@@ -17,7 +17,7 @@ const (
 
 var entries = []*benchmark.Entry[any]{
 	{
-		Filename:       baseFolder + "1MB.xml",
+		Filename:       baseFolder + "10MB.xml",
 		ParallelFactor: 0.5,
 		AvgTokenLength: 4,
 		Result:         nil,
