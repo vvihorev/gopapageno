@@ -57,13 +57,13 @@ func Runner[T any](b *testing.B, parsingStrategy gopapageno.ParsingStrategy, new
 	})
 }
 
-func CustomFuncRunner[T any](
+func XPathRunner[T any](
 	b *testing.B,
 	parsingStrategy gopapageno.ParsingStrategy,
 	newLexer func() *gopapageno.Lexer,
 	newGrammar func() *gopapageno.Grammar,
 	entries []*Entry[T],
-	runFunc func(*testing.B, *gopapageno.Runner, []byte),
+	runFunc func(string, *testing.B, *gopapageno.Runner, []byte),
 ) {
 	reductionStrategies := []gopapageno.ReductionStrategy{gopapageno.ReductionSweep} //, gopapageno.ReductionParallel, gopapageno.ReductionMixed}
 
@@ -74,27 +74,31 @@ func CustomFuncRunner[T any](
 	b.Run(fmt.Sprintf("strategy=%s", parsingStrategy), func(b *testing.B) {
 		for _, entry := range entries {
 			b.Run(fmt.Sprintf("file=%s", path.Base(entry.Filename)), func(b *testing.B) {
-				for c := 1; c <= threads; c++ {
-					b.Run(fmt.Sprintf("goroutines=%d", c), func(b *testing.B) {
-						for _, reductionStrat := range reductionStrategies {
-							b.Run(fmt.Sprintf("reduction=%s", reductionStrat), func(b *testing.B) {
-								bytes, err := os.ReadFile(entry.Filename)
-								if err != nil {
-									b.Fatalf("could not read source file %s: %v", entry.Filename, err)
+				for _, query := range []string{"A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "B1", "B2"} {
+					b.Run(fmt.Sprintf("query=%s", query), func(b *testing.B) {
+						for c := 1; c <= threads; c++ {
+							b.Run(fmt.Sprintf("goroutines=%d", c), func(b *testing.B) {
+								for _, reductionStrat := range reductionStrategies {
+									b.Run(fmt.Sprintf("reduction=%s", reductionStrat), func(b *testing.B) {
+										bytes, err := os.ReadFile(entry.Filename)
+										if err != nil {
+											b.Fatalf("could not read source file %s: %v", entry.Filename, err)
+										}
+
+										b.SetBytes(0)
+
+										r := gopapageno.NewRunner(
+											newLexer(),
+											newGrammar(),
+											gopapageno.WithConcurrency(c),
+											gopapageno.WithReductionStrategy(reductionStrat),
+											gopapageno.WithParallelFactor(entry.ParallelFactor),
+											gopapageno.WithAverageTokenLength(entry.AvgTokenLength),
+										)
+
+										runFunc(query, b, r, bytes)
+									})
 								}
-
-								b.SetBytes(0)
-
-								r := gopapageno.NewRunner(
-									newLexer(),
-									newGrammar(),
-									gopapageno.WithConcurrency(c),
-									gopapageno.WithReductionStrategy(reductionStrat),
-									gopapageno.WithParallelFactor(entry.ParallelFactor),
-									gopapageno.WithAverageTokenLength(entry.AvgTokenLength),
-								)
-
-								runFunc(b, r, bytes)
 							})
 						}
 					})

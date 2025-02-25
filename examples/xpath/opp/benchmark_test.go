@@ -1,11 +1,11 @@
 package main
 
 import (
-	"fmt"
+	"testing"
+
 	"github.com/giornetta/gopapageno"
 	"github.com/giornetta/gopapageno/benchmark"
 	x "github.com/giornetta/gopapageno/ext/xpath"
-	"testing"
 )
 
 const baseFolder = "../data/"
@@ -25,23 +25,19 @@ var entries = []*benchmark.Entry[any]{
 }
 
 func BenchmarkParse(b *testing.B) {
-	benchmark.CustomFuncRunner(b, gopapageno.OPP, NewLexer, NewGrammar, entries, func(b *testing.B, r *gopapageno.Runner, bytes []byte) {
-		for _, query := range []string{"A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "B1", "B2"} {
-			b.Run(fmt.Sprintf("query=%s", query), func(b *testing.B) {
-				b.StopTimer()
-				b.ResetTimer()
-				b.StartTimer()
-				for i := 0; i < b.N; i++ {
-					cmd := x.Execute(query).Against(bytes).WithNumberOfThreads(r.Options.Concurrency)
-					results, err := cmd.Run(r)
-					if err != nil {
-						b.Fatalf("could not run command: %v", err)
-					}
-					if len(results) == 0 {
-						b.Log("no matches found")
-					}
-				}
-			})
+	benchmark.XPathRunner(b, gopapageno.OPP, NewLexer, NewGrammar, entries, func(query string, b *testing.B, r *gopapageno.Runner, bytes []byte) {
+		b.StopTimer()
+		b.ResetTimer()
+		b.StartTimer()
+		for i := 0; i < b.N; i++ {
+			cmd := x.Execute(query).Against(bytes).WithNumberOfThreads(r.Options.Concurrency)
+			results, err := cmd.Run(r)
+			if err != nil {
+				b.Fatalf("could not run command: %v", err)
+			}
+			if len(results) == 0 {
+				// b.Log("no matches found")
+			}
 		}
 	})
 }

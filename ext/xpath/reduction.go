@@ -52,10 +52,7 @@ func (r *Reduction) avoidMemoryLeaksAtTheEndOfHandling() {
 func (r *Reduction) iterateOverAllGlobalUdpeRecordsAndExecuteMainPhases() {
 	for id, gr := range udpeGlobalTable.(*globalUdpeTableImpl).list {
 		r.globalUdpeRecordBeingConsidered = gr
-		updatingExecutionRecord, err := r.updatingExecutionTable.recordByID(id)
-		if err != nil {
-			panic(fmt.Sprintf("cannot retrieve execution record for udpe with id: %d", id))
-		}
+		updatingExecutionRecord := r.updatingExecutionTable.(*executionTableImpl).list[id]
 
 		r.addNewExecutionThreadsToExecutionRecord(updatingExecutionRecord)
 		updatingExecutionRecord.updateAllExecutionThreads(r.reducedNT)
