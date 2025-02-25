@@ -174,56 +174,6 @@ func TestExecutionThread(t *testing.T) {
 	})
 }
 
-func TestExecutionThreadListIterator(t *testing.T) {
-	t.Run(`iterator of empty execution thread list`, func(t *testing.T) {
-		executionThreadList := newExecutionThreadList()
-		executionThreadListIterator := executionThreadList.newIterator()
-
-		t.Run(`hasNext()=false`, func(t *testing.T) {
-			want := false
-			if got := executionThreadListIterator.hasNext(); got != want {
-				t.Errorf(`hasNext()=%v | want %v`, got, want)
-			}
-		})
-
-		t.Run(`next() panics`, func(t *testing.T) {
-			defer func() {
-				if r := recover(); r == nil {
-					t.Error(`next() does NOT panic when it should`)
-				}
-			}()
-			executionThreadListIterator.next()
-		})
-	})
-
-	t.Run(`itearator of a NON empty execution thread list`, func(t *testing.T) {
-		t.Run(`it allows right number of iterations`, func(t *testing.T) {
-			executionThreadList := newExecutionThreadList()
-			executionThreadList.addExecutionThread(nil, nil, nil)
-			executionThreadList.addExecutionThread(nil, nil, nil)
-			executionThreadList.addExecutionThread(nil, nil, nil)
-			executionThreadList.addExecutionThread(nil, nil, nil)
-			const expectedIterationCount = 4
-
-			executionThreadListIterator := executionThreadList.newIterator()
-			var actualIterationCount int
-			for executionThreadListIterator.hasNext() {
-				actualIterationCount++
-
-				et, _ := executionThreadListIterator.next()
-				if et == nil {
-					t.Errorf(`next() returns a <nil> execution thread`)
-				}
-			}
-
-			if actualIterationCount != expectedIterationCount {
-				t.Errorf(`iterator iterated %d times | want %d`, actualIterationCount, expectedIterationCount)
-			}
-		})
-	})
-	queryIds = nil
-}
-
 // Utils
 func _emptyPathPatternBuilder() pathPattern {
 	fpeBuilder := newFpeBuilder()

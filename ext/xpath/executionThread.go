@@ -1,7 +1,6 @@
 package xpath
 
 import (
-	"container/list"
 	"fmt"
 )
 
@@ -26,7 +25,8 @@ type executionThreadImpl struct {
 	pp     pathPattern
 	spList speculationList
 	offspr []executionThread
-	el     *list.Element
+
+	next *executionThreadImpl
 }
 
 func (et *executionThreadImpl) String() string {
@@ -110,13 +110,12 @@ type executionThreadList interface {
 
 // concrete execution thread list implementation
 type executionThreadListImpl struct {
-	list *list.List
+	head *executionThreadImpl
+	size int
 }
 
 func newExecutionThreadList() executionThreadList {
-	return &executionThreadListImpl{
-		list: list.New(),
-	}
+	return &executionThreadListImpl{}
 }
 
 // addExecutionThread adds a new execution thread to to the execution thread list.
@@ -129,14 +128,31 @@ func (etList *executionThreadListImpl) addExecutionThread(ctx, sol NonTerminal, 
 		pp:     pp,
 		spList: newSpeculationList(),
 	}
-	et.el = etList.list.PushFront(et)
+	et.next = etList.head
+	etList.head = et
+	etList.size++
 	return et
 }
 
 func (etList *executionThreadListImpl) removeExecutionThread(et executionThread, removeChildren bool) (ok bool) {
 	etImpl, ok := et.(*executionThreadImpl)
 	if ok {
-		etList.list.Remove(etImpl.el)
+		prev := etList.head
+		if prev == etImpl {
+			etList.head = nil
+		} else {
+			cur := prev.next
+			for cur != nil {
+				if cur == etImpl {
+					prev.next = cur.next
+					break
+				}
+				prev = cur
+				cur = cur.next
+			}
+		}
+		etList.size--
+
 		if removeChildren {
 			for _, childEt := range etImpl.offspr {
 				etList.removeExecutionThread(childEt, true)
@@ -147,7 +163,7 @@ func (etList *executionThreadListImpl) removeExecutionThread(et executionThread,
 		etImpl.pp = nil     //avoid memory leaks
 		etImpl.spList = nil //avoid memory leaks
 		etImpl.offspr = nil //avoid memory leaks
-		etImpl.el = nil     //avoid memory leaks
+		etImpl.next = nil   //avoid memory leaks
 	}
 	return
 }
@@ -164,7 +180,7 @@ func (etList *executionThreadListImpl) hasExecutionThreadRunningFor(ctx NonTermi
 }
 
 func (etList *executionThreadListImpl) len() int {
-	return etList.list.Len()
+	return etList.size
 }
 
 func (etList *executionThreadListImpl) merge(incoming executionThreadList) (result executionThreadList, ok bool) {
@@ -178,19 +194,26 @@ func (etList *executionThreadListImpl) merge(incoming executionThreadList) (resu
 	}
 
 	ok = true
-	etList.list.PushBackList(incomingImpl.list)
-	for el := etList.list.Front(); el != nil; el = el.Next() {
-		incomingEt := el.Value.(*executionThreadImpl)
-		incomingEt.el = el
+	cur := etList.head
+	if cur == nil {
+		etList.head = incomingImpl.head
+	} else {
+		for ; cur.next != nil; cur = cur.next {
+		}
+		cur.next = incomingImpl.head
 	}
-	incoming.(*executionThreadListImpl).list.Init()
+	etList.size += incomingImpl.size
+
+	// cleanup incoming execution thread list for reuse of executionTable
+	incomingImpl.head = nil
+	incomingImpl.size = 0
 	return
 }
 
 // iterator object
 func (etList *executionThreadListImpl) newIterator() executionThreadListIterator {
 	return &executionThreadListIteratorImpl{
-		nextEl: etList.list.Front(),
+		nextEl: etList.head,
 	}
 }
 
@@ -200,7 +223,7 @@ type executionThreadListIterator interface {
 }
 
 type executionThreadListIteratorImpl struct {
-	nextEl *list.Element
+	nextEl *executionThreadImpl
 }
 
 func (etlIt *executionThreadListIteratorImpl) hasNext() bool {
@@ -208,13 +231,7 @@ func (etlIt *executionThreadListIteratorImpl) hasNext() bool {
 }
 
 func (etlIt *executionThreadListIteratorImpl) next() (et executionThread, hasNext bool) {
-	et, ok := etlIt.nextEl.Value.(executionThread)
-
-	if !ok {
-		panic(`execution thread list iterator error: trying to access a non existing next execution thread`)
-	}
-
-	etlIt.nextEl = etlIt.nextEl.Next()
+	etlIt.nextEl = etlIt.nextEl.next
 	hasNext = etlIt.nextEl != nil
 	return
 }
@@ -223,15 +240,8 @@ func (etlIt *executionThreadListIteratorImpl) next() (et executionThread, hasNex
 type executionThreadListIterableCallback func(et executionThread) (doBreak bool)
 
 func (etList *executionThreadListImpl) iterate(callback executionThreadListIterableCallback) {
-	var next *list.Element
-	for e := etList.list.Front(); e != nil; e = next {
-		next = e.Next()
-		et, ok := e.Value.(executionThread)
-		if !ok {
-			panic(`execution thread list iterate: can NOT access to the next execution thread`)
-		}
-
-		if doBreak := callback(et); doBreak {
+	for cur := etList.head; cur != nil; cur = cur.next {
+		if doBreak := callback(cur); doBreak {
 			return
 		}
 	}
