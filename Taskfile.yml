@@ -3,7 +3,7 @@ version: '3'
 vars:
   EXAMPLE: xpath
   STRAT: opp
-  FNAME: 'initial'
+  FNAME: 'FINAL-10MB-NOGC-ORIGINAL'
   COUNT: 7
 
 tasks:
