@@ -63,6 +63,8 @@ func (et *executionTableImpl) merge(incoming executionTable) (result executionTa
 		}
 		return
 	})
+
+	executionTablePool.Put(incoming)
 	return
 }
 

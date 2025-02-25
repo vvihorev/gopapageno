@@ -87,6 +87,7 @@ func (ctxSolMap *contextSolutionsMapImpl) merge(incoming contextSolutionsMap) (r
 
 	for k, v := range incomingImpl.m {
 		ctxSolMap.m[k] = append(ctxSolMap.m[k], v...)
+		delete(incomingImpl.m, k)
 	}
 	ok = true
 	return

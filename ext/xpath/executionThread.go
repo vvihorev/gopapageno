@@ -183,6 +183,7 @@ func (etList *executionThreadListImpl) merge(incoming executionThreadList) (resu
 		incomingEt := el.Value.(*executionThreadImpl)
 		incomingEt.el = el
 	}
+	incoming.(*executionThreadListImpl).list.Init()
 	return
 }
 

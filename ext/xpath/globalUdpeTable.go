@@ -1,5 +1,28 @@
 package xpath
 
+import (
+	"sync"
+)
+
+var executionTablePool = sync.Pool{
+	New: func() interface{} {
+		et := new(executionTableImpl)
+		globalUdpeTableSize := len(udpeGlobalTable.(*globalUdpeTableImpl).list)
+		executionRecordsGroup := make([]executionRecord, globalUdpeTableSize)
+		for id := range executionRecordsGroup {
+			globalUdpeRecord := udpeGlobalTable.(*globalUdpeTableImpl).recordByID(id)
+			executionRecordsGroup[id] = &executionRecordImpl{
+				ctxSols:      newContextSolutionsMap(),
+				etList:       newExecutionThreadList(),
+				id:           id,
+				expType:      globalUdpeRecord.udpeType(),
+			}
+		}
+		et.list = executionRecordsGroup
+		return et
+	},
+}
+
 type globalTableIterableCallback func(id int, record globalUdpeRecord)
 
 type globalUdpeTable interface {
@@ -15,21 +38,19 @@ type globalUdpeTableImpl struct {
 	list []globalUdpeRecord
 }
 
-func (globalUdpeTable *globalUdpeTableImpl) newExecutionTable() executionTable {
-	et := new(executionTableImpl)
-	globalUdpeTableSize := globalUdpeTable.size()
-	executionRecordsGroup := make([]executionRecord, globalUdpeTableSize)
-	for id := range executionRecordsGroup {
-		globalUdpeRecord := globalUdpeTable.recordByID(id)
-		executionRecordsGroup[id] = &executionRecordImpl{
-			ctxSols:      newContextSolutionsMap(),
-			etList:       newExecutionThreadList(),
-			id:           id,
-			expType:      globalUdpeRecord.udpeType(),
-		}
+func PreallocateExecutionTables(numThreads int) {
+	tablesPerThread := 3
+	tables := make([]executionTable, numThreads*tablesPerThread)
+	for range numThreads * tablesPerThread {
+		tables = append(tables, executionTablePool.Get().(executionTable))
 	}
-	et.list = executionRecordsGroup
+	for _, et := range tables {
+		executionTablePool.Put(et)
+	}
+}
 
+func (globalUdpeTable *globalUdpeTableImpl) newExecutionTable() executionTable {
+	et := executionTablePool.Get().(executionTable)
 	return et
 }
 
