@@ -3,7 +3,7 @@ version: '3'
 vars:
   EXAMPLE: xpath
   STRAT: opp
-  FNAME: '05-encode-strings-present-in-query'
+  FNAME: '06-iterate-over-execution-threads-directly'
   COUNT: 7
 
 tasks:
@@ -44,4 +44,4 @@ tasks:
 
   profile:
     cmds:
-      - go test github.com/giornetta/gopapageno/examples/{{ .EXAMPLE }}/{{ .STRAT }} -bench=^BenchmarkParse$ -cpuprofile=cpu.prof -benchmem -timeout 2h -run=^$
+      - go test github.com/giornetta/gopapageno/examples/{{ .EXAMPLE }}/{{ .STRAT }} -bench=^BenchmarkParse$ -cpuprofile=cpu.prof -benchmem -memprofile=mem.prof -timeout 2h -run=^$
