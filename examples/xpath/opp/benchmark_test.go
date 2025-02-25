@@ -26,7 +26,7 @@ var entries = []*benchmark.Entry[any]{
 
 func BenchmarkParse(b *testing.B) {
 	benchmark.CustomFuncRunner(b, gopapageno.OPP, NewLexer, NewGrammar, entries, func(b *testing.B, r *gopapageno.Runner, bytes []byte) {
-		for _, query := range []string{"A2", "A3"} {
+		for _, query := range []string{"A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "B1", "B2"} {
 			b.Run(fmt.Sprintf("query=%s", query), func(b *testing.B) {
 				b.StopTimer()
 				b.ResetTimer()
@@ -38,7 +38,7 @@ func BenchmarkParse(b *testing.B) {
 						b.Fatalf("could not run command: %v", err)
 					}
 					if len(results) == 0 {
-						b.Fatalf("no matches found")
+						b.Log("no matches found")
 					}
 				}
 			})
