@@ -13,6 +13,8 @@ const defaultExecutorNumberOfThreads = 1
 // Singletons
 var nudpeGlobalTable globalNudpeTable
 var udpeGlobalTable globalUdpeTable
+var queryIds map[string]int8
+var queryIdCounter int8
 var logger Logger
 
 func init() {
@@ -138,11 +140,14 @@ func (executorCommand *executorCommandImpl) Run(runner *gopapageno.Runner) (resu
 func (executor *executorImpl) initSingletonDataStructures() {
 	udpeGlobalTable = new(globalUdpeTableImpl)
 	nudpeGlobalTable = new(globalNudpeTableImpl)
+	queryIds = map[string]int8{}
+	queryIdCounter = 1
 }
 
 func (executor *executorImpl) freeSingletonDataStructures() {
 	udpeGlobalTable = nil
 	nudpeGlobalTable = nil
+	queryIds = nil
 }
 
 func (executor *executorImpl) setXPathQueryToBeExecuted(xpathQuery string) {

@@ -70,18 +70,25 @@ type udpeBuilder interface {
 }
 
 type elementTest struct {
-	wildCard bool
-	name     string
-	attr     *Attribute
 	pred     predicate
+	attr     *Attribute
+	name     int8
+	wildCard bool
 }
 
 func newElementTest(name string, attribute *Attribute, predicate predicate) *elementTest {
+	encodedName, exists := queryIds[name]
+	if !exists {
+		queryIds[name] = queryIdCounter
+		encodedName = queryIdCounter
+		queryIdCounter++
+	}
+
 	return &elementTest{
-		name:     name,
-		wildCard: name == "*",
-		attr:     attribute,
 		pred:     predicate,
+		name:     encodedName,
+		attr:     attribute,
+		wildCard: name == "*",
 	}
 }
 
@@ -119,7 +126,7 @@ func (et *elementTest) test(tested interface{}) bool {
 }
 
 func (et *elementTest) String() string {
-	result := []string{et.name}
+	result := []string{fmt.Sprintf("%d", et.name)}
 	if et.pred != nil {
 		result = append(result, "[p]")
 	}

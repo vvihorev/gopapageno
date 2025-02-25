@@ -111,6 +111,7 @@ func TestExecutionThreadList(t *testing.T) {
 }
 
 func TestExecutionThread(t *testing.T) {
+	queryIds = map[string]int8{}
 	t.Run(`executionThread.isCompleted()`, func(t *testing.T) {
 		t.Run(`executionThread.isCompleted()=true`, func(t *testing.T) {
 
@@ -220,6 +221,7 @@ func TestExecutionThreadListIterator(t *testing.T) {
 			}
 		})
 	})
+	queryIds = nil
 }
 
 // Utils

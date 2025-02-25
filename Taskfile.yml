@@ -3,7 +3,7 @@ version: '3'
 vars:
   EXAMPLE: xpath
   STRAT: opp
-  FNAME: '04-simplify-execution-table'
+  FNAME: '05-encode-strings-present-in-query'
   COUNT: 7
 
 tasks:

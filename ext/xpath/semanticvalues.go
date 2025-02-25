@@ -118,6 +118,10 @@ type OpenTagSemanticValue struct {
 }
 
 func NewOpenTagSemanticValue(id string, attributes []*Attribute, startPos int, endPos int) *OpenTagSemanticValue {
+	_, exists := queryIds[id]
+	if !exists {
+		id = ""
+	}
 	return &OpenTagSemanticValue{
 		semanticValue: semanticValue{
 			id:       id,
@@ -133,6 +137,10 @@ type CloseTagSemanticValue struct {
 }
 
 func NewCloseTagSemanticValue(id string, startPos int, endPos int) *CloseTagSemanticValue {
+	_, exists := queryIds[id]
+	if !exists {
+		id = ""
+	}
 	return &CloseTagSemanticValue{
 		semanticValue{
 			id:       id,
@@ -147,6 +155,10 @@ type OpenCloseTagSemanticValue struct {
 }
 
 func NewOpenCloseTagSemanticValue(id string, attributes []*Attribute, startPos int, endPos int) *OpenCloseTagSemanticValue {
+	_, exists := queryIds[id]
+	if !exists {
+		id = ""
+	}
 	return &OpenCloseTagSemanticValue{
 		OpenTagSemanticValue{
 			semanticValue: semanticValue{

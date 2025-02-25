@@ -5,6 +5,11 @@ import (
 )
 
 func TestElementTest(t *testing.T) {
+	queryIds = map[string]int8{
+		"a": 1,
+		"not-a": 2,
+	}
+
 	t.Run(`elementTest without Attribute`, func(t *testing.T) {
 		elementTest := newElementTest("a", nil, nil)
 
@@ -63,9 +68,14 @@ func TestElementTest(t *testing.T) {
 			}
 		})
 	})
+
+	queryIds = nil
 }
 
 func TestTextTest(t *testing.T) {
+	queryIds = map[string]int8{
+		"a": 1,
+	}
 	t.Run(`textTest with empty data`, func(t *testing.T) {
 		textTest := newTextTest("")
 
@@ -106,4 +116,5 @@ func TestTextTest(t *testing.T) {
 			}
 		})
 	})
+	queryIds = nil 
 }

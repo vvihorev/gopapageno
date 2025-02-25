@@ -7,6 +7,11 @@ import (
 )
 
 func TestFpeInnerTest(t *testing.T) {
+	queryIds = map[string]int8{
+		"a": 1,
+		"b": 2,
+	}
+	queryIdCounter = 1
 	t.Run(`fpeInnerTest.String()`, func(t *testing.T) {
 		t.Run(`fpeInnerTest.behindDescendantAxis==true`, func(t *testing.T) {
 			elementTest := newElementTest("a", nil, nil)
@@ -135,8 +140,11 @@ func TestFpeInnerTest(t *testing.T) {
 			})
 		})
 	})
+	queryIds = nil
 }
 func TestFpeBuilder(t *testing.T) {
+	queryIds = map[string]int8{}
+	queryIdCounter = 1
 	t.Run(`fpeBuilder.addUdpeTest(t)`, func(t *testing.T) {
 		t.Run(`fpeBuilder.addUdpeTest(t)=false if fpeBuilder expecting an axis`, func(t *testing.T) {
 			fpeBuilder := new(fpeBuilderImpl)
@@ -271,8 +279,11 @@ func TestFpeBuilder(t *testing.T) {
 			}
 		})
 	})
+	queryIds = nil
 }
 func TestFpe(t *testing.T) {
+	queryIds = map[string]int8{}
+	queryIdCounter = 1
 	t.Run(`fpe.entryPoint()`, func(t *testing.T) {
 		fpeBuilder := newFpeBuilder()
 		fpeBuilder.addAxis(child)
@@ -294,7 +305,7 @@ func TestFpe(t *testing.T) {
 			fpeBuilder.addAxis(child)
 			fpeBuilder.addUdpeTest(newElementTest("b", nil, nil))
 			fpe := fpeBuilder.end()
-			want := "a/b"
+			want := "1/2"
 			if got := fpe.String(); got != want {
 				t.Errorf(`fpe.String()=%v | want %v`, got, want)
 			}
@@ -308,16 +319,24 @@ func TestFpe(t *testing.T) {
 			fpeBuilder.addUdpeTest(newElementTest("b", nil, nil))
 			fpe := fpeBuilder.end()
 
-			want := "a//b"
+			want := "1//2"
 			if got := fpe.String(); got != want {
 				t.Errorf(`fpe.String()=%v | want %v`, got, want)
 			}
 		})
 	})
+	queryIds = nil
 }
 
 // Test integration that makes up Algorithm 1
 func TestFpeIntegration(t *testing.T) {
+	queryIds = map[string]int8{
+		"a": 1,
+		"b": 2,
+		"c": 3,
+		"z": 4,
+	}
+	queryIdCounter = 1
 	t.Run(`Phase 1`, func(t *testing.T) {
 		t.Run(`1. γ = α<b>X</b>`, func(t *testing.T) {
 			reducedElement := newElement("b", []*Attribute{NewAttribute("key", "value")}, nil)
@@ -360,34 +379,34 @@ func TestFpeIntegration(t *testing.T) {
 				fpeBuilder6.addAxis(descendantOrSelf)
 				fpeBuilder6.addUdpeTest(newElementTest("b", NewAttribute("key", "value"), nil))
 
-				const expectedPathPatternReprAfterMatch = "ε/a"
+				const expectedPathPatternReprAfterMatch = "ε/1"
 				var tests = []struct {
 					fpeBuilder                        fpeBuilder
 					expectedPathPatternReprAfterMatch string
 				}{
 					{
 						fpeBuilder:                        fpeBuilder1,
-						expectedPathPatternReprAfterMatch: "ε/a",
+						expectedPathPatternReprAfterMatch: "ε/1",
 					},
 					{
 						fpeBuilder:                        fpeBuilder2,
-						expectedPathPatternReprAfterMatch: "ε/a",
+						expectedPathPatternReprAfterMatch: "ε/1",
 					},
 					{
 						fpeBuilder:                        fpeBuilder3,
-						expectedPathPatternReprAfterMatch: "ε/a//",
+						expectedPathPatternReprAfterMatch: "ε/1//",
 					},
 					{
 						fpeBuilder:                        fpeBuilder4,
-						expectedPathPatternReprAfterMatch: "ε/a//",
+						expectedPathPatternReprAfterMatch: "ε/1//",
 					},
 					{
 						fpeBuilder:                        fpeBuilder5,
-						expectedPathPatternReprAfterMatch: "ε/a",
+						expectedPathPatternReprAfterMatch: "ε/1",
 					},
 					{
 						fpeBuilder:                        fpeBuilder6,
-						expectedPathPatternReprAfterMatch: "ε/a//",
+						expectedPathPatternReprAfterMatch: "ε/1//",
 					},
 				}
 
@@ -441,7 +460,7 @@ func TestFpeIntegration(t *testing.T) {
 					{
 						fpeBuilder:            fpeBuilder1,
 						returnsNewPathPattern: true,
-						newPathPatternRepr:    "ε/a",
+						newPathPatternRepr:    "ε/1",
 					},
 					{
 						fpeBuilder:            fpeBuilder2,
@@ -522,19 +541,19 @@ func TestFpeIntegration(t *testing.T) {
 				}{
 					{
 						fpeBuilder:                        fpeBuilder1,
-						expectedPathPatternReprAfterMatch: "ε/a",
+						expectedPathPatternReprAfterMatch: "ε/1",
 					},
 					{
 						fpeBuilder:                        fpeBuilder2,
-						expectedPathPatternReprAfterMatch: "ε/a//",
+						expectedPathPatternReprAfterMatch: "ε/1//",
 					},
 					{
 						fpeBuilder:                        fpeBuilder3,
-						expectedPathPatternReprAfterMatch: "ε/a",
+						expectedPathPatternReprAfterMatch: "ε/1",
 					},
 					{
 						fpeBuilder:                        fpeBuilder4,
-						expectedPathPatternReprAfterMatch: "ε/a//",
+						expectedPathPatternReprAfterMatch: "ε/1//",
 					},
 				}
 
@@ -590,11 +609,11 @@ func TestFpeIntegration(t *testing.T) {
 			}{
 				{
 					fpeBuilder:                        fpeBuilder1,
-					expectedPathPatternReprAfterMatch: "ε/a",
+					expectedPathPatternReprAfterMatch: "ε/1",
 				},
 				{
 					fpeBuilder:                        fpeBuilder2,
-					expectedPathPatternReprAfterMatch: "ε/a//",
+					expectedPathPatternReprAfterMatch: "ε/1//",
 				},
 			}
 
@@ -659,12 +678,12 @@ func TestFpeIntegration(t *testing.T) {
 			}{
 				{
 					fpeBuilder:                        fpeBuilder1,
-					expectedPathPatternReprAfterMatch: "ε/a/b//",
-					newPathPatternRepr:                "ε/a",
+					expectedPathPatternReprAfterMatch: "ε/1/2//",
+					newPathPatternRepr:                "ε/1",
 				},
 				{
 					fpeBuilder:                        fpeBuilder2,
-					expectedPathPatternReprAfterMatch: "ε/b//",
+					expectedPathPatternReprAfterMatch: "ε/2//",
 					newPathPatternRepr:                "ε",
 				},
 			}
@@ -712,7 +731,7 @@ func TestFpeIntegration(t *testing.T) {
 		})
 
 		t.Run(`26.`, func(t *testing.T) {
-			expectedPathPatternReprAfterMatch := "ε/a//"
+			expectedPathPatternReprAfterMatch := "ε/1//"
 
 			fpeBuilder := newFpeBuilder()
 			fpeBuilder.addAxis(child)
@@ -785,11 +804,11 @@ func TestFpeIntegration(t *testing.T) {
 			}{
 				{
 					fpeBuilder:                        fpeBuilder1,
-					expectedPathPatternReprAfterMatch: "ε/a",
+					expectedPathPatternReprAfterMatch: "ε/1",
 				},
 				{
 					fpeBuilder:                        fpeBuilder2,
-					expectedPathPatternReprAfterMatch: "ε/a//",
+					expectedPathPatternReprAfterMatch: "ε/1//",
 				},
 			}
 
@@ -829,4 +848,5 @@ func TestFpeIntegration(t *testing.T) {
 			}
 		})
 	})
+	queryIds = nil
 }

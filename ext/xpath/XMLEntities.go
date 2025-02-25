@@ -20,13 +20,17 @@ func NewAttribute(key, value string) *Attribute {
 }
 
 type Element struct {
-	name          string
 	attributes    []*Attribute
 	posInDocument *position
+	name          int8
 }
 
 func newElement(name string, attributes []*Attribute, posInDocument *position) *Element {
-	return &Element{name, attributes, posInDocument}
+	encodedName, exists := queryIds[name]
+	if !exists {
+		panic(fmt.Sprintf("expected to find encoded value for name: %s", name))
+	}
+	return &Element{attributes, posInDocument, encodedName}
 }
 
 func (e *Element) position() *position {
@@ -41,13 +45,13 @@ func (e *Element) SetFromExtremeTags(openTag OpenTagSemanticValue, closeTag Clos
 	if openTag.id != closeTag.id {
 		panic("Invalid Element construction")
 	}
-	e.name = openTag.id
+	e.name = queryIds[openTag.id]
 	e.attributes = openTag.attributes
 	e.posInDocument = newPosition(openTag.startPos, closeTag.endPos)
 }
 
 func (e *Element) SetFromSingleTag(openCloseTag OpenCloseTagSemanticValue) {
-	e.name = openCloseTag.id
+	e.name = queryIds[openCloseTag.id]
 	e.attributes = openCloseTag.attributes
 	e.posInDocument = newPosition(openCloseTag.startPos, openCloseTag.endPos)
 }

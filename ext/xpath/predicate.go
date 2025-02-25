@@ -36,8 +36,8 @@ type predicate interface {
 }
 
 type predicateImpl struct {
-	value            customBool
 	expressionVector []operator
+	value            customBool
 	atomsLookup      map[atomID]int
 }
 

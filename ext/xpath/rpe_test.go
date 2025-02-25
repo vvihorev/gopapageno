@@ -7,6 +7,11 @@ import (
 )
 
 func TestRpeInnerTest(t *testing.T) {
+	queryIds = map[string]int8{
+		"a": 1,
+		"b": 2,
+	}
+	queryIdCounter = 1
 	t.Run(`rpeInnerTest.String()`, func(t *testing.T) {
 		t.Run(`rpeInnerTest.behindAncestorAxis==true`, func(t *testing.T) {
 			elementTest := newElementTest("a", nil, nil)
@@ -45,9 +50,12 @@ func TestRpeInnerTest(t *testing.T) {
 			})
 		})
 	})
+	queryIds = nil
 }
 
 func TestRpeBuilder(t *testing.T) {
+	queryIds = map[string]int8{}
+	queryIdCounter = 1
 	t.Run(`rpeBuilder.addUdpeTest(t)`, func(t *testing.T) {
 		t.Run(`rpeBuilder.addUdpeTest(t)=false if rpeBuilder expecting an axis`, func(t *testing.T) {
 			rpeBuilder := new(rpeBuilderImpl)
@@ -179,9 +187,15 @@ func TestRpeBuilder(t *testing.T) {
 			}
 		})
 	})
+	queryIds = nil
 }
 
 func TestRpe(t *testing.T) {
+	queryIds = map[string]int8{
+		"a": 1,
+		"b": 2,
+	}
+	queryIdCounter = 1
 	t.Run(`rpe.String()`, func(t *testing.T) {
 		t.Run(`rpe=a\b\`, func(t *testing.T) {
 			rpeBuilder := newRpeBuilder()
@@ -190,7 +204,7 @@ func TestRpe(t *testing.T) {
 			rpeBuilder.addAxis(parent)
 			rpeBuilder.addUdpeTest(newElementTest("a", nil, nil))
 			rpe := rpeBuilder.end()
-			want := `a\b`
+			want := `1\2`
 
 			if got := rpe.String(); got != want {
 				t.Errorf(`rpe.String()=%v | want %v`, got, want)
@@ -204,17 +218,25 @@ func TestRpe(t *testing.T) {
 			rpeBuilder.addAxis(ancestorOrSelf)
 			rpeBuilder.addUdpeTest(newElementTest("a", nil, nil))
 			rpe := rpeBuilder.end()
-			want := `a\\b`
+			want := `1\\2`
 
 			if got := rpe.String(); got != want {
 				t.Errorf(`rpe.String()=%v | want %v`, got, want)
 			}
 		})
 	})
+	queryIds = nil
 }
 
 // Test integraton that makes Algorithm 2
 func TestRpeIntegration(t *testing.T) {
+	queryIds = map[string]int8{
+		"a": 1,
+		"b": 2,
+		"c": 3,
+		"z": 4,
+	}
+	queryIdCounter = 1
 	t.Run(`Phase 1`, func(t *testing.T) {
 		t.Run(`1. γ = α<b>X</b>`, func(t *testing.T) {
 			reducedElement := newElement("b", []*Attribute{NewAttribute("key", "value")}, nil)
@@ -252,19 +274,19 @@ func TestRpeIntegration(t *testing.T) {
 				}{
 					{
 						rpeBuilder:                           rpeBuilder1,
-						expectedRpePathPatternReprAfterMatch: `a\ε`,
+						expectedRpePathPatternReprAfterMatch: `1\ε`,
 					},
 					{
 						rpeBuilder:                           rpeBuilder2,
-						expectedRpePathPatternReprAfterMatch: `a\ε`,
+						expectedRpePathPatternReprAfterMatch: `1\ε`,
 					},
 					{
 						rpeBuilder:                           rpeBuilder3,
-						expectedRpePathPatternReprAfterMatch: `\\a\ε`,
+						expectedRpePathPatternReprAfterMatch: `\\1\ε`,
 					},
 					{
 						rpeBuilder:                           rpeBuilder4,
-						expectedRpePathPatternReprAfterMatch: `\\a\ε`,
+						expectedRpePathPatternReprAfterMatch: `\\1\ε`,
 					},
 				}
 
@@ -318,7 +340,7 @@ func TestRpeIntegration(t *testing.T) {
 					{
 						rpeBuilder:            rpeBuilder1,
 						returnsNewPathPattern: true,
-						newPathPatternRepr:    `a\ε`,
+						newPathPatternRepr:    `1\ε`,
 					},
 					{
 						rpeBuilder:            rpeBuilder2,
@@ -390,11 +412,11 @@ func TestRpeIntegration(t *testing.T) {
 			}{
 				{
 					rpeBuilder:                           rpeBuilder1,
-					expectedRpePathPatternReprAfterMatch: `a\ε`,
+					expectedRpePathPatternReprAfterMatch: `1\ε`,
 				},
 				{
 					rpeBuilder:                           rpeBuilder2,
-					expectedRpePathPatternReprAfterMatch: `\\a\ε`,
+					expectedRpePathPatternReprAfterMatch: `\\1\ε`,
 				},
 			}
 
@@ -456,12 +478,12 @@ func TestRpeIntegration(t *testing.T) {
 			}{
 				{
 					rpeBuilder:                           rpeBuilder1,
-					expectedRpePathPatternReprAfterMatch: `\\b\a\ε`,
-					newPathPatternRepr:                   `a\ε`,
+					expectedRpePathPatternReprAfterMatch: `\\2\1\ε`,
+					newPathPatternRepr:                   `1\ε`,
 				},
 				{
 					rpeBuilder:                           rpeBuilder2,
-					expectedRpePathPatternReprAfterMatch: `\\b\ε`,
+					expectedRpePathPatternReprAfterMatch: `\\2\ε`,
 					newPathPatternRepr:                   `ε`,
 				},
 			}
@@ -508,7 +530,7 @@ func TestRpeIntegration(t *testing.T) {
 		})
 
 		t.Run(`19.`, func(t *testing.T) {
-			const expectedRpePathPatternReprAfterMatch = `\\a\ε`
+			const expectedRpePathPatternReprAfterMatch = `\\1\ε`
 
 			rpeBuilder := newRpeBuilder()
 			rpeBuilder.addAxis(parent)
@@ -581,11 +603,11 @@ func TestRpeIntegration(t *testing.T) {
 			}{
 				{
 					rpeBuilder:                           rpeBuilder1,
-					expectedRpePathPatternReprAfterMatch: `a\ε`,
+					expectedRpePathPatternReprAfterMatch: `1\ε`,
 				},
 				{
 					rpeBuilder:                           rpeBuilder2,
-					expectedRpePathPatternReprAfterMatch: `\\a\ε`,
+					expectedRpePathPatternReprAfterMatch: `\\1\ε`,
 				},
 			}
 
