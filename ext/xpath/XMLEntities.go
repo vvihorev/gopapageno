@@ -26,7 +26,7 @@ type Element struct {
 }
 
 func newElement(name string, attributes []*Attribute, posInDocument *position) *Element {
-	encodedName, exists := queryIds[name]
+	encodedName, exists := QueryIds[name]
 	if !exists {
 		panic(fmt.Sprintf("expected to find encoded value for name: %s", name))
 	}
@@ -45,13 +45,13 @@ func (e *Element) SetFromExtremeTags(openTag OpenTagSemanticValue, closeTag Clos
 	if openTag.id != closeTag.id {
 		panic("Invalid Element construction")
 	}
-	e.name = queryIds[openTag.id]
+	e.name = openTag.id
 	e.attributes = openTag.attributes
 	e.posInDocument = newPosition(openTag.startPos, closeTag.endPos)
 }
 
 func (e *Element) SetFromSingleTag(openCloseTag OpenCloseTagSemanticValue) {
-	e.name = queryIds[openCloseTag.id]
+	e.name = openCloseTag.id
 	e.attributes = openCloseTag.attributes
 	e.posInDocument = newPosition(openCloseTag.startPos, openCloseTag.endPos)
 }

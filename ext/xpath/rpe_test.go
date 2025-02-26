@@ -7,7 +7,7 @@ import (
 )
 
 func TestRpeInnerTest(t *testing.T) {
-	queryIds = map[string]int8{
+	QueryIds = map[string]int8{
 		"a": 1,
 		"b": 2,
 	}
@@ -50,11 +50,11 @@ func TestRpeInnerTest(t *testing.T) {
 			})
 		})
 	})
-	queryIds = nil
+	QueryIds = nil
 }
 
 func TestRpeBuilder(t *testing.T) {
-	queryIds = map[string]int8{}
+	QueryIds = map[string]int8{}
 	queryIdCounter = 1
 	t.Run(`rpeBuilder.addUdpeTest(t)`, func(t *testing.T) {
 		t.Run(`rpeBuilder.addUdpeTest(t)=false if rpeBuilder expecting an axis`, func(t *testing.T) {
@@ -187,11 +187,11 @@ func TestRpeBuilder(t *testing.T) {
 			}
 		})
 	})
-	queryIds = nil
+	QueryIds = nil
 }
 
 func TestRpe(t *testing.T) {
-	queryIds = map[string]int8{
+	QueryIds = map[string]int8{
 		"a": 1,
 		"b": 2,
 	}
@@ -225,12 +225,12 @@ func TestRpe(t *testing.T) {
 			}
 		})
 	})
-	queryIds = nil
+	QueryIds = nil
 }
 
 // Test integraton that makes Algorithm 2
 func TestRpeIntegration(t *testing.T) {
-	queryIds = map[string]int8{
+	QueryIds = map[string]int8{
 		"a": 1,
 		"b": 2,
 		"c": 3,

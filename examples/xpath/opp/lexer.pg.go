@@ -8,8 +8,9 @@ import (
 	"github.com/giornetta/gopapageno/ext/xpath"
 )
 
-func getIdAndAttributesListFrom(text string) (id string, attribute []*xpath.Attribute) {
+func getIdAndAttributesListFrom(text string) (id int8, attribute []*xpath.Attribute) {
 	var l, r int
+	var exists bool
 
 	l = 1
 	if text[1] == byte('/') {
@@ -21,13 +22,17 @@ func getIdAndAttributesListFrom(text string) (id string, attribute []*xpath.Attr
 	if text[r] == byte('>') {
 		if text[r-1] == byte('/') {
 			r--
-			id = string(text[l:r])
-		} else {
-			id = string(text[l:r])
+		}
+		id, exists = xpath.QueryIds[text[l:r]]
+		if !exists {
+			id = 0
 		}
 		return
 	} else {
-		id = string(text[l:r])
+		id, exists = xpath.QueryIds[text[l:r]]
+		if !exists {
+			id = 0
+		}
 	}
 
 	for r < len(text) {

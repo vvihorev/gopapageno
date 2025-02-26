@@ -7,7 +7,7 @@ import (
 )
 
 func TestFpeInnerTest(t *testing.T) {
-	queryIds = map[string]int8{
+	QueryIds = map[string]int8{
 		"a": 1,
 		"b": 2,
 	}
@@ -140,10 +140,10 @@ func TestFpeInnerTest(t *testing.T) {
 			})
 		})
 	})
-	queryIds = nil
+	QueryIds = nil
 }
 func TestFpeBuilder(t *testing.T) {
-	queryIds = map[string]int8{}
+	QueryIds = map[string]int8{}
 	queryIdCounter = 1
 	t.Run(`fpeBuilder.addUdpeTest(t)`, func(t *testing.T) {
 		t.Run(`fpeBuilder.addUdpeTest(t)=false if fpeBuilder expecting an axis`, func(t *testing.T) {
@@ -279,10 +279,10 @@ func TestFpeBuilder(t *testing.T) {
 			}
 		})
 	})
-	queryIds = nil
+	QueryIds = nil
 }
 func TestFpe(t *testing.T) {
-	queryIds = map[string]int8{}
+	QueryIds = map[string]int8{}
 	queryIdCounter = 1
 	t.Run(`fpe.entryPoint()`, func(t *testing.T) {
 		fpeBuilder := newFpeBuilder()
@@ -325,12 +325,12 @@ func TestFpe(t *testing.T) {
 			}
 		})
 	})
-	queryIds = nil
+	QueryIds = nil
 }
 
 // Test integration that makes up Algorithm 1
 func TestFpeIntegration(t *testing.T) {
-	queryIds = map[string]int8{
+	QueryIds = map[string]int8{
 		"a": 1,
 		"b": 2,
 		"c": 3,
@@ -848,5 +848,5 @@ func TestFpeIntegration(t *testing.T) {
 			}
 		})
 	})
-	queryIds = nil
+	QueryIds = nil
 }

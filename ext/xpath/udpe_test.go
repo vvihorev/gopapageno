@@ -5,7 +5,7 @@ import (
 )
 
 func TestElementTest(t *testing.T) {
-	queryIds = map[string]int8{
+	QueryIds = map[string]int8{
 		"a": 1,
 		"not-a": 2,
 	}
@@ -69,11 +69,11 @@ func TestElementTest(t *testing.T) {
 		})
 	})
 
-	queryIds = nil
+	QueryIds = nil
 }
 
 func TestTextTest(t *testing.T) {
-	queryIds = map[string]int8{
+	QueryIds = map[string]int8{
 		"a": 1,
 	}
 	t.Run(`textTest with empty data`, func(t *testing.T) {
@@ -116,5 +116,5 @@ func TestTextTest(t *testing.T) {
 			}
 		})
 	})
-	queryIds = nil 
+	QueryIds = nil
 }

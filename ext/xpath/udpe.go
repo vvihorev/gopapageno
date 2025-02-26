@@ -78,9 +78,9 @@ type elementTest struct {
 }
 
 func newElementTest(name string, attribute *Attribute, predicate predicate) *elementTest {
-	encodedName, exists := queryIds[name]
+	encodedName, exists := QueryIds[name]
 	if !exists {
-		queryIds[name] = queryIdCounter
+		QueryIds[name] = queryIdCounter
 		encodedName = queryIdCounter
 		queryIdCounter++
 	}
