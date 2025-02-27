@@ -1,6 +1,8 @@
 package xpath
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // NonTerminal represents a unique non terminal inside the syntax tree representing
 // the XML document
@@ -14,51 +16,52 @@ type NonTerminal interface {
 	Position() Position
 }
 
+// Used for tests only
 func NewNonTerminal() NonTerminal {
-	return &nonTerminalImpl{}
+	return &NonTerminalImpl{}
 }
 
-type nonTerminalImpl struct {
+type NonTerminalImpl struct {
 	n       interface{}
 	ch      []NonTerminal
 	execTab executionTable
 }
 
-func (nt *nonTerminalImpl) String() string {
+func (nt *NonTerminalImpl) String() string {
 	if nt == nil {
 		return "-"
 	}
 	return fmt.Sprintf("E(%p)", nt)
 }
 
-func (nt *nonTerminalImpl) SetExecutionTable(executionTable executionTable) NonTerminal {
+func (nt *NonTerminalImpl) SetExecutionTable(executionTable executionTable) NonTerminal {
 	nt.execTab = executionTable
 	return nt
 }
 
-func (nt *nonTerminalImpl) ExecutionTable() executionTable {
+func (nt *NonTerminalImpl) ExecutionTable() executionTable {
 	return nt.execTab
 }
 
-func (nt *nonTerminalImpl) SetNode(n interface{}) NonTerminal {
+func (nt *NonTerminalImpl) SetNode(n interface{}) NonTerminal {
 	nt.n = n
 	return nt
 }
 
-func (nt *nonTerminalImpl) Node() interface{} {
+func (nt *NonTerminalImpl) Node() interface{} {
 	return nt.n
 }
 
-func (nt *nonTerminalImpl) SetDirectChildAndInheritItsChildren(child NonTerminal) NonTerminal {
+func (nt *NonTerminalImpl) SetDirectChildAndInheritItsChildren(child NonTerminal) NonTerminal {
 	nt.ch = append(child.Children(), child)
 	return nt
 }
 
-func (nt *nonTerminalImpl) Children() []NonTerminal {
+func (nt *NonTerminalImpl) Children() []NonTerminal {
 	return nt.ch
 }
 
-func (nt *nonTerminalImpl) Position() Position {
+func (nt *NonTerminalImpl) Position() Position {
 	if element, isElement := nt.n.(*Element); isElement {
 		return element.position()
 	}

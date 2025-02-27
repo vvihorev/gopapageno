@@ -16,7 +16,7 @@ ELEM : ELEM OPENTAG ELEM CLOSETAG
 
     generativeNonTerminal := $1.Value.(xpath.NonTerminal)
     wrappedNonTerminal := $3.Value.(xpath.NonTerminal)
-    reducedNonTerminal := xpath.NewNonTerminal().SetNode(element).SetDirectChildAndInheritItsChildren(generativeNonTerminal)
+    reducedNonTerminal := parserNonTerminalPools[thread].Get().SetNode(element).SetDirectChildAndInheritItsChildren(generativeNonTerminal)
 
     reduction := reductionPool.Get().(*xpath.Reduction)
     reduction.Setup(reducedNonTerminal, generativeNonTerminal, wrappedNonTerminal)
@@ -33,7 +33,7 @@ ELEM : ELEM OPENTAG ELEM CLOSETAG
     element.SetFromExtremeTags(openTag, closeTag)
 
     wrappedNonTerminal := $2.Value.(xpath.NonTerminal)
-    reducedNonTerminal := xpath.NewNonTerminal().SetNode(element)
+    reducedNonTerminal := parserNonTerminalPools[thread].Get().SetNode(element)
 
     reduction := reductionPool.Get().(*xpath.Reduction)
     reduction.Setup(reducedNonTerminal, nil, wrappedNonTerminal)
@@ -50,7 +50,7 @@ ELEM : ELEM OPENTAG ELEM CLOSETAG
     element.SetFromExtremeTags(openTag, closeTag)
 
     generativeNonTerminal := $1.Value.(xpath.NonTerminal)
-    reducedNonTerminal := xpath.NewNonTerminal().SetNode(element).SetDirectChildAndInheritItsChildren(generativeNonTerminal)
+    reducedNonTerminal := parserNonTerminalPools[thread].Get().SetNode(element).SetDirectChildAndInheritItsChildren(generativeNonTerminal)
 
     reduction := reductionPool.Get().(*xpath.Reduction)
     reduction.Setup(reducedNonTerminal, generativeNonTerminal, nil)
@@ -66,7 +66,7 @@ ELEM : ELEM OPENTAG ELEM CLOSETAG
     element := parserElementsPools[thread].Get()
     element.SetFromExtremeTags(openTag, closeTag)
 
-    reducedNonTerminal := xpath.NewNonTerminal().SetNode(element)
+    reducedNonTerminal := parserNonTerminalPools[thread].Get().SetNode(element)
 
     reduction := reductionPool.Get().(*xpath.Reduction)
     reduction.Setup(reducedNonTerminal, nil, nil)
@@ -82,7 +82,7 @@ ELEM : ELEM OPENTAG ELEM CLOSETAG
     element.SetFromSingleTag(openCloseTag)
 
     generativeNonTerminal := $1.Value.(xpath.NonTerminal)
-    reducedNonTerminal := xpath.NewNonTerminal().SetNode(element).SetDirectChildAndInheritItsChildren(generativeNonTerminal)
+    reducedNonTerminal := parserNonTerminalPools[thread].Get().SetNode(element).SetDirectChildAndInheritItsChildren(generativeNonTerminal)
 
     reduction := reductionPool.Get().(*xpath.Reduction)
     reduction.Setup(reducedNonTerminal, generativeNonTerminal, nil)
@@ -97,7 +97,7 @@ ELEM : ELEM OPENTAG ELEM CLOSETAG
     element := parserElementsPools[thread].Get()
     element.SetFromSingleTag(openCloseTag)
 
-    reducedNonTerminal := xpath.NewNonTerminal().SetNode(element)
+    reducedNonTerminal := parserNonTerminalPools[thread].Get().SetNode(element)
 
     reduction := reductionPool.Get().(*xpath.Reduction)
     reduction.Setup(reducedNonTerminal, nil, nil)
@@ -114,7 +114,7 @@ ELEM : ELEM OPENTAG ELEM CLOSETAG
 
     generativeNonTerminal := $1.Value.(xpath.NonTerminal)
 
-    reducedNonTerminal := xpath.NewNonTerminal().SetNode(text).SetDirectChildAndInheritItsChildren(generativeNonTerminal)
+    reducedNonTerminal := parserNonTerminalPools[thread].Get().SetNode(text).SetDirectChildAndInheritItsChildren(generativeNonTerminal)
 
     reduction := reductionPool.Get().(*xpath.Reduction)
     reduction.Setup(reducedNonTerminal, generativeNonTerminal, nil)
@@ -129,7 +129,7 @@ ELEM : ELEM OPENTAG ELEM CLOSETAG
     text := new(xpath.Text)
     text.SetFromText(tsv)
 
-    reducedNonTerminal := xpath.NewNonTerminal().SetNode(text)
+    reducedNonTerminal := parserNonTerminalPools[thread].Get().SetNode(text)
 
     reduction := reductionPool.Get().(*xpath.Reduction)
     reduction.Setup(reducedNonTerminal, nil, nil)
@@ -153,14 +153,17 @@ var reductionPool = &sync.Pool{
 	},
 }
 
+var parserNonTerminalPools []*gopapageno.Pool[xpath.NonTerminalImpl]
 var parserElementsPools []*gopapageno.Pool[xpath.Element]
 
 // ParserPreallocMem initializes all the memory pools required by the semantic function of the parser.
 func ParserPreallocMem(inputSize int, numThreads int) {
     poolSizePerThread := 10000
 
+    parserNonTerminalPools = make([]*gopapageno.Pool[xpath.NonTerminalImpl], numThreads)
     parserElementsPools = make([]*gopapageno.Pool[xpath.Element], numThreads)
     for i := 0; i < numThreads; i++ {
+        parserNonTerminalPools[i] = gopapageno.NewPool[xpath.NonTerminalImpl](poolSizePerThread)
         parserElementsPools[i] = gopapageno.NewPool[xpath.Element](poolSizePerThread)
     }
 }

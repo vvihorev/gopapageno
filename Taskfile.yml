@@ -3,7 +3,7 @@ version: '3'
 vars:
   EXAMPLE: xpath
   STRAT: opp
-  FNAME: 'FINAL-10MB-NOGC-OPTIMIZED'
+  FNAME: '11-preallocate-non-terminals'
   COUNT: 7
 
 tasks:

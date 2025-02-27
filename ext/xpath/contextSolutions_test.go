@@ -37,24 +37,24 @@ func TestContextSolutionsMap(t *testing.T) {
 
 	t.Run(`solutionsFor(ctx, maps)`, func(t *testing.T) {
 
-		root := new(nonTerminalImpl)
-		solution1 := new(nonTerminalImpl)
-		solution2 := new(nonTerminalImpl)
+		root := new(NonTerminalImpl)
+		solution1 := new(NonTerminalImpl)
+		solution2 := new(NonTerminalImpl)
 
 		firstStepFromRootMap := newContextSolutionsMap()
 		firstStepFromRootMap.addContextSolution(root, solution1)
 		firstStepFromRootMap.addContextSolution(root, solution2)
 
-		solution11 := new(nonTerminalImpl)
-		solution21 := new(nonTerminalImpl)
-		solution22 := new(nonTerminalImpl)
+		solution11 := new(NonTerminalImpl)
+		solution21 := new(NonTerminalImpl)
+		solution22 := new(NonTerminalImpl)
 
 		secondStepFromRootMap := newContextSolutionsMap()
 		secondStepFromRootMap.addContextSolution(solution1, solution11)
 		secondStepFromRootMap.addContextSolution(solution2, solution21)
 		secondStepFromRootMap.addContextSolution(solution2, solution22)
 
-		solution221 := new(nonTerminalImpl)
+		solution221 := new(NonTerminalImpl)
 		thirdStepFromRootMap := newContextSolutionsMap()
 		thirdStepFromRootMap.addContextSolution(solution22, solution221)
 
@@ -96,21 +96,21 @@ func TestContextSolutionsMap(t *testing.T) {
 
 	t.Run(`transitiveClosure(maps)`, func(t *testing.T) {
 
-		root1 := new(nonTerminalImpl)
-		solution11 := new(nonTerminalImpl)
+		root1 := new(NonTerminalImpl)
+		solution11 := new(NonTerminalImpl)
 
-		root2 := new(nonTerminalImpl)
-		solution21 := new(nonTerminalImpl)
-		solution22 := new(nonTerminalImpl)
+		root2 := new(NonTerminalImpl)
+		solution21 := new(NonTerminalImpl)
+		solution22 := new(NonTerminalImpl)
 
 		firstStepFromRootsMap := newContextSolutionsMap()
 		firstStepFromRootsMap.addContextSolution(root1, solution11)
 		firstStepFromRootsMap.addContextSolution(root2, solution21, solution22)
 
-		solution111 := new(nonTerminalImpl)
+		solution111 := new(NonTerminalImpl)
 
-		solution211 := new(nonTerminalImpl)
-		solution212 := new(nonTerminalImpl)
+		solution211 := new(NonTerminalImpl)
+		solution212 := new(NonTerminalImpl)
 
 		secondStepFromRootsMap := newContextSolutionsMap()
 		secondStepFromRootsMap.addContextSolution(solution11, solution111)
