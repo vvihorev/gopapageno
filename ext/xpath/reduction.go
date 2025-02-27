@@ -98,8 +98,7 @@ func (r *Reduction) addNewExecutionThreadsToExecutionRecord(executionRecord exec
 			return
 		}
 		executionRecord.addExecutionThread(r.wrappedNT, nil, entryPoint)
-		childrenOfWrappedNT := r.wrappedNT.Children()
-		for _, child := range childrenOfWrappedNT {
+		for child := r.wrappedNT.(*NonTerminalImpl).nextChild; child != nil; child = child.nextChild {
 			executionRecord.addExecutionThread(child, nil, udpe.entryPoint())
 		}
 

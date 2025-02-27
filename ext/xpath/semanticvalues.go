@@ -9,7 +9,6 @@ import (
 type NonTerminal interface {
 	SetExecutionTable(execTab executionTable) NonTerminal
 	SetNode(n interface{}) NonTerminal
-	Children() []NonTerminal
 	SetDirectChildAndInheritItsChildren(NonTerminal) NonTerminal
 	ExecutionTable() executionTable
 	Node() interface{}
@@ -22,9 +21,9 @@ func NewNonTerminal() NonTerminal {
 }
 
 type NonTerminalImpl struct {
-	n       interface{}
-	ch      []NonTerminal
-	execTab executionTable
+	n         interface{}
+	nextChild *NonTerminalImpl
+	execTab   executionTable
 }
 
 func (nt *NonTerminalImpl) String() string {
@@ -53,12 +52,9 @@ func (nt *NonTerminalImpl) Node() interface{} {
 }
 
 func (nt *NonTerminalImpl) SetDirectChildAndInheritItsChildren(child NonTerminal) NonTerminal {
-	nt.ch = append(child.Children(), child)
+	child.(*NonTerminalImpl).nextChild = nt.nextChild
+	nt.nextChild = child.(*NonTerminalImpl)
 	return nt
-}
-
-func (nt *NonTerminalImpl) Children() []NonTerminal {
-	return nt.ch
 }
 
 func (nt *NonTerminalImpl) Position() Position {
