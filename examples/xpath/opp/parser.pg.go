@@ -248,10 +248,7 @@ func NewGrammar() *gopapageno.Grammar {
 			ELEM0.LastChild = TEXT2
 
 			{
-			    tsv := TEXT2.Value.(xpath.TextSemanticValue)
-			
-			    text := new(xpath.Text)
-			    text.SetFromText(tsv)
+			    text := TEXT2.Value.(xpath.TextSemanticValue)
 			
 			    generativeNonTerminal := ELEM1.Value.(xpath.NonTerminal)
 			
@@ -355,10 +352,7 @@ func NewGrammar() *gopapageno.Grammar {
 			ELEM0.LastChild = TEXT1
 
 			{
-			    tsv := TEXT1.Value.(xpath.TextSemanticValue)
-			
-			    text := new(xpath.Text)
-			    text.SetFromText(tsv)
+			    text := TEXT1.Value.(xpath.TextSemanticValue)
 			
 			    reducedNonTerminal := parserNonTerminalPools[thread].Get().SetNode(text)
 			

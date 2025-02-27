@@ -59,11 +59,15 @@ func (nt *NonTerminalImpl) SetDirectChildAndInheritItsChildren(child NonTerminal
 
 func (nt *NonTerminalImpl) Position() Position {
 	if element, isElement := nt.n.(*Element); isElement {
-		return element.position()
+		p := position{}
+		element.position(&p)
+		return &p
 	}
 
 	if text, isText := nt.n.(*Text); isText {
-		return text.position()
+		p := position{}
+		text.position(&p)
+		return &p
 	}
 
 	return nil

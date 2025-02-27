@@ -21,20 +21,26 @@ func NewAttribute(key, value string) *Attribute {
 
 type Element struct {
 	attributes    []*Attribute
-	posInDocument *position
+	startPos      int
+	endPos        int
 	name          int8
 }
 
+// used for tests only
 func newElement(name string, attributes []*Attribute, posInDocument *position) *Element {
 	encodedName, exists := QueryIds[name]
 	if !exists {
 		panic(fmt.Sprintf("expected to find encoded value for name: %s", name))
 	}
-	return &Element{attributes, posInDocument, encodedName}
+	if posInDocument == nil {
+		posInDocument = &position{0, 0}
+	}
+	return &Element{attributes, posInDocument.start, posInDocument.end, encodedName}
 }
 
-func (e *Element) position() *position {
-	return e.posInDocument
+func (e *Element) position(p *position)  {
+	p.start = e.startPos
+	p.end = e.endPos
 }
 
 func (e *Element) String() string {
@@ -47,34 +53,39 @@ func (e *Element) SetFromExtremeTags(openTag OpenTagSemanticValue, closeTag Clos
 	}
 	e.name = openTag.id
 	e.attributes = openTag.attributes
-	e.posInDocument = newPosition(openTag.startPos, closeTag.endPos)
+	e.startPos = openTag.startPos
+	e.endPos = closeTag.endPos
 }
 
 func (e *Element) SetFromSingleTag(openCloseTag OpenCloseTagSemanticValue) {
 	e.name = openCloseTag.id
 	e.attributes = openCloseTag.attributes
-	e.posInDocument = newPosition(openCloseTag.startPos, openCloseTag.endPos)
+	e.startPos = openCloseTag.startPos
+	e.endPos = openCloseTag.endPos
 }
 
 // Text node
 type Text struct {
-	data          string
-	posInDocument *position
+	TextSemanticValue
 }
 
+// used only for tests
 func newText(data string, posInDocument *position) *Text {
-	return &Text{data, posInDocument}
+	t := Text{}
+	t.data = data
+	if posInDocument == nil {
+		posInDocument = &position{0, 0}
+	}
+	t.startPos = posInDocument.start
+	t.endPos = posInDocument.end
+	return &t
 }
 
 func (t *Text) String() string {
 	return fmt.Sprintf("Text(%q)", t.data)
 }
 
-func (t *Text) SetFromText(tsv TextSemanticValue) {
-	t.data = tsv.data
-	t.posInDocument = newPosition(tsv.startPos, tsv.endPos)
-}
-
-func (t *Text) position() *position {
-	return t.posInDocument
+func (t *Text) position(p *position) {
+	p.start = t.startPos
+	p.end = t.endPos
 }
