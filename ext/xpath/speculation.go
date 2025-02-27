@@ -7,6 +7,7 @@ import (
 
 type speculation interface {
 	evaluate(v evaluator) customBool
+	evaluateReduction(r *Reduction) customBool
 }
 
 type speculationImpl struct {
@@ -32,6 +33,24 @@ func (sp *speculationImpl) evaluate(v evaluator) (result customBool) {
 	for _, atomID := range predicateAtomsIDs {
 		id := int(atomID)
 		atomValue := v(id, sp.ctx, sp.evaluationsCount)
+		result = sp.prd.earlyEvaluate(atomID, atomValue)
+		if result != Undefined {
+			return result
+		}
+	}
+	return
+}
+
+func (sp *speculationImpl) evaluateReduction(r *Reduction) (result customBool) {
+	defer func() {
+		sp.evaluationsCount++
+	}()
+
+	result = Undefined
+	predicateAtomsIDs := sp.prd.atomsIDs()
+	for _, atomID := range predicateAtomsIDs {
+		id := int(atomID)
+		atomValue := r.updatingExecutionTable.evaluateID(id, sp.ctx, sp.evaluationsCount)
 		result = sp.prd.earlyEvaluate(atomID, atomValue)
 		if result != Undefined {
 			return result

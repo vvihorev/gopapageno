@@ -113,6 +113,7 @@ type executionRecord interface {
 	merge(incoming executionRecord) (result executionRecord, ok bool)
 	updateAllExecutionThreads(reduced NonTerminal)
 	stopUnfoundedSpeculativeExecutionThreads(evaluator evaluator)
+	stopUnfoundedSpeculativeExecutionThreadsForReduction(r *Reduction)
 	saveReducedNTAsContextOrSolutionlIntoCompletedExecutionThreads(NonTerminal)
 	produceContextSolutionsOutOfCompletedNonSpeculativeExecutionThreads()
 	udpeType() udpeType
@@ -205,6 +206,16 @@ func (er *executionRecordImpl) updateAllExecutionThreads(reduced NonTerminal) {
 func (er *executionRecordImpl) stopUnfoundedSpeculativeExecutionThreads(evaluator evaluator) {
 	for execThread := er.etList.(*executionThreadListImpl).head; execThread != nil; execThread = execThread.next {
 		if areSpeculationsFounded := execThread.checkAndUpdateSpeculations(evaluator); !areSpeculationsFounded {
+			if isExecutionThreadRemoved := er.etList.removeExecutionThread(execThread, true); !isExecutionThreadRemoved {
+				panic("stopping unfounded speculative execution thred: cannot remove execution thread")
+			}
+		}
+	}
+}
+
+func (er *executionRecordImpl) stopUnfoundedSpeculativeExecutionThreadsForReduction(r *Reduction) {
+	for execThread := er.etList.(*executionThreadListImpl).head; execThread != nil; execThread = execThread.next {
+		if areSpeculationsFounded := execThread.checkAndUpdateSpeculationsForReduction(r); !areSpeculationsFounded {
 			if isExecutionThreadRemoved := er.etList.removeExecutionThread(execThread, true); !isExecutionThreadRemoved {
 				panic("stopping unfounded speculative execution thred: cannot remove execution thread")
 			}

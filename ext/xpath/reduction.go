@@ -56,7 +56,7 @@ func (r *Reduction) iterateOverAllGlobalUdpeRecordsAndExecuteMainPhases() {
 
 		r.addNewExecutionThreadsToExecutionRecord(updatingExecutionRecord)
 		updatingExecutionRecord.updateAllExecutionThreads(r.reducedNT)
-		updatingExecutionRecord.stopUnfoundedSpeculativeExecutionThreads(r.updatingExecutionTable.evaluateID)
+		updatingExecutionRecord.stopUnfoundedSpeculativeExecutionThreadsForReduction(r)
 		updatingExecutionRecord.saveReducedNTAsContextOrSolutionlIntoCompletedExecutionThreads(r.reducedNT)
 		updatingExecutionRecord.produceContextSolutionsOutOfCompletedNonSpeculativeExecutionThreads()
 	}

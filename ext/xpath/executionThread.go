@@ -1,6 +1,7 @@
 package xpath
 
 import (
+	"container/list"
 	"fmt"
 )
 
@@ -16,6 +17,7 @@ type executionThread interface {
 	addChild(et executionThread)
 	children() []executionThread
 	checkAndUpdateSpeculations(v evaluator) bool
+	checkAndUpdateSpeculationsForReduction(r *Reduction) bool
 }
 
 // concrete execution thread implementation
@@ -82,19 +84,51 @@ func (et *executionThreadImpl) children() []executionThread {
 
 func (et *executionThreadImpl) checkAndUpdateSpeculations(v evaluator) (areSpeculationsFounded bool) {
 	areSpeculationsFounded = true
-	et.spList.iterate(func(sp speculation) (doBreak bool) {
+	var next *list.Element
+	for e := et.spList.(*speculationListImpl).list.Front(); e != nil; e = next {
+		next = e.Next()
+		sp, ok := e.Value.(speculation)
+
+		if !ok {
+			panic(`speculation list iterate: can NOT access to the next speculation`)
+		}
+
 		speculationValue := sp.evaluate(v)
 		switch speculationValue {
 		case False:
 			areSpeculationsFounded = false
 			et.removeSpeculation(sp)
-			doBreak = true
+			break
 		case True:
 			et.removeSpeculation(sp)
 		case Undefined:
 		}
-		return
-	})
+	}
+	return
+}
+
+func (et *executionThreadImpl) checkAndUpdateSpeculationsForReduction(r *Reduction) (areSpeculationsFounded bool) {
+	areSpeculationsFounded = true
+	var next *list.Element
+	for e := et.spList.(*speculationListImpl).list.Front(); e != nil; e = next {
+		next = e.Next()
+		sp, ok := e.Value.(speculation)
+
+		if !ok {
+			panic(`speculation list iterate: can NOT access to the next speculation`)
+		}
+
+		speculationValue := sp.evaluateReduction(r)
+		switch speculationValue {
+		case False:
+			areSpeculationsFounded = false
+			et.removeSpeculation(sp)
+			break
+		case True:
+			et.removeSpeculation(sp)
+		case Undefined:
+		}
+	}
 	return
 }
 
