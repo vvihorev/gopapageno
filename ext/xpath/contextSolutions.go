@@ -14,25 +14,23 @@ type contextSolutionsMap interface {
 }
 
 type contextSolutionEntry struct {
-	solution NonTerminal
-	next     *contextSolutionEntry
+	context, solution NonTerminal
+	next              *contextSolutionEntry
 }
 
 type contextSolutionsMapImpl struct {
-	m map[NonTerminal]*contextSolutionEntry
+	head *contextSolutionEntry
 }
 
 func newContextSolutionsMap() contextSolutionsMap {
-	return &contextSolutionsMapImpl{
-		m: make(map[NonTerminal]*contextSolutionEntry),
-	}
+	return &contextSolutionsMapImpl{}
 }
 
 func (ctxSolMap *contextSolutionsMapImpl) addContextSolution(ctx NonTerminal, sols ...NonTerminal) {
 	for _, sol := range sols {
-		entry := contextSolutionEntry{solution: sol}
-		entry.next = ctxSolMap.m[ctx]
-		ctxSolMap.m[ctx] = &entry
+		entry := contextSolutionEntry{context: ctx, solution: sol}
+		entry.next = ctxSolMap.head
+		ctxSolMap.head = &entry
 	}
 }
 
@@ -41,9 +39,11 @@ func (ctxSolMap *contextSolutionsMapImpl) hasSolutionsFor(ctx NonTerminal) bool 
 }
 
 func (ctxSolMap *contextSolutionsMapImpl) solutionsFor(ctx NonTerminal, maps ...contextSolutionsMap) (solutions []NonTerminal) {
-	cur := ctxSolMap.m[ctx]
+	cur := ctxSolMap.head
 	for cur != nil {
-		solutions = append(solutions, cur.solution)
+		if cur.context == ctx {
+			solutions = append(solutions, cur.solution)
+		}
 		cur = cur.next
 	}
 
@@ -63,19 +63,26 @@ func (ctxSolMap *contextSolutionsMapImpl) solutionsFor(ctx NonTerminal, maps ...
 func (ctxSolMap *contextSolutionsMapImpl) transitiveClosure(maps ...contextSolutionsMap) (result contextSolutionsMap) {
 	result = newContextSolutionsMap()
 
-	for context := range ctxSolMap.m {
-		solutionsReachableFromContext := ctxSolMap.solutionsFor(context, maps...)
-		result.addContextSolution(context, solutionsReachableFromContext...)
+	seen := map[NonTerminal]bool{}
+	cur := ctxSolMap.head
+	for cur != nil {
+		if _, exists := seen[cur.context]; exists {
+			continue
+		}
+		seen[cur.context] = true
+
+		solutionsReachableFromContext := ctxSolMap.solutionsFor(cur.context, maps...)
+		result.addContextSolution(cur.context, solutionsReachableFromContext...)
+		cur = cur.next
 	}
 	return
 }
 
 func (ctxSolMap *contextSolutionsMapImpl) convertToGroupOfSolutionsPositions() (positions []Position) {
-	for _, entry := range ctxSolMap.m {
-		for entry != nil {
-			positions = append(positions, entry.solution.Position())
-			entry = entry.next
-		}
+	cur := ctxSolMap.head
+	for cur != nil {
+		positions = append(positions, cur.solution.Position())
+		cur = cur.next
 	}
 	return
 }
@@ -97,18 +104,19 @@ func (ctxSolMap *contextSolutionsMapImpl) merge(incoming contextSolutionsMap) (r
 		return
 	}
 
-	for k, v := range incomingImpl.m {
-		cur := ctxSolMap.m[k]
-		if cur == nil {
-			ctxSolMap.m[k] = v
-		} else {
-			for cur.next != nil {
-				cur = cur.next
-			}
-			cur.next = v
+	if incomingImpl.head == nil {
+	} else if ctxSolMap.head == nil {
+		ctxSolMap.head = incomingImpl.head
+		incomingImpl.head = nil
+	} else {
+		cur := ctxSolMap.head
+		for cur.next != nil {
+			cur = cur.next
 		}
-		delete(incomingImpl.m, k)
+		cur.next = incomingImpl.head
+		incomingImpl.head = nil
 	}
+
 	ok = true
 	return
 }
