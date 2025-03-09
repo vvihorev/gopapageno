@@ -13,20 +13,27 @@ type contextSolutionsMap interface {
 	convertToGroupOfSolutionsPositions() []Position
 }
 
-type implementedMapType map[NonTerminal][]NonTerminal
+type contextSolutionEntry struct {
+	solution NonTerminal
+	next     *contextSolutionEntry
+}
 
 type contextSolutionsMapImpl struct {
-	m implementedMapType
+	m map[NonTerminal]*contextSolutionEntry
 }
 
 func newContextSolutionsMap() contextSolutionsMap {
 	return &contextSolutionsMapImpl{
-		m: make(implementedMapType),
+		m: make(map[NonTerminal]*contextSolutionEntry),
 	}
 }
 
 func (ctxSolMap *contextSolutionsMapImpl) addContextSolution(ctx NonTerminal, sols ...NonTerminal) {
-	ctxSolMap.m[ctx] = append(ctxSolMap.m[ctx], sols...)
+	for _, sol := range sols {
+		entry := contextSolutionEntry{solution: sol}
+		entry.next = ctxSolMap.m[ctx]
+		ctxSolMap.m[ctx] = &entry
+	}
 }
 
 func (ctxSolMap *contextSolutionsMapImpl) hasSolutionsFor(ctx NonTerminal) bool {
@@ -34,7 +41,11 @@ func (ctxSolMap *contextSolutionsMapImpl) hasSolutionsFor(ctx NonTerminal) bool 
 }
 
 func (ctxSolMap *contextSolutionsMapImpl) solutionsFor(ctx NonTerminal, maps ...contextSolutionsMap) (solutions []NonTerminal) {
-	solutions = ctxSolMap.m[ctx]
+	cur := ctxSolMap.m[ctx]
+	for cur != nil {
+		solutions = append(solutions, cur.solution)
+		cur = cur.next
+	}
 
 	for currentMapIdx := 0; currentMapIdx < len(maps); currentMapIdx++ {
 		tmpNodesToVisit := []NonTerminal{}
@@ -60,9 +71,10 @@ func (ctxSolMap *contextSolutionsMapImpl) transitiveClosure(maps ...contextSolut
 }
 
 func (ctxSolMap *contextSolutionsMapImpl) convertToGroupOfSolutionsPositions() (positions []Position) {
-	for _, solutions := range ctxSolMap.m {
-		for _, solution := range solutions {
-			positions = append(positions, solution.Position())
+	for _, entry := range ctxSolMap.m {
+		for entry != nil {
+			positions = append(positions, entry.solution.Position())
+			entry = entry.next
 		}
 	}
 	return
@@ -86,7 +98,15 @@ func (ctxSolMap *contextSolutionsMapImpl) merge(incoming contextSolutionsMap) (r
 	}
 
 	for k, v := range incomingImpl.m {
-		ctxSolMap.m[k] = append(ctxSolMap.m[k], v...)
+		cur := ctxSolMap.m[k]
+		if cur == nil {
+			ctxSolMap.m[k] = v
+		} else {
+			for cur.next != nil {
+				cur = cur.next
+			}
+			cur.next = v
+		}
 		delete(incomingImpl.m, k)
 	}
 	ok = true
